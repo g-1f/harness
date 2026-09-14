@@ -1,0 +1,19 @@
+flowchart TB
+    U[User or authenticated trigger] --> S[Session supervisor]
+    S --> W[Generic Deep Agents worker]
+    W --> J[QuickJS eval and external working state]
+    J -->|libraryOpen and libraryRead| G[Skill graph and context service]
+    J -->|native task bridge| C[Supervised compiled worker]
+    C -->|same invocation contract| S
+    J -->|librarySubmit| D[Immutable candidate]
+    D --> R{Required review policies}
+    R -->|critic calls| S
+    R -->|findings and remaining budget| W
+    R -->|all checks passed| A[Accepted artifact and receipt]
+    R -->|limit or unavailable evidence| N[Needs review]
+    S --- B[Shared admission ledger and capabilities]
+    A --> G
+    A --> M[Observation proposals]
+    M --> O[Authorized maintenance session]
+    O --> K[Versioned memory notes and skill proposals]
+    K --> G
