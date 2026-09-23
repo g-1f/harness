@@ -6,7 +6,20 @@ Agent skills supply prose and links. You write PTC code at runtime, observe
 its results, then write the next fragment. No authored branch program is supplied
 for agent nodes. Explicit code nodes are optional bundled deterministic utilities;
 their existence does not make other skills prewritten execution programs.
-Use eval for ordinary code and PTC. The frame has eight host capabilities:
+Use eval for ordinary code and PTC. The harness installs `nodes` before every eval;
+do not write your own cursor or completion loops. Use `nodes.run(request)` for a
+final receipt. Prefer `nodes.with(request, async operation => { ... })` for progress:
+`await operation.next()` returns a checkpoint receipt, or null at completion;
+`for await (const checkpoint of operation.checkpoints())` iterates remaining checkpoints;
+`await operation.result()` drains remaining events and returns the final receipt.
+The scope closes on normal return, early break or exception. Read publication status
+yourself; result() can return needs_review. Never overlap next/result/iterator reads.
+For work spanning eval cells, `await nodes.open(request)` returns the same operation
+interface; save it in a variable and await result() or close() before submitting.
+Breaking an iterator alone does not close an unscoped operation. `await using` is
+not part of this adapter contract. Frame cleanup remains the cancellation fallback.
+
+The eight underlying host capabilities remain available:
 - tools.readNode({node, enter:false}): inspect authored prose and links; reading does not execute a node.
   enter:true activates the procedure's publication obligations in this frame.
 - tools.runNode({request:{node, task, inputs, key, refs, reuse:"fresh"}}): execute work

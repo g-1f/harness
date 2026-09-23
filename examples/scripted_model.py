@@ -92,14 +92,20 @@ observe('views', await Promise.all([read(a.ref), read(c.ref)]));
             )
         if self.node == "a":
             return """
-const opened = input.baseline_requires_snapshot ? await openShared('b') : null;
-const progress = opened ? await nextCheckpoint(opened.handle) : null;
-const measured = progress ? await read(progress.receipt.ref) : null;
-const b = opened ? await complete(opened.handle, progress.cursor) : null;
+const shared = input.baseline_requires_snapshot
+  ? await nodes.with(sharedRequest('b'), async operation => {
+      const progress = await operation.next();
+      if (!progress) throw new Error('Expected snapshot measurement');
+      const measured = await read(progress.ref);
+      const b = await operation.result();
+      if (b.status !== 'accepted') throw new Error('Snapshot unaccepted');
+      return {progress, measured, b};
+    }) : {progress: null, measured: null, b: null};
+const {progress, measured, b} = shared;
 var evidenceRefs = [...suppliedRefs,
-  ...(progress ? [progress.receipt.ref] : []), ...(b ? [b.ref] : [])];
+  ...(progress ? [progress.ref] : []), ...(b ? [b.ref] : [])];
 var observation = evidence('a', {
-  snapshot: b?.ref || null, checkpoint: progress?.receipt.ref || null,
+  snapshot: b?.ref || null, checkpoint: progress?.ref || null,
   subchecks: b ? [measured, await read(b.ref)] : []
 });
 observe('evidence', observation);
@@ -112,12 +118,17 @@ var observation = evidence('c', {snapshot: null, policy: null});
 observe('evidence', observation);
 """
             return """
-var opened = await openShared('b');
-var progress = await nextCheckpoint(opened.handle);
-var measured = await read(progress.receipt.ref);
-var focused = await run('b', [progress.receipt.ref],
-  'Assess capacity from snapshot checkpoint', 'fresh', sharedInputs());
-var snapshot = await complete(opened.handle, progress.cursor);
+var shared = await nodes.with(sharedRequest('b'), async operation => {
+  const progress = await operation.next();
+  if (!progress) throw new Error('Expected snapshot measurement');
+  const measured = await read(progress.ref);
+  const focused = await run('b', [progress.ref],
+    'Assess capacity from snapshot checkpoint', 'fresh', sharedInputs());
+  const snapshot = await operation.result();
+  if (snapshot.status !== 'accepted') throw new Error('Snapshot unaccepted');
+  return {progress, measured, focused, snapshot};
+});
+var {progress, measured, focused, snapshot} = shared;
 observe('capacity_snapshot', {
   snapshot: await read(snapshot.ref), focus: await read(focused.ref), checkpoint: measured
 });
@@ -280,10 +291,10 @@ await tools.submitCandidate({
         return (
             code
             + """
-var evidenceRefs = [...suppliedRefs, progress.receipt.ref, focused.ref, snapshot.ref,
+var evidenceRefs = [...suppliedRefs, progress.ref, focused.ref, snapshot.ref,
   ...(policy ? [policy.ref] : [])];
 var observation = evidence('c', {
-  snapshot: snapshot.ref, checkpoint: progress.receipt.ref,
+  snapshot: snapshot.ref, checkpoint: progress.ref,
   focus: focused.ref, policy: policy?.ref || null,
   subchecks: [measured, await read(focused.ref), await read(snapshot.ref),
     ...(policy ? [await read(policy.ref)] : [])]

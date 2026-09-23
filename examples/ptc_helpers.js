@@ -6,15 +6,15 @@ async function read(ref) {
     const slice = await tools.readArtifact({ref, offset, limit: 16000});
     text += slice.text;
     offset = slice.next_offset;
-    if (offset >= slice.total_chars) return JSON.parse(text).content;
     if (text.length > 64000) throw new Error('Demo evidence too large');
+    if (offset >= slice.total_chars) return JSON.parse(text).content;
   } while (true);
 }
 
 async function run(node, refs = [], task = 'Interpret the supplied evidence', reuse = 'fresh', inputs = input) {
-  const receipt = await tools.runNode({request: {
+  const receipt = await nodes.run({
     node, task, inputs, refs, reuse, key: node + ':' + (++sequence)
-  }});
+  });
   if (receipt.status !== 'accepted') throw new Error(node + ': ' + receipt.status);
   return receipt;
 }
@@ -38,28 +38,11 @@ var sharedTasks = {
 async function share(node, refs = []) {
   return run(node, refs, sharedTasks[node], 'session', sharedInputs());
 }
-async function openShared(node, refs = []) {
-  return tools.openNode({request: {
+function sharedRequest(node, refs = []) {
+  return {
     node, task: sharedTasks[node], inputs: sharedInputs(), refs,
     reuse: 'session', key: node + ':' + (++sequence)
-  }});
-}
-async function nextCheckpoint(handle, after = 0) {
-  const event = await tools.nextNodeEvent({handle, after});
-  if (event.kind !== 'checkpoint' || event.receipt.status !== 'accepted') {
-    throw new Error('Expected an accepted checkpoint');
-  }
-  return event;
-}
-async function complete(handle, after) {
-  let event = await tools.nextNodeEvent({handle, after});
-  while (event.kind === 'checkpoint') {
-    event = await tools.nextNodeEvent({handle, after: event.cursor});
-  }
-  if (event.kind !== 'complete' || event.receipt.status !== 'accepted') {
-    throw new Error('Node did not complete with an accepted result');
-  }
-  return event.receipt;
+  };
 }
 
 function evidence(node, extra = {}) {

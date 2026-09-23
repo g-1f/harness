@@ -14,6 +14,7 @@ from typing import Any
 
 from deepagents import create_deep_agent
 from deepagents.backends import StateBackend
+from langchain.agents.middleware import AgentMiddleware
 from langchain_core.messages import AIMessage
 from langchain_core.runnables import RunnableLambda
 from langchain_core.tools import tool
@@ -21,6 +22,7 @@ from langchain_quickjs import CodeInterpreterMiddleware
 
 from harness.api import NodeAPI
 from harness.contracts import Candidate, Rejected, RunContext, encode
+from harness.runners.ptc import PTC_PRELUDE
 from harness.runtime import Frame, Runtime
 
 RUNTIME_PROMPT = Path(__file__).with_name("node_agent.md").read_text(encoding="utf-8")
@@ -41,6 +43,16 @@ def node_messages(frame: Frame, context: RunContext) -> list[dict[str, str]]:
         },
     )
     return [{"role": "user", "content": encode(packet)} for packet in packets]
+
+
+class PTCWrapperMiddleware(AgentMiddleware):
+    async def awrap_tool_call(self, request, handler):
+        if request.tool_call["name"] == "eval":
+            call = request.tool_call
+            args = dict(call["args"])
+            args["code"] = PTC_PRELUDE + "\n" + args["code"]
+            request = request.override(tool_call={**call, "args": args})
+        return await handler(request)
 
 
 class DeepAgentRunner:
@@ -138,7 +150,7 @@ class DeepAgentRunner:
             tools=functions,
             backend=StateBackend(),
             subagents=[supervised_worker],
-            middleware=[interpreter],
+            middleware=[PTCWrapperMiddleware(), interpreter],
         )
         return agent, api
 

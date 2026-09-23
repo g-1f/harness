@@ -147,13 +147,15 @@ Each row is an accepted, immutable checkpoint from a producer. The reads are obs
 
 ## Captured PTC and observations
 
+The harness installs the [shared nodes wrapper](../../harness/runners/ptc.js) before eval. Its injected source is omitted from these model-authored cells. [Wrapper contract](../../docs/ptc-wrapper.md) covers scopes and cross-cell state.
+
 The shared-request fixture helper is shown once. It encodes the standard producer tasks described in skill prose. Consumer interpretations are separate a/c/d/f/g outputs. Live agents write their own equivalent requests.
 
 ```js
 async function run(node, refs = [], task = 'Interpret the supplied evidence', reuse = 'fresh', inputs = input) {
-  const receipt = await tools.runNode({request: {
+  const receipt = await nodes.run({
     node, task, inputs, refs, reuse, key: node + ':' + (++sequence)
-  }});
+  });
   if (receipt.status !== 'accepted') throw new Error(node + ': ' + receipt.status);
   return receipt;
 }
@@ -177,28 +179,11 @@ var sharedTasks = {
 async function share(node, refs = []) {
   return run(node, refs, sharedTasks[node], 'session', sharedInputs());
 }
-async function openShared(node, refs = []) {
-  return tools.openNode({request: {
+function sharedRequest(node, refs = []) {
+  return {
     node, task: sharedTasks[node], inputs: sharedInputs(), refs,
     reuse: 'session', key: node + ':' + (++sequence)
-  }});
-}
-async function nextCheckpoint(handle, after = 0) {
-  const event = await tools.nextNodeEvent({handle, after});
-  if (event.kind !== 'checkpoint' || event.receipt.status !== 'accepted') {
-    throw new Error('Expected an accepted checkpoint');
-  }
-  return event;
-}
-async function complete(handle, after) {
-  let event = await tools.nextNodeEvent({handle, after});
-  while (event.kind === 'checkpoint') {
-    event = await tools.nextNodeEvent({handle, after: event.cursor});
-  }
-  if (event.kind !== 'complete' || event.receipt.status !== 'accepted') {
-    throw new Error('Node did not complete with an accepted result');
-  }
-  return event.receipt;
+  };
 }
 ```
 
@@ -270,14 +255,20 @@ Observed:
 ### E2:a
 
 ```js
-const opened = input.baseline_requires_snapshot ? await openShared('b') : null;
-const progress = opened ? await nextCheckpoint(opened.handle) : null;
-const measured = progress ? await read(progress.receipt.ref) : null;
-const b = opened ? await complete(opened.handle, progress.cursor) : null;
+const shared = input.baseline_requires_snapshot
+  ? await nodes.with(sharedRequest('b'), async operation => {
+      const progress = await operation.next();
+      if (!progress) throw new Error('Expected snapshot measurement');
+      const measured = await read(progress.ref);
+      const b = await operation.result();
+      if (b.status !== 'accepted') throw new Error('Snapshot unaccepted');
+      return {progress, measured, b};
+    }) : {progress: null, measured: null, b: null};
+const {progress, measured, b} = shared;
 var evidenceRefs = [...suppliedRefs,
-  ...(progress ? [progress.receipt.ref] : []), ...(b ? [b.ref] : [])];
+  ...(progress ? [progress.ref] : []), ...(b ? [b.ref] : [])];
 var observation = evidence('a', {
-  snapshot: b?.ref || null, checkpoint: progress?.receipt.ref || null,
+  snapshot: b?.ref || null, checkpoint: progress?.ref || null,
   subchecks: b ? [measured, await read(b.ref)] : []
 });
 observe('evidence', observation);
@@ -347,12 +338,17 @@ Observed:
 ### E7:c
 
 ```js
-var opened = await openShared('b');
-var progress = await nextCheckpoint(opened.handle);
-var measured = await read(progress.receipt.ref);
-var focused = await run('b', [progress.receipt.ref],
-  'Assess capacity from snapshot checkpoint', 'fresh', sharedInputs());
-var snapshot = await complete(opened.handle, progress.cursor);
+var shared = await nodes.with(sharedRequest('b'), async operation => {
+  const progress = await operation.next();
+  if (!progress) throw new Error('Expected snapshot measurement');
+  const measured = await read(progress.ref);
+  const focused = await run('b', [progress.ref],
+    'Assess capacity from snapshot checkpoint', 'fresh', sharedInputs());
+  const snapshot = await operation.result();
+  if (snapshot.status !== 'accepted') throw new Error('Snapshot unaccepted');
+  return {progress, measured, focused, snapshot};
+});
+var {progress, measured, focused, snapshot} = shared;
 observe('capacity_snapshot', {
   snapshot: await read(snapshot.ref), focus: await read(focused.ref), checkpoint: measured
 });
@@ -369,10 +365,10 @@ OBS:{"stage":"capacity_snapshot","value":{"snapshot":{"changed":true,"internal":
 
 ```js
 const policy = await run('h', [snapshot.ref], 'Investigate the policy outlook');
-var evidenceRefs = [...suppliedRefs, progress.receipt.ref, focused.ref, snapshot.ref,
+var evidenceRefs = [...suppliedRefs, progress.ref, focused.ref, snapshot.ref,
   ...(policy ? [policy.ref] : [])];
 var observation = evidence('c', {
-  snapshot: snapshot.ref, checkpoint: progress.receipt.ref,
+  snapshot: snapshot.ref, checkpoint: progress.ref,
   focus: focused.ref, policy: policy?.ref || null,
   subchecks: [measured, await read(focused.ref), await read(snapshot.ref),
     ...(policy ? [await read(policy.ref)] : [])]

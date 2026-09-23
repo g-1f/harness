@@ -6,6 +6,7 @@ from quickjs_rs import Runtime as JSRuntime
 
 from harness.api import NodeAPI
 from harness.contracts import Candidate, Rejected, RunContext, encode
+from harness.runners.ptc import PTC_PRELUDE
 from harness.runtime import Frame, Runtime
 
 
@@ -23,45 +24,26 @@ class CodeRunner:
         with JSRuntime(memory_limit=64 * 1024 * 1024) as js:
             with js.new_context(timeout=self.timeout) as ctx:
 
-                async def run(args):
-                    return await api.run_node(**args)
+                def bind(method):
+                    async def invoke(args):
+                        return await method(**args)
 
-                async def open_node(args):
-                    return await api.open_node(**args)
+                    return invoke
 
-                async def next_node_event(args):
-                    return await api.next_node_event(**args)
-
-                async def close_node(args):
-                    return await api.close_node(**args)
-
-                async def inspect(args):
-                    return await api.read_node(**args)
-
-                async def read(args):
-                    return await api.read_artifact(**args)
-
-                async def submit(args):
-                    return await api.submit_candidate(**args)
-
-                async def checkpoint(args):
-                    return await api.publish_checkpoint(**args)
-
-                for name, fn in [
-                    ("runNode", run),
-                    ("openNode", open_node),
-                    ("nextNodeEvent", next_node_event),
-                    ("closeNode", close_node),
-                    ("readNode", inspect),
-                    ("readArtifact", read),
-                    ("publishCheckpoint", checkpoint),
-                    ("submitCandidate", submit),
-                ]:
-                    ctx.register(name, fn)
-                prelude = (
-                    "const tools = {runNode, openNode, nextNodeEvent, closeNode, "
-                    "readNode, readArtifact, publishCheckpoint, submitCandidate};\n"
-                )
+                capabilities = {
+                    "runNode": api.run_node,
+                    "openNode": api.open_node,
+                    "nextNodeEvent": api.next_node_event,
+                    "closeNode": api.close_node,
+                    "readNode": api.read_node,
+                    "readArtifact": api.read_artifact,
+                    "publishCheckpoint": api.publish_checkpoint,
+                    "submitCandidate": api.submit_candidate,
+                }
+                for name, method in capabilities.items():
+                    ctx.register(name, bind(method))
+                prelude = "const tools = {" + ", ".join(capabilities) + "};\n"
+                prelude += PTC_PRELUDE + "\n"
                 prelude += "const input = " + encode(frame.request.inputs) + ";\n"
                 prelude += "const task = " + encode(frame.request.task) + ";\n"
                 prelude += "const refs = " + encode(frame.request.refs) + ";\n"

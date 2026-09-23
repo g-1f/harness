@@ -181,6 +181,10 @@ def render(case: str, runtime: Runtime, receipt: dict) -> str:
         "",
         "## Captured PTC and observations",
         "",
+        "The harness installs the [shared nodes wrapper](../../harness/runners/ptc.js) "
+        "before eval. Its injected source is omitted from these model-authored cells. "
+        "[Wrapper contract](../../docs/ptc-wrapper.md) covers scopes and cross-cell state.",
+        "",
         "The shared-request fixture helper is shown once. It encodes the standard "
         "producer tasks described in skill prose. Consumer interpretations are separate "
         "a/c/d/f/g outputs. Live agents write their own equivalent requests.",

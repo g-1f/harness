@@ -209,6 +209,12 @@ does not require a script in the skill; b/f/k/l are agent executions.
 
 ## Eight host capabilities
 
+Generated PTC normally uses the installed [scoped JS wrapper](docs/ptc-wrapper.md):
+`nodes.run(request)` for a final receipt, or `nodes.with(request, async operation =>
+{ ... })` for checkpoints and final results with automatic scope cleanup. Use
+`nodes.open(request)` when observing across eval cells. The wrapper owns cursors
+and completion loops; the following host endpoints still enforce runtime policy.
+
 | Capability | Effect |
 | --- | --- |
 | `readNode` | Inspect a procedure; `enter: true` also adopts its publication obligations |

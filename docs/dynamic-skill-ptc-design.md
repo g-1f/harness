@@ -220,6 +220,9 @@ grants a required reviewer the exact candidate and its declared supporting refs.
 PTC exposes camelCase equivalents on `tools`. Native calls use the same bound
 `NodeAPI`. The framework's compatibility `task` route dispatches into the same
 supervisor. No unsupervised application child is provided through that route.
+The installed [PTC wrapper](ptc-wrapper.md) adds scoped operation objects over those
+endpoints without adding host primitives. It owns cursor iteration and cleanup;
+`nodes.open` supports observation across model-authored eval cells.
 
 A candidate has a nonempty summary of at most 600 characters, a JSON object
 `content`, and `based_on` artifact refs. It is limited to 500 KB. These are the same
