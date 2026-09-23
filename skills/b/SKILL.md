@@ -11,8 +11,8 @@ identical request. No caller-specific interpretation is part of the artifact.
 
 Use [[delta_check]] with its standard task and the same projected inputs. Read the
 numeric difference. Publish a checkpoint containing the measurement, unit and source
-based on the delta ref. This checkpoint is independently reviewed and can be consumed
-while subsequent work runs. If zero, return the supplied b narrative with `changed: false`
+based on the delta ref. This immutable measurement can be consumed while subsequent work runs.
+Publication does not certify its correctness; callers assess it for their task. If zero, return the supplied b narrative with `changed: false`
 and no further investigation. Otherwise call [[k|volume evidence]] and [[l|mix
 evidence]] in parallel, using their standard tasks and the delta ref as evidence.
 They also support identical session requests by other consumers.

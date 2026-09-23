@@ -1,8 +1,9 @@
-"""One-process supervisor for node work, explicit artifact grants and reviews."""
+"""One-process supervisor for node work, explicit artifact grants and publication."""
 
 from __future__ import annotations
 
 import asyncio
+import math
 import time
 import uuid
 from collections.abc import Awaitable, Callable, Mapping
@@ -21,7 +22,6 @@ from harness.contracts import (
     encode,
 )
 from harness.operations import Lease, OperationPool
-from harness.policy import ReviewPolicy, validate_policies
 from harness.skills import Registry
 from harness.storage import Store
 
@@ -34,7 +34,7 @@ class Frame:
     origin: str | None
     request: NodeRequest
     executor: str = "agent"
-    active: set[str] = field(default_factory=set)
+    consulted: set[str] = field(default_factory=set)
     grants: set[str] = field(default_factory=set)
     children: set[asyncio.Task] = field(default_factory=set)
     handles: set[str] = field(default_factory=set)
@@ -104,24 +104,20 @@ class Runtime:
         *,
         ledger: Ledger | None = None,
         bindings: Mapping[str, str] | None = None,
-        reviews: Mapping[str, ReviewPolicy] | None = None,
         default_executor: str = "agent",
         max_depth: int = 5,
         deadline_seconds: float = 180,
-        max_revisions: int = 2,
     ):
         if (
             type(max_depth) is not int
             or max_depth < 0
-            or type(max_revisions) is not int
-            or max_revisions < 0
+            or type(deadline_seconds) not in (int, float)
+            or not math.isfinite(deadline_seconds)
             or deadline_seconds <= 0
         ):
             raise Rejected("Invalid supervisor limits")
         self.registry, self.store = registry, store
         self.bindings = MappingProxyType(dict(bindings or {}))
-        self.reviews = MappingProxyType(dict(reviews or {}))
-        validate_policies(registry, self.reviews)
         if set(self.bindings) - registry.nodes.keys():
             raise Rejected("Executor binding names an unknown skill")
         if any(
@@ -133,7 +129,7 @@ class Runtime:
         self._sealed = False
         self.ledger = ledger or Ledger()
         self.session = uuid.uuid4().hex
-        self.max_depth, self.max_revisions = max_depth, max_revisions
+        self.max_depth = max_depth
         self.deadline = time.monotonic() + deadline_seconds
         self.operations = OperationPool(max_depth=max_depth, emit=self._operation_event)
         self._call_tasks: set[asyncio.Task[Receipt]] = set()
@@ -145,8 +141,6 @@ class Runtime:
                 "snapshot": registry.snapshot,
                 "bindings": dict(self.bindings),
                 "default_executor": default_executor,
-                "reviews": {name: asdict(policy) for name, policy in self.reviews.items()},
-                "max_revisions": max_revisions,
             }
         )
 
@@ -205,14 +199,10 @@ class Runtime:
             "total_chars": len(text),
         }
 
-    def read_node(
-        self, frame: Frame, node: str, *, enter: bool = False, limit: int = 32_000
-    ) -> dict:
+    def read_node(self, frame: Frame, node: str, *, limit: int = 32_000) -> dict:
         self.check_live(frame)
         if type(limit) is not int or not 512 <= limit <= 32_000 or node not in self.registry.nodes:
             raise Rejected("Unknown skill or invalid entry budget")
-        if type(enter) is not bool:
-            raise Rejected("enter must be a boolean")
         skill = self.registry.nodes[node]
         packet = {
             "node": skill.name,
@@ -226,10 +216,9 @@ class Runtime:
             raise Rejected(
                 "Entry exceeds budget; split the skill or request a larger bounded packet"
             )
-        if enter:
-            frame.active.add(node)
+        frame.consulted.add(node)
         self.store.event(
-            type="node_enter" if enter else "node_read",
+            type="node_read",
             session=self.session,
             frame=frame.id,
             node=node,
@@ -344,23 +333,13 @@ class Runtime:
             lease.observing = False
 
     async def publish_checkpoint(self, frame: Frame, value: Candidate) -> Receipt:
-        """Publish an independently reviewed artifact while this node is running."""
+        """Publish an immutable intermediate artifact; content is application-defined."""
         self.check_live(frame)
-        draft = candidate(value)
-        attempt = self.ledger.admit_checkpoint()
-        draft_ref = self._record(
-            frame, draft, "draft", kind="checkpoint", checkpoint_attempt=attempt
-        )
-        reviews, feedback, _ = await self._review(
-            frame, draft, draft_ref, 0, review_key=f"checkpoint:{attempt}"
-        )
-        status = "needs_review" if feedback else "accepted"
-        ref = self._record(
-            frame, draft, status, reviews, kind="checkpoint", checkpoint_attempt=attempt
-        )
-        receipt: Receipt = {"ref": ref, "status": status, "summary": draft["summary"]}
-        if status == "accepted":
-            self.operations.publish(frame.id, receipt)
+        output = candidate(value)
+        sequence = self.ledger.admit_checkpoint()
+        ref = self._record(frame, output, kind="checkpoint", checkpoint_sequence=sequence)
+        receipt: Receipt = {"ref": ref, "status": "published", "summary": output["summary"]}
+        self.operations.publish(frame.id, receipt)
         return receipt
 
     def _validate_call(self, request: NodeRequest, caller: Frame | None) -> None:
@@ -431,17 +410,15 @@ class Runtime:
         self,
         frame: Frame,
         draft: Candidate,
-        status: str,
-        reviews: tuple | list = (),
         *,
         kind: str = "result",
-        checkpoint_attempt: int | None = None,
+        checkpoint_sequence: int | None = None,
     ) -> str:
         self.check_live(frame)
         for ref in draft["based_on"]:
             value = self._authorized_record(frame, ref)
-            if status == "accepted" and value["status"] != "accepted":
-                raise Rejected("Accepted results cannot depend on unaccepted artifacts")
+            if value["status"] != "published":
+                raise Rejected("Published artifacts cannot depend on unpublished records")
         return self.store.put(
             {
                 "session": self.session,
@@ -451,100 +428,37 @@ class Runtime:
                 "task": frame.request.task,
                 "executor": frame.executor,
                 "snapshot": self.registry.snapshot,
-                "consulted": sorted(frame.active),
+                "consulted": sorted(frame.consulted),
                 "inputs": frame.request.inputs,
                 "node_revision": self.registry.nodes[frame.request.node].revision,
                 "input_refs": list(frame.request.refs),
                 "observed_refs": sorted(frame.observed),
-                "status": status,
+                "status": "published",
                 "created_at": time.time(),
                 **(
-                    {"kind": kind, "checkpoint_attempt": checkpoint_attempt}
+                    {"kind": kind, "checkpoint_sequence": checkpoint_sequence}
                     if kind == "checkpoint"
                     else {}
                 ),
                 **draft,
-                "reviews": list(reviews),
             }
         )
-
-    async def _review(
-        self,
-        frame: Frame,
-        draft: Candidate,
-        draft_ref: str,
-        attempt: int,
-        *,
-        review_key: str = "review",
-    ) -> tuple[list[str], list[dict[str, Any]], int]:
-        policies = [self.reviews[name] for name in sorted(frame.active) if name in self.reviews]
-        reviewers = tuple(dict.fromkeys(name for p in policies for name in p.reviewers))
-        round_limit = min([self.max_revisions, *(p.max_revisions for p in policies)])
-
-        async def review_one(name: str) -> Receipt:
-            return await self.run_node(
-                NodeRequest(
-                    name,
-                    f"Review candidate {draft_ref}; independently test claims. "
-                    "Return content with candidate_ref, verdict pass/fail/inconclusive, and findings array.",
-                    frame.request.inputs,
-                    f"{review_key}:{attempt}:{name}",
-                    tuple(dict.fromkeys([draft_ref, *draft["based_on"]])),
-                ),
-                frame,
-            )
-
-        results = await asyncio.gather(
-            *(review_one(name) for name in reviewers), return_exceptions=True
-        )
-        refs, feedback = [], []
-        for name, result in zip(reviewers, results, strict=True):
-            if isinstance(result, BaseException):
-                feedback.append({"reviewer": name, "error": type(result).__name__})
-                continue
-            refs.append(result["ref"])
-            verdict = self._authorized_record(frame, result["ref"])["content"]
-            valid = (
-                verdict.get("candidate_ref") == draft_ref
-                and verdict.get("verdict") == "pass"
-                and verdict.get("findings") == []
-            )
-            if result["status"] != "accepted" or not valid:
-                feedback.append({"reviewer": name, "ref": result["ref"], "verdict": verdict})
-        return refs, feedback, round_limit
 
     async def _run(self, frame: Frame) -> Receipt:
         self.store.event(type="started", session=self.session, frame=frame.id)
         try:
             async with asyncio.timeout(max(0, self.deadline - time.monotonic())):
-                packet = self.read_node(frame, frame.request.node, enter=True)
-                feedback, previous = [], None
-                for attempt in range(self.max_revisions + 1):
-                    context: RunContext = {
-                        "entry": packet,
-                        "attempt": attempt,
-                        "feedback": feedback,
-                        "previous": previous,
-                    }
-                    output = await self._executors[frame.executor](frame, context)
-                    if (task := asyncio.current_task()) is not None and task.cancelling():
-                        raise asyncio.CancelledError
-                    draft = candidate(output)
-                    if any(not task.done() for task in frame.children) or frame.handles:
-                        raise Rejected("Join or close all child calls before returning a draft")
-                    draft_ref = self._record(frame, draft, "draft")
-                    reviews, feedback, round_limit = await self._review(
-                        frame, draft, draft_ref, attempt
-                    )
-                    if (task := asyncio.current_task()) is not None and task.cancelling():
-                        raise asyncio.CancelledError
-                    if not feedback or attempt >= round_limit:
-                        status = "needs_review" if feedback else "accepted"
-                        ref = self._record(frame, draft, status, reviews)
-                        self.store.event(type=status, session=self.session, frame=frame.id, ref=ref)
-                        return {"ref": ref, "status": status, "summary": draft["summary"]}
-                    previous = draft_ref
-                raise AssertionError("Unreachable revision bound")
+                packet = self.read_node(frame, frame.request.node)
+                context: RunContext = {"entry": packet}
+                output = await self._executors[frame.executor](frame, context)
+                if (task := asyncio.current_task()) is not None and task.cancelling():
+                    raise asyncio.CancelledError
+                value = candidate(output)
+                if any(not task.done() for task in frame.children) or frame.handles:
+                    raise Rejected("Join or close all child calls before returning an output")
+                ref = self._record(frame, value)
+                self.store.event(type="completed", session=self.session, frame=frame.id, ref=ref)
+                return {"ref": ref, "status": "published", "summary": value["summary"]}
         except asyncio.CancelledError:
             self.store.event(type="cancelled", session=self.session, frame=frame.id)
             raise

@@ -8,7 +8,8 @@ from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.messages import AIMessage
 from langchain_core.outputs import ChatGeneration, ChatResult
 
-from harness import Ledger, NodeRequest, Registry, ReviewPolicy, Runtime, Store
+from examples.review import ReviewedTransformation
+from harness import Ledger, NodeRequest, Registry, Runtime, Store
 from harness.runners.agent import DeepAgentRunner
 from harness.runners.code import CodeRunner
 from harness.runners.metering import metered_model
@@ -80,8 +81,13 @@ class IntegrationTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(runtime.ledger.frames, 2)
 
     async def test_real_interpreter_review_repair_loop(self):
-        registry = Registry([skill("work"), skill("critic")])
-        kernel = Runtime(registry, Store(), reviews={"work": ReviewPolicy(("critic",), 1)})
+        registry = Registry([skill("release"), skill("work"), skill("critic")])
+        kernel = Runtime(registry, Store(), bindings={"release": "reviewed"})
+        self.addCleanup(kernel.store.close)
+        self.addAsyncCleanup(kernel.aclose)
+        kernel.register_executor(
+            "reviewed", ReviewedTransformation(kernel, "work", "critic", max_revisions=1)
+        )
         attempts = []
 
         def factory(frame):
@@ -106,11 +112,11 @@ await tools.submitCandidate({summary: 'Checked', content: {
             )
 
         kernel.register_executor("agent", DeepAgentRunner(kernel, factory, interpreter_timeout=30))
-        result = await kernel.run_node(NodeRequest("work", "produce", {}, "root"))
-        self.assertEqual(result["status"], "accepted")
+        result = await kernel.run_node(NodeRequest("release", "produce", {}, "root"))
+        self.assertEqual(result["status"], "published")
         self.assertEqual(attempts, [0, 1])
         self.assertEqual(kernel.ledger.model_calls, 8)
-        self.assertEqual(kernel.store.get(result["ref"])["content"]["value"], 1)
+        self.assertEqual(kernel.store.get(result["ref"])["content"]["result"]["value"], 1)
 
     async def test_real_interpreter_recursive_dispatch_and_submission(self):
         registry = Registry([skill("work")])
@@ -129,7 +135,7 @@ await tools.submitCandidate({summary: 'Checked', content: {
                 )
                 code = """
 const receipt = await tools.runNode({request: REQUEST});
-if (receipt.status !== "accepted") throw new Error("Child did not pass");
+if (receipt.status !== "published") throw new Error("Child did not pass");
 await tools.submitCandidate({summary: "Joined child", content: {depth: DEPTH}, based_on: [receipt.ref]});
 """.replace("REQUEST", child_request).replace("DEPTH", str(depth))
             else:
@@ -141,7 +147,7 @@ await tools.submitCandidate({summary: "Joined child", content: {depth: DEPTH}, b
 
         kernel.register_executor("agent", DeepAgentRunner(kernel, factory, interpreter_timeout=30))
         result = await kernel.run_node(NodeRequest("work", "depth 2", {"n": 2}, "root"))
-        self.assertEqual(result["status"], "accepted")
+        self.assertEqual(result["status"], "published")
         self.assertEqual(kernel.ledger.frames, 3)
         self.assertEqual(kernel.ledger.model_calls, 6)
         record = kernel.store.get(result["ref"])
@@ -175,7 +181,7 @@ await tools.submitCandidate({summary: "Joined child", content: {depth: DEPTH}, b
 
         kernel.register_executor("agent", DeepAgentRunner(kernel, factory, interpreter_timeout=30))
         result = await kernel.run_node(NodeRequest("work", "root", {}, "root"))
-        self.assertEqual(result["status"], "accepted")
+        self.assertEqual(result["status"], "published")
         self.assertEqual(kernel.ledger.frames, 2)
         self.assertEqual(kernel.ledger.model_calls, 5)
 
@@ -205,9 +211,63 @@ await tools.submitCandidate({summary:'Fresh worker',content:{ok:true},based_on:[
 
         runtime.register_executor("agent", DeepAgentRunner(runtime, factory))
         result = await runtime.run_node(NodeRequest("program", "compose", {}, "root"))
-        self.assertEqual(result["status"], "accepted")
+        self.assertEqual(result["status"], "published")
         self.assertEqual(runtime.ledger.frames, 2)
         self.assertEqual(runtime.ledger.model_calls, 2)
+
+    async def test_nested_ptc_transformations(self):
+        root = code_skill(
+            "root",
+            """
+let key = 0;
+const invoke = (node, artifacts = []) => nodes.run({
+  node, task: 'Apply ' + node, inputs: {}, refs: artifacts.map(x => x.ref), key: String(++key)
+});
+const [a, c, d, e] = await Promise.all([
+  invoke('a'), invoke('c'), invoke('d'), invoke('e')
+]);
+const [reviewed, challenged, combined] = await Promise.all([
+  invoke('review', [a]),
+  invoke('red_team', [a]),
+  invoke('coherence', [c, d, e]).then(value => invoke('node_a', [value]))
+]);
+await tools.submitCandidate({summary:'Composed transforms',content:{
+  reviewed: reviewed.ref, challenged: challenged.ref, combined: combined.ref
+},based_on:[reviewed.ref, challenged.ref, combined.ref]});
+""",
+        )
+        names = ("a", "c", "d", "e", "review", "red_team", "coherence", "node_a")
+        runtime = Runtime(
+            Registry([root, *(skill(name) for name in names)]), Store(), bindings={"root": "code"}
+        )
+        self.addCleanup(runtime.store.close)
+        self.addAsyncCleanup(runtime.aclose)
+        runtime.register_executor("code", CodeRunner(runtime, "run.js"))
+
+        async def transform(frame, context):
+            values = [runtime.read(frame, ref)["content"] for ref in frame.request.refs]
+            node = frame.request.node
+            if node in ("a", "c", "d", "e"):
+                content = {"value": {"a": 0, "c": 1, "d": 2, "e": 3}[node]}
+            elif node == "review":
+                content = {"verdict": "fail", "findings": ["Zero value"]}
+            elif node == "red_team":
+                content = {"counterexample": values[0]["value"]}
+            elif node == "coherence":
+                content = {"sum": sum(value["value"] for value in values)}
+            else:
+                content = {"value": values[0]["sum"] * 10}
+            return {"summary": node, "content": content, "based_on": list(frame.request.refs)}
+
+        runtime.register_executor("agent", transform)
+        receipt = await runtime.run_node(NodeRequest("root", "Compose", {}, "root"))
+        result = runtime.store.get(receipt["ref"])["content"]
+        self.assertEqual(runtime.store.get(result["combined"])["content"], {"value": 60})
+        review, challenge = [runtime.store.get(result[key]) for key in ("reviewed", "challenged")]
+        self.assertEqual(review["content"]["verdict"], "fail")
+        self.assertEqual(review["based_on"], challenge["based_on"])
+        self.assertEqual(runtime.ledger.frames, 9)
+        self.assertEqual(runtime.ledger.model_calls, 0)
 
     async def test_legacy_native_task_still_enters_runtime(self):
         runtime = Runtime(Registry([skill("work")]), Store())

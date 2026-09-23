@@ -6,7 +6,7 @@ Reproduce: `python demo.py --offline --case b --trace outputs/scenario_b.json`.
 
 Regenerate both documents: `python -m examples.export_trajectories`.
 
-Outcome: `complete`. **22 calls, 18 executions**, 0 in-flight joins, 4 completed-result reuses. 55 scripted model operations; zero model API calls. All acquired leases were released; no active wait edges remain.
+Outcome: `complete`. **23 calls, 19 executions**, 0 in-flight joins, 4 completed-result reuses. 55 scripted model operations; zero model API calls. All acquired leases were released; no active wait edges remain.
 
 ## Prompt
 
@@ -14,14 +14,16 @@ Source: [scenario_b.md](../prompts/scenario_b.md).
 
 Investigate the synthetic snapshot using the root skill. Complete baseline view a
 before starting capacity view c, as requested by sequence_baseline in the input.
-If c needs the same neutral b snapshot, reuse its accepted artifact through the
-same explicit request. Replay b's accepted checkpoint after completion and request
+If c needs the same neutral b snapshot, reuse its published artifact through the
+same explicit request. Replay b's published checkpoint after completion and request
 a distinct capacity-focused b call grounded in it. Investigate the policy outlook
 when observations warrant it; shared mix evidence may already exist. After both
 views, run d's cross-check.
 Keep caller interpretations separate from shared evidence, inspect the outputs,
 and use fresh independent audits before synthesis. Write PTC incrementally from
 the skill prose and observations; respect any flags that omit a dependency.
+
+Read the thesis composition's decision and report completion only when approved.
 
 Bound synthetic inputs:
 
@@ -105,8 +107,9 @@ Each row has one context and one produced result. `origin` in the raw trace reco
 | `E14:artifact_coherence` | Audit this artifact | `agent` | `E11:d/result` |
 | `E15:artifact_coherence` | Audit joint coherence | `agent` | `E2:a/result`, `E7:c/result`, `E11:d/result` |
 | `E16:red_team` | Challenge candidate E2:a/result | `agent` | `E2:a/result` |
-| `E17:thesis` | Synthesize the independently interpreted views and audit findings | `agent` | `E2:a/result`, `E7:c/result`, `E11:d/result`, `E12:artifact_coherence/result`, `E13:artifact_coherence/result`, `E14:artifact_coherence/result`, `E15:artifact_coherence/result`, `E16:red_team/result` |
-| `E18:red_team` | Review candidate E17:thesis/draft; independently test claims. Return content with candidate_ref, verdict pass/fail/inconclusive, and findings array. | `agent` | `E17:thesis/draft`, `E2:a/result`, `E7:c/result`, `E11:d/result`, `E12:artifact_coherence/result`, `E13:artifact_coherence/result`, `E14:artifact_coherence/result`, `E15:artifact_coherence/result`, `E16:red_team/result` |
+| `E17:thesis` | Synthesize the independently interpreted views and audit findings | `reviewed_thesis` | `E2:a/result`, `E7:c/result`, `E11:d/result`, `E12:artifact_coherence/result`, `E13:artifact_coherence/result`, `E14:artifact_coherence/result`, `E15:artifact_coherence/result`, `E16:red_team/result` |
+| `E18:thesis_draft` | Synthesize the independently interpreted views and audit findings | `agent` | `E2:a/result`, `E7:c/result`, `E11:d/result`, `E12:artifact_coherence/result`, `E13:artifact_coherence/result`, `E14:artifact_coherence/result`, `E15:artifact_coherence/result`, `E16:red_team/result` |
+| `E19:red_team` | Review the first referenced artifact against the requested task: Synthesize the independently interpreted views and audit findings | `agent` | `E18:thesis_draft/result`, `E2:a/result`, `E7:c/result`, `E11:d/result`, `E12:artifact_coherence/result`, `E13:artifact_coherence/result`, `E14:artifact_coherence/result`, `E15:artifact_coherence/result`, `E16:red_team/result` |
 
 ## Calls and ownership
 
@@ -135,11 +138,12 @@ Every successful acquisition has its own lease. Multiple rows can target the sam
 | `E1:root` | `E15:artifact_coherence` | `artifact_coherence:7` | started | fresh |
 | `E1:root` | `E16:red_team` | `red_team:8` | started | fresh |
 | `E1:root` | `E17:thesis` | `thesis:9` | started | fresh |
-| `E17:thesis` | `E18:red_team` | `review:0:red_team` | started | fresh |
+| `E17:thesis` | `E18:thesis_draft` | `draft:0` | started | fresh |
+| `E17:thesis` | `E19:red_team` | `review:0` | started | fresh |
 
 ## Checkpoints and observation order
 
-Each row is an accepted, immutable checkpoint from a producer. The reads are observed grants, ordered by the session event log; 'before final' means the consumer obtained it while the producer was still running. A late subscriber can replay the same checkpoint after completion.
+Each row is a published, immutable checkpoint from a producer. The reads are observed grants, ordered by the session event log; 'before final' means the consumer obtained it while the producer was still running. A late subscriber can replay the same checkpoint after completion.
 
 | Producer | Checkpoint | Subscriber reads |
 | --- | --- | --- |
@@ -156,7 +160,7 @@ async function run(node, refs = [], task = 'Interpret the supplied evidence', re
   const receipt = await nodes.run({
     node, task, inputs, refs, reuse, key: node + ':' + (++sequence)
   });
-  if (receipt.status !== 'accepted') throw new Error(node + ': ' + receipt.status);
+  if (receipt.status !== 'published') throw new Error(node + ': ' + receipt.status);
   return receipt;
 }
 
@@ -235,10 +239,11 @@ OBS:{"stage":"audits","value":[{"coverage":1,"findings":[],"targets":["E2:a/resu
 ```js
 const evidence = [...state.artifacts.map(item => item.receipt.ref), ...state.audits.map(audit => audit.ref)];
 const thesis = await run('thesis', evidence, 'Synthesize the independently interpreted views and audit findings');
+const decision = await read(thesis.ref);
 await tools.submitCandidate({
-  summary: 'Completed graph investigation with a reviewed thesis',
+  summary: 'Graph investigation with a thesis decision',
   content: {
-    outcome: 'complete', thesis: thesis.ref,
+    outcome: decision.decision === 'approved' ? 'complete' : 'blocked', thesis: thesis.ref,
     views: state.artifacts.map(item => ({node: item.name, ref: item.receipt.ref})),
     snapshot_refs: state.snapshots, audited: state.artifacts.map(item => item.receipt.ref)
   },
@@ -261,7 +266,7 @@ const shared = input.baseline_requires_snapshot
       if (!progress) throw new Error('Expected snapshot measurement');
       const measured = await read(progress.ref);
       const b = await operation.result();
-      if (b.status !== 'accepted') throw new Error('Snapshot unaccepted');
+      if (b.status !== 'published') throw new Error('Snapshot unpublished');
       return {progress, measured, b};
     }) : {progress: null, measured: null, b: null};
 const {progress, measured, b} = shared;
@@ -306,7 +311,7 @@ var checkpoint = await tools.publishCheckpoint({
     source: measurement.source, text: 'Snapshot measurement'},
   based_on: [delta.ref]
 });
-if (checkpoint.status !== 'accepted') throw new Error('Snapshot checkpoint unaccepted');
+if (checkpoint.status !== 'published') throw new Error('Snapshot checkpoint unpublished');
 observe('delta', await read(delta.ref));
 ```
 
@@ -345,7 +350,7 @@ var shared = await nodes.with(sharedRequest('b'), async operation => {
   const focused = await run('b', [progress.ref],
     'Assess capacity from snapshot checkpoint', 'fresh', sharedInputs());
   const snapshot = await operation.result();
-  if (snapshot.status !== 'accepted') throw new Error('Snapshot unaccepted');
+  if (snapshot.status !== 'published') throw new Error('Snapshot unpublished');
   return {progress, measured, focused, snapshot};
 });
 var {progress, measured, focused, snapshot} = shared;
@@ -558,4 +563,42 @@ Observed:
 }
 ```
 
-Accepted publication and review verdicts are separate. The thesis's mandatory review targets its frozen candidate in fresh context. Hashes mentioned inside a view do not themselves grant access to those artifacts. These offline outcomes verify execution mechanics, not live-model reasoning quality.
+Publication and review decisions are separate. The application thesis composition's review targets its exact published candidate in fresh context. The root inspects its decision before completing. Hashes mentioned inside a view do not themselves grant access to those artifacts. These offline outcomes verify execution mechanics, not live-model reasoning quality.
+
+## Application decision and exact-candidate review
+
+The native thesis executor runs the ordinary composition in [examples/review.py](../review.py). The following are actual published contents, not core artifact metadata. The root reads decision before completing.
+
+```json
+{
+  "attempts": 1,
+  "candidate_ref": "E18:thesis_draft/result",
+  "decision": "approved",
+  "history": [
+    {
+      "candidate_ref": "E18:thesis_draft/result",
+      "review_ref": "E19:red_team/result"
+    }
+  ],
+  "result": {
+    "evidence_count": 3,
+    "limitations": [
+      "Synthetic observations; not an investment recommendation"
+    ],
+    "text": "Synthetic thesis: Source evidence supports the baseline claim. Capacity additions lag demand. Concentrated supplier exposure warrants further investigation."
+  },
+  "reviews": [
+    "E19:red_team/result"
+  ]
+}
+```
+
+Reviewer output:
+
+```json
+{
+  "candidate_ref": "E18:thesis_draft/result",
+  "findings": [],
+  "verdict": "pass"
+}
+```

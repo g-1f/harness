@@ -46,6 +46,7 @@ class Resource:
             or ".." in path.parts
             or path.as_posix() != self.path
             or not self.path
+            or self.path == "."
             or self.path == "SKILL.md"
             or not isinstance(self.data, bytes)
         ):

@@ -30,16 +30,7 @@ class CodeRunner:
 
                     return invoke
 
-                capabilities = {
-                    "runNode": api.run_node,
-                    "openNode": api.open_node,
-                    "nextNodeEvent": api.next_node_event,
-                    "closeNode": api.close_node,
-                    "readNode": api.read_node,
-                    "readArtifact": api.read_artifact,
-                    "publishCheckpoint": api.publish_checkpoint,
-                    "submitCandidate": api.submit_candidate,
-                }
+                capabilities = api.capabilities()
                 for name, method in capabilities.items():
                     ctx.register(name, bind(method))
                 prelude = "const tools = {" + ", ".join(capabilities) + "};\n"

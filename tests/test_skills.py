@@ -86,6 +86,6 @@ class SkillTests(unittest.TestCase):
             Registry([skill])
 
     def test_invalid_resource_paths(self):
-        for path in ("../outside.js", "/absolute.js", "SKILL.md", "a/../b.js"):
+        for path in ("", ".", "../outside.js", "/absolute.js", "SKILL.md", "a/../b.js"):
             with self.subTest(path=path), self.assertRaises(Rejected):
                 Resource(path, b"source")

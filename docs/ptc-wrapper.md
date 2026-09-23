@@ -3,7 +3,7 @@
 The harness supplies `nodes` before every agent eval and code-resource execution.
 The implementation is `harness/runners/ptc.js`; both adapters load those exact
 bytes. There are no new host tools, skill fields or authorization mechanisms.
-The existing `NodeAPI` and runtime continue to own grants, review, leases and budgets.
+The existing `NodeAPI` and runtime continue to own grants, leases, publication and budgets.
 
 ## Audit findings and changes
 
@@ -15,7 +15,7 @@ The existing `NodeAPI` and runtime continue to own grants, review, leases and bu
 | Helpers lacked scoped cleanup after callback exceptions or early return | `nodes.with` closes in `finally`; failure of both callback and cleanup preserves both errors |
 | Concurrent reads could consume the same logical stream ambiguously | One pending next/result read per operation; the host independently enforces the same constraint |
 | Receipt mutation could change a wrapper's remembered result | Cached receipt is private; each result returns a copy |
-| CodeRunner repeated eight forwarding functions and a second tool-name list | One capability map and one argument-binding helper register native bridges and construct `tools` |
+| Adapters repeated forwarding functions and tool lists | NodeAPI defines the methods, descriptions and bridge order once; both adapters use that map |
 | Demo bounded-read helper checked size after returning the final slice | Size is checked before the final return |
 
 ## Default use: scope the observation
@@ -27,7 +27,7 @@ const view = await nodes.with(request, async operation => {
     // Interpret evidence, call another skill, or break when enough is available.
   }
   const result = await operation.result();
-  if (result.status !== 'accepted') throw new Error('Publication needs review');
+  // Inspect the artifact's application-specific decision if your task requires one.
   return result;
 });
 ```
@@ -39,12 +39,13 @@ behavior instead of adding unnecessary progress polls.
 
 | Operation method | Behavior |
 | --- | --- |
-| `next()` | Next accepted checkpoint receipt, or null when the final receipt is received |
+| `next()` | Next published checkpoint receipt, or null when the final receipt is received |
 | `checkpoints()` | Async iterator over remaining checkpoint receipts |
 | `result()` | Consume remaining events, return final receipt; repeated calls return copies of the remembered receipt |
 | `close()` | Release this consumer early; repeat calls are safe. Other consumers keep their own leases |
 
-The wrapper never turns `needs_review` into `accepted`. Producer errors propagate.
+The wrapper returns published receipts without interpreting artifact content.
+A negative application decision is a completed result; producer errors propagate.
 The native QuickJS bridge presents Python exceptions inside JS as a generic
 HostError; an uncaught error is restored to the original exception at the Python
 boundary. JS callers must not rely on seeing the producer's Python exception text.
@@ -80,7 +81,7 @@ It does not resume state after process crashes or repair lost interpreter snapsh
 `tests/test_ptc.py` executes the wrapper through real QuickJS and Deep Agents.
 It covers checkpoint iteration, zero checkpoints, repeated/copy-safe results,
 overlapping reads, early break, callback failure, producer failure, another live
-consumer, needs_review, automatic injection, and operation state across eval cells.
+consumer, opaque domain decisions, automatic injection, and operation state across eval cells.
 Both graph trajectories use scoped observations from the harness wrapper. The
 scripted fixture retains only application-specific request and interpretation helpers.
 

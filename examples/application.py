@@ -2,7 +2,8 @@
 
 from pathlib import Path
 
-from harness import Registry, ReviewPolicy, Runtime, Store
+from examples.review import ReviewedTransformation
+from harness import Registry, Runtime, Store
 from harness.runners.agent import DeepAgentRunner
 from harness.runners.code import CodeRunner
 from harness.runners.metering import metered_model
@@ -18,8 +19,7 @@ def build_runtime(
     runtime = Runtime(
         Registry.load(ROOT / "skills"),
         store if store is not None else Store(),
-        bindings={"delta_check": "snapshot_math"},
-        reviews={"thesis": ReviewPolicy(("red_team",))},
+        bindings={"delta_check": "snapshot_math", "thesis": "reviewed_thesis"},
         deadline_seconds=240,
     )
 
@@ -43,6 +43,10 @@ def build_runtime(
         "agent", DeepAgentRunner(runtime, model_factory, interpreter_timeout=60)
     )
     runtime.register_executor("snapshot_math", CodeRunner(runtime, "scripts/observe_delta.js"))
+    runtime.register_executor(
+        "reviewed_thesis",
+        ReviewedTransformation(runtime, "thesis_draft", "red_team", max_revisions=1),
+    )
     return runtime
 
 

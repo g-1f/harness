@@ -2,7 +2,7 @@ import asyncio
 import time
 import unittest
 
-from harness import Ledger, NodeRequest, Registry, Rejected, ReviewPolicy, Runtime, Store
+from harness import Ledger, NodeRequest, Registry, Rejected, Runtime, Store
 from harness.contracts import encode
 from harness.runtime import Frame
 from tests.support import call, draft, skill
@@ -64,88 +64,18 @@ class RuntimeTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(kernel.ledger.frames, 7)
         self.assertEqual(kernel.ledger.model_calls, 7)
 
-    async def test_review_repairs_and_binds_to_new_candidate(self):
-        registry = Registry([skill("work"), skill("critic")])
-        kernel = Runtime(registry, Store(), reviews={"work": ReviewPolicy(("critic",), 1)})
-        seen = []
-
-        async def run(frame, context):
-            if frame.request.node == "critic":
-                ref = frame.request.refs[0]
-                value = kernel.read(frame, ref)["content"]["value"]
-                seen.append(ref)
-                return {
-                    "summary": "Independent check",
-                    "content": {
-                        "candidate_ref": ref,
-                        "verdict": "pass" if value else "fail",
-                        "findings": [] if value else ["Value is missing"],
-                    },
-                }
-            return draft(context["attempt"])
-
-        kernel.register_executor("agent", run)
-        receipt = await kernel.run_node(call())
-        result = kernel.store.get(receipt["ref"])
-        self.assertEqual(receipt["status"], "accepted")
-        self.assertEqual(result["content"]["value"], 1)
-        self.assertEqual(len(set(seen)), 2)
-        final_review = kernel.store.get(result["reviews"][0])["content"]
-        self.assertEqual(final_review["candidate_ref"], seen[-1])
-
-    async def test_missing_malformed_or_wrong_candidate_review_cannot_pass(self):
-        for verdict in (
-            {},
-            {"candidate_ref": "wrong", "verdict": "pass", "findings": []},
-            {"candidate_ref": "wrong", "verdict": "fail", "findings": ["bad"]},
-        ):
-            with self.subTest(verdict=verdict):
-                kernel = Runtime(
-                    Registry([skill("work"), skill("critic")]),
-                    Store(),
-                    reviews={"work": ReviewPolicy(("critic",))},
-                )
-
-                async def run(frame, context, verdict=verdict):
-                    return (
-                        {"summary": "Result", "content": verdict}
-                        if frame.request.node == "critic"
-                        else draft()
-                    )
-
-                kernel.register_executor("agent", run)
-                result = await kernel.run_node(call())
-                self.assertEqual(result["status"], "needs_review")
-
-    async def test_inline_open_activates_review(self):
-        kernel = Runtime(
-            Registry([skill("work", links=("checked",)), skill("checked"), skill("critic")]),
-            Store(),
-            reviews={"checked": ReviewPolicy(("critic",))},
-        )
-
-        async def run(frame, context):
-            if frame.request.node == "critic":
-                raise RuntimeError("Reviewer unavailable")
-            kernel.read_node(frame, "checked", enter=True)
-            return draft()
-
-        kernel.register_executor("agent", run)
-        result = await kernel.run_node(call())
-        self.assertEqual(result["status"], "needs_review")
-
     async def test_reading_a_link_does_not_grant_ambient_artifacts(self):
         kernel = Runtime(Registry([skill("work", links=("evidence",)), skill("evidence")]), Store())
         frame = Frame("parent", None, call())
         ref = kernel.store.put(
-            {"session": kernel.session, "frame": "sibling", "status": "accepted"}
+            {"session": kernel.session, "frame": "sibling", "status": "published"}
         )
         packet = kernel.read_node(frame, "work")
         self.assertEqual(packet["links"], ["evidence"])
         with self.assertRaisesRegex(Rejected, "not visible"):
             kernel.read(frame, ref)
         frame.grants.add(ref)
-        self.assertEqual(kernel.read(frame, ref)["status"], "accepted")
+        self.assertEqual(kernel.read(frame, ref)["status"], "published")
 
     async def test_context_packet_is_bounded_and_prose_preserved(self):
         node = skill("work", instructions="é" * 600)
@@ -215,6 +145,12 @@ class RuntimeTests(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(cancelled.is_set())
         self.assertTrue(all(op.task.done() for op in kernel.operations.operations.values()))
 
+    def test_deadline_must_be_positive_and_finite(self):
+        with Store() as store:
+            for seconds in (True, "10", -1, 0, float("inf"), float("nan")):
+                with self.subTest(seconds=seconds), self.assertRaises(Rejected):
+                    Runtime(Registry([skill("work")]), store, deadline_seconds=seconds)
+
     async def test_session_deadline(self):
         kernel = Runtime(Registry([skill("work")]), Store(), deadline_seconds=0.02)
 
@@ -225,37 +161,32 @@ class RuntimeTests(unittest.IsolatedAsyncioTestCase):
         with self.assertRaises(TimeoutError):
             await kernel.run_node(call())
 
-    async def test_draft_visibility_and_cross_session_denial(self):
+    async def test_artifact_visibility_and_cross_session_denial(self):
         kernel = Runtime(Registry([skill("work")]), Store())
         parent = Frame("parent", None, call())
-        ref = kernel.store.put({"session": kernel.session, "frame": "child", "status": "draft"})
+        ref = kernel.store.put({"session": kernel.session, "frame": "child", "status": "published"})
         with self.assertRaises(Rejected):
             kernel.read(parent, ref)
         parent.grants.add(ref)
-        self.assertEqual(kernel.read(parent, ref)["status"], "draft")
-        foreign = kernel.store.put({"session": "other", "frame": "parent", "status": "accepted"})
+        self.assertEqual(kernel.read(parent, ref)["status"], "published")
+        foreign = kernel.store.put({"session": "other", "frame": "parent", "status": "published"})
         with self.assertRaises(Rejected):
             kernel.read(parent, foreign)
 
-    async def test_policy_graph_rejects_review_recursion(self):
-        with self.assertRaisesRegex(Rejected, "Required-review cycle"):
-            Runtime(
-                Registry([skill("critic")]),
-                Store(),
-                reviews={"critic": ReviewPolicy(("critic",), 1)},
-            )
+    async def test_reading_a_procedure_records_consultation_without_running_it(self):
+        runtime = Runtime(Registry([skill("work"), skill("checked")]), Store())
+        self.addCleanup(runtime.store.close)
 
-    async def test_inspection_does_not_activate_review(self):
-        runtime = Runtime(
-            Registry([skill("work"), skill("checked"), skill("critic")]),
-            Store(),
-            reviews={"checked": ReviewPolicy(("critic",))},
-        )
-        frame = Frame("f", None, call())
-        runtime.read_node(frame, "checked")
-        self.assertEqual(frame.active, set())
-        runtime.read_node(frame, "checked", enter=True)
-        self.assertEqual(frame.active, {"checked"})
+        async def run(frame, context):
+            self.assertEqual(set(context), {"entry"})
+            runtime.read_node(frame, "checked")
+            self.assertEqual(frame.consulted, {"work", "checked"})
+            return draft()
+
+        runtime.register_executor("agent", run)
+        result = await runtime.run_node(call())
+        self.assertEqual(runtime.store.get(result["ref"])["consulted"], ["checked", "work"])
+        self.assertEqual(runtime.ledger.frames, 1)
 
     async def test_reviewer_grants_cover_reads_entry_and_descendants(self):
         runtime = Runtime(
@@ -267,7 +198,7 @@ class RuntimeTests(unittest.IsolatedAsyncioTestCase):
                 "session": runtime.session,
                 "frame": "other",
                 "node": "evidence",
-                "status": "accepted",
+                "status": "published",
                 "inputs": {},
                 "snapshot": runtime.registry.snapshot,
                 "created_at": time.time(),
@@ -297,29 +228,6 @@ class RuntimeTests(unittest.IsolatedAsyncioTestCase):
         runtime.register_executor("agent", run)
         await runtime.run_node(NodeRequest("work", "root", {}, "root"))
         self.assertEqual(seen, ["critic", "work"])
-
-    async def test_inconclusive_required_review_blocks_acceptance(self):
-        runtime = Runtime(
-            Registry([skill("work"), skill("critic")]),
-            Store(),
-            reviews={"work": ReviewPolicy(("critic",))},
-        )
-
-        async def run(frame, context):
-            if frame.request.node == "critic":
-                return {
-                    "summary": "Insufficient evidence",
-                    "content": {
-                        "candidate_ref": frame.request.refs[0],
-                        "verdict": "inconclusive",
-                        "findings": [],
-                    },
-                }
-            return draft()
-
-        runtime.register_executor("agent", run)
-        result = await runtime.run_node(call())
-        self.assertEqual(result["status"], "needs_review")
 
     async def test_code_runner_dispatch_without_agent(self):
         async def code(frame, context):

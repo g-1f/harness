@@ -89,12 +89,9 @@ def candidate(value: Any) -> Candidate:
 
 class Receipt(TypedDict):
     ref: str
-    status: Literal["accepted", "needs_review"]
+    status: Literal["published"]
     summary: str
 
 
 class RunContext(TypedDict):
     entry: dict[str, Any]
-    attempt: int
-    feedback: list[dict[str, Any]]
-    previous: str | None

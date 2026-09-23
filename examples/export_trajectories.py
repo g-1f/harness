@@ -25,14 +25,10 @@ def render(case: str, runtime: Runtime, receipt: dict) -> str:
     for event in events:
         if event["type"] == "checkpoint_published":
             aliases[event["ref"]] = aliases[event["operation"]] + f"/checkpoint:{event['cursor']}"
-        if event["type"] in ("accepted", "needs_review"):
+        if event["type"] == "completed":
             record = runtime.store.get(event["ref"])
             records[event["frame"]] = record
             aliases[event["ref"]] = aliases[event["frame"]] + "/result"
-            for ref in record["input_refs"]:
-                target = runtime.store.get(ref)
-                if target["status"] == "draft":
-                    aliases[ref] = aliases[target["frame"]] + "/draft"
 
     def normalize(value: str) -> str:
         for identifier, label in aliases.items():
@@ -144,7 +140,7 @@ def render(case: str, runtime: Runtime, receipt: dict) -> str:
         "",
         "## Checkpoints and observation order",
         "",
-        "Each row is an accepted, immutable checkpoint from a producer. The reads "
+        "Each row is a published, immutable checkpoint from a producer. The reads "
         "are observed grants, ordered by the session event log; 'before final' "
         "means the consumer obtained it while the producer was still running. "
         "A late subscriber can replay the same checkpoint after completion.",
@@ -160,7 +156,7 @@ def render(case: str, runtime: Runtime, receipt: dict) -> str:
                 i
                 for i, item in enumerate(events)
                 if i > position
-                and item["type"] in ("accepted", "needs_review", "failed", "cancelled")
+                and item["type"] in ("completed", "failed", "cancelled")
                 and item.get("frame") == event["operation"]
             ),
             None,
@@ -240,12 +236,35 @@ def render(case: str, runtime: Runtime, receipt: dict) -> str:
         normalize(json.dumps(report, indent=2)),
         "```",
         "",
-        "Accepted publication and review verdicts are separate. The thesis's mandatory "
-        "review targets its frozen candidate in fresh context. Hashes mentioned inside "
+        "Publication and review decisions are separate. The application thesis composition's "
+        "review targets its exact published candidate in fresh context. The root inspects its decision before completing. Hashes mentioned inside "
         "a view do not themselves grant access to those artifacts. These offline "
         "outcomes verify execution mechanics, not live-model reasoning quality.",
         "",
     ]
+    if "thesis" in report:
+        decision = runtime.store.get(report["thesis"])["content"]
+        lines += [
+            "## Application decision and exact-candidate review",
+            "",
+            "The native thesis executor runs the ordinary composition in "
+            "[examples/review.py](../review.py). The following are actual published "
+            "contents, not core artifact metadata. The root reads decision before completing.",
+            "",
+            "```json",
+            normalize(json.dumps(decision, indent=2)),
+            "```",
+            "",
+        ]
+        for ref in decision["reviews"]:
+            lines += [
+                "Reviewer output:",
+                "",
+                "```json",
+                normalize(json.dumps(runtime.store.get(ref)["content"], indent=2)),
+                "```",
+                "",
+            ]
     return "\n".join(lines)
 
 

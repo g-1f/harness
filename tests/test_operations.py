@@ -2,8 +2,9 @@
 
 import asyncio
 import unittest
+from dataclasses import replace
 
-from harness import Ledger, NodeRequest, Registry, Rejected, ReviewPolicy, Runtime, Store
+from harness import Ledger, NodeRequest, Registry, Rejected, Runtime, Store
 from tests.support import draft, skill
 
 
@@ -153,7 +154,7 @@ class OperationTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(b.state, "running")
         self.assertEqual(len(b.waiters), 1)
         finish.set()
-        self.assertEqual((await root)["status"], "accepted")
+        self.assertEqual((await root)["status"], "published")
         self.assertFalse(producer_cancelled)
         self.assert_released(runtime)
 
@@ -177,7 +178,7 @@ class OperationTests(unittest.IsolatedAsyncioTestCase):
         finish.set()
         receipt = await second
         receipt["status"] = "tampered"
-        self.assertEqual((await runtime.run_node(shared()))["status"], "accepted")
+        self.assertEqual((await runtime.run_node(shared()))["status"], "published")
         self.assertEqual(runtime.ledger.frames, 1)
         self.assert_released(runtime)
 
@@ -241,7 +242,7 @@ class OperationTests(unittest.IsolatedAsyncioTestCase):
             with self.assertRaisesRegex(RuntimeError, "Transient"):
                 await runtime.run_node(shared(key=key))
         self.assertEqual(runs, 1)
-        self.assertEqual((await runtime.run_node(shared(key="retry")))["status"], "accepted")
+        self.assertEqual((await runtime.run_node(shared(key="retry")))["status"], "published")
         self.assertEqual(runs, 2)
         self.assert_released(runtime)
 
@@ -277,36 +278,24 @@ class OperationTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(runtime.ledger.frames, 1)
         self.assert_released(runtime)
 
-    async def test_unaccepted_result_is_not_a_shared_cache_hit(self):
-        runtime = self.runtime(names=("b", "review"), reviews={"b": ReviewPolicy(("review",))})
-        reviews = 0
+    async def test_negative_domain_decision_is_reused_until_caller_requests_fresh_work(self):
+        runtime = self.runtime(names=("b",))
+        executions = 0
 
         async def run(frame, context):
-            nonlocal reviews
-            if frame.request.node == "review":
-                reviews += 1
-                return {
-                    "summary": "Review",
-                    "content": {
-                        "candidate_ref": frame.request.refs[0],
-                        "verdict": "fail" if reviews == 1 else "pass",
-                        "findings": ["Not ready"] if reviews == 1 else [],
-                    },
-                }
-            return draft()
+            nonlocal executions
+            executions += 1
+            return {"summary": "Decision", "content": {"decision": "blocked", "verdict": "fail"}}
 
         runtime.register_executor("agent", run)
-        self.assertEqual((await runtime.run_node(shared(key="first")))["status"], "needs_review")
-        self.assertEqual((await runtime.run_node(shared(key="retry")))["status"], "accepted")
-        self.assertEqual(reviews, 2)
-        self.assertTrue(
-            all(
-                e["reuse"] == "fresh"
-                for e in runtime.store.events()
-                if e["type"] == "admitted" and e["node"] == "review"
-            )
-        )
-        self.assert_released(runtime)
+        first = await runtime.run_node(shared(key="first"))
+        again = await runtime.run_node(shared(key="another"))
+        self.assertEqual(first, again)
+        self.assertEqual(executions, 1)
+        self.assertEqual(runtime.store.get(again["ref"])["content"]["decision"], "blocked")
+        fresh = await runtime.run_node(replace(shared(key="fresh"), reuse="fresh"))
+        self.assertNotEqual(fresh["ref"], first["ref"])
+        self.assertEqual(executions, 2)
 
     async def test_different_work_and_explicit_fresh_calls_do_not_share(self):
         runtime = self.runtime(names=("b",))
@@ -397,7 +386,7 @@ class OperationTests(unittest.IsolatedAsyncioTestCase):
         result = await asyncio.wait_for(
             runtime.run_node(NodeRequest("root", "Join", {}, "root")), 2
         )
-        self.assertEqual(result["status"], "accepted")
+        self.assertEqual(result["status"], "published")
         self.assertEqual(runtime.ledger.frames, 3)
         self.assert_released(runtime)
 

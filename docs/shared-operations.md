@@ -19,23 +19,22 @@ The execution context does not retain the origin's frame or private state.
 The producer belongs to the session coordinator. A completed artifact records one
 producer execution; call events record every consumer edge.
 
-No lock/release attributes are added to skills. `NodeRequest` gains one optional
+No lock/release attributes are added to skills. `NodeRequest` has one optional
 call-level choice: `reuse: "fresh" | "session"`, default `"fresh"`. Joining and
 release are automatic within `await run_node(...)`. `open_node` adds a caller-owned
 observation handle for progress; it releases on terminal event, explicit close or
 frame cleanup. This handle is not a lock token and cannot block other callers.
 Each handle permits one pending event read. Cancelling a read retains its handle
 for retry; closing is allowed after deadline expiry because it only releases
-resources and still checks ownership. Cursors follow accepted publication order,
-which may differ from start order when reviews run concurrently.
+resources and still checks ownership. Cursors follow publication order, which may differ from the order work began.
+Source versions and semantic freshness belong in artifact content.
 
 ## 2. Exact shared-work identity
 
 Within one runtime session:
 
 ```text
-execution_config = hash(skill_snapshot, executor_bindings, default_executor,
-                        required_review_policies, global_revision_bound)
+execution_config = hash(skill_snapshot, executor_bindings, default_executor)
 work_identity = hash(execution_config, node, task, inputs, ordered_refs)
 call_identity = (caller_execution_id, local_key)
 ```
@@ -50,7 +49,7 @@ pins skill/resource bytes. Executor instances must treat configuration as immuta
 Shared executors must derive behavior from the explicit request and that configured
 execution environment; origin/caller identity must not secretly select different
 models, entitlements or semantics. The supplied agent adapter sends only the explicit
-request, skill entry and review context to the model.
+request and skill entry to the model.
 
 Different tasks, inputs, evidence or configuration do not share. Similar wording is
 not automatically considered equivalent. A caller's interpretation belongs in its
@@ -60,8 +59,8 @@ the same projected inputs and empty refs.
 
 Fresh operations never populate or join the shared index. Repeating the exact same
 caller/key still replays its original execution: retry identity and sharing scope
-are separate concepts. Mandatory reviewers use fresh requests; optional independent
-review calls should do the same.
+are separate concepts. Applications requesting independent review use fresh calls. This is a request
+choice, not a reviewer role understood by the pool.
 
 ## 3. Atomic acquisition and state resolution
 
@@ -77,13 +76,13 @@ For a new call binding using session reuse:
 | --- | --- |
 | Absent | Admit and create one producer, index it, acquire a lease |
 | Running | Acquire another lease and await that task |
-| Accepted | Return the accepted receipt and grant its artifact to the caller |
+| Completed | Return the published receipt and grant its artifact, regardless of domain decision |
 | Cancelling | Await cleanup without keeping the dying producer alive; revalidate and resolve again |
 | Failed or cancelled | Create a new generation under a new execution ID |
-| `needs_review` | Create a new generation; an unaccepted candidate is not a reusable success |
 
 An existing bound caller/key bypasses replacement and replays its selected execution.
-Intentional retries after failure need a new key. There is no automatic unbounded
+Intentional retries after failure need a new key. To rerun a completed negative
+decision with identical inputs, use a new key and fresh execution. There is no automatic unbounded
 retry loop. Exact-request hits still consume the call budget; new executions also
 consume the frame budget.
 
@@ -127,13 +126,13 @@ the producer while awaiting it, and releases its lease in `finally`.
   cleanup must be cooperative; it cannot start a new investigation while closing.
 
 `Runtime.aclose()` ends the entire session, cancels all remaining caller waits and
-producers, and awaits their completion. Required publication checks also ensure a
-cancelled producer cannot suppress cancellation and publish a candidate as accepted.
-Records already accepted before a caller cancels remain valid session results.
+producers, and awaits their completion. Liveness checks also prevent a stopping
+producer from suppressing cancellation and publishing a final output.
+Records already published before cancellation remain immutable session evidence.
 
-The lifetime of an accepted artifact is separate from its wait leases. No lease is
-needed merely to retain or read an immutable accepted result. The session retains
-accepted operation results until shutdown; there is no independent TTL policy.
+The lifetime of an published artifact is separate from its wait leases. No lease is
+needed merely to retain or read an immutable published result. The session retains
+completed operation results until shutdown; there is no independent TTL policy.
 Sharing assumes the explicit inputs describe a stable snapshot. For changed external
 state, change the inputs/version or request fresh work.
 
@@ -172,19 +171,19 @@ mutate another consumer's cached receipt.
 
 Grants are not transitive. Sharing b does not automatically grant every artifact
 mentioned inside b. Consumers can request compatible shared producers themselves or
-receive explicit grants from their caller. Required reviewers get the exact frozen
-draft and declared evidence. An accepted review with `verdict: "fail"` remains a
-failing review; publication status is not a correctness assertion.
+receive explicit grants from their caller. A review and its candidate are ordinary
+artifacts; fresh reviewer context and pass/fail schemas are application choices.
+Published status says nothing about a domain verdict.
 
-An operation keeps up to `max_checkpoints` accepted checkpoints, each with an
-ordered cursor starting at 1. Each publication freezes its own draft and runs its
-configured mandatory reviewers, independent of final-result review. Rejected
-checkpoint drafts stay private and never advance the subscriber cursor. Every
-subscriber gets an artifact grant when reading its event; a late subscriber can
-replay earlier accepted checkpoints within the session. On terminal failure the
-subscriber gets a terminal error and the already accepted checkpoints remain
-independent records. A new task/refs/key starts a separate execution if the caller
-needs a different aspect. The host does not assess semantic usefulness.
+Checkpoint publications are bounded by the session-wide `max_checkpoints` budget.
+Each publication freezes content and assigns the next operation cursor starting
+at 1. Structural/access failures never advance the cursor. There is no implicit
+review before publication. Subscribers receive grants when they consume events;
+a late subscriber can replay earlier progress in the same session. On terminal
+failure the read raises and releases its handle; previous checkpoints remain
+independent records. The final-only run path grants no unobserved checkpoints.
+A new question and explicit refs can start a separate transformation while the
+original producer runs. The host does not assess semantic usefulness.
 
 ## 8. Executable evidence
 
@@ -199,7 +198,8 @@ needs a different aspect. The host does not assess semantic usefulness.
 | Last waiter cancels; replacement arrives | Cleanup finishes before replacement starts |
 | Conflicting key during cleanup; repeated caller cancellation | Reservation remains consistent; no lease leak or overlapping generation |
 | Executor clears its cancellation flag | Stopping context cannot create work, read procedures or publish |
-| Failure or unaccepted review | Same key replays; new key permits another execution |
+| Execution failure | Same key replays; a new key permits another execution |
+| Negative domain decision | Completed result is reusable; a new key plus fresh requests another execution |
 | Different task/input/ref or explicit fresh calls | No unintended sharing |
 | Guessed evidence hash | Shared lookup does not bypass grants |
 | x/y await each other across branches | Cycle is rejected instead of hanging |
@@ -213,4 +213,4 @@ They do not validate live-model reasoning quality or distributed/durable operati
 
 `tests/test_progress.py` covers two simultaneous subscribers receiving the same
 checkpoint, distinct follow-up tasks before final completion, late replay, failed
-checkpoint review, owner-scoped handles, budgets and cleanup.
+producers, owner-scoped handles, budgets, publication order and cleanup.

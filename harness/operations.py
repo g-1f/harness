@@ -38,7 +38,7 @@ class Operation:
             return "cancelled"
         if self.task.exception() is not None:
             return "failed"
-        return self.task.result()["status"]
+        return "completed"
 
 
 @dataclass(frozen=True, slots=True)
@@ -113,7 +113,7 @@ class OperationPool:
                         if caller is not None:
                             self._remove_wait(caller, operation.id)
                     continue
-                if operation is not None and operation.state in ("running", "accepted"):
+                if operation is not None and operation.state in ("running", "completed"):
                     disposition = "joined" if operation.state == "running" else "reused"
                 else:
                     operation = None
@@ -155,10 +155,10 @@ class OperationPool:
             return lease
 
     def publish(self, operation_id: str, receipt: Receipt) -> int:
-        """Announce an independently accepted checkpoint to every current/future caller."""
+        """Announce a published checkpoint to every current/future caller."""
         operation = self.operations[operation_id]
-        if operation.stopping or operation.task.done() or receipt["status"] != "accepted":
-            raise Rejected("Only a running operation can publish an accepted checkpoint")
+        if operation.stopping or operation.task.done() or receipt["status"] != "published":
+            raise Rejected("Only a running operation can publish a checkpoint")
         cursor = len(operation.checkpoints) + 1
         self.emit(
             type="checkpoint_published", operation=operation_id, cursor=cursor, ref=receipt["ref"]

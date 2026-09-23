@@ -1,18 +1,40 @@
 # Callable skill graph
 
-The harness reads skill prose, observes results, and writes JavaScript programmatic
-tool calls (PTC). Its `run_node` primitive can create an execution, join identical
-running work, or reuse an accepted result. Deep Agents is one execution adapter.
+A node is a function over explicit inputs and artifacts. The harness reads skill
+prose, observes results and writes JavaScript programmatic tool calls (PTC).
+Nodes can compose, run in parallel, share identical work and publish progress.
+Deep Agents is an execution adapter; RLM, review and coherence are not core primitives.
 
-A skill is a procedure. A caller's request is a use of that procedure. An execution
-is the work producing an artifact. **Several callers can share one execution while
-keeping their own interpretations and cancellation lifetimes.**
+**The runtime owns execution and artifact authority. Applications own meaning.**
+A completed review can publish a failing verdict. Approval and bounded repair are
+ordinary compositions, demonstrated in [examples/review.py](examples/review.py).
+There are no review policies, reviewer roles or repair fields in the core contract.
+
+## Native primitives that earn their keep
+
+| Host endpoint | Why the host owns it |
+| --- | --- |
+| `readNode` | Bounded access to pinned procedure prose and links |
+| `openNode` | Admission, shared execution identity and a caller-owned lease |
+| `nextNodeEvent` | Ordered progress/completion, wait safety and delivered artifact grants |
+| `closeNode` | Release one consumer; cancel/drain only after the last consumer leaves |
+| `readArtifact` | Bounded immutable reads with explicit authority checks |
+| `publishCheckpoint` | Immutable, replayable intermediate publication |
+| `submitCandidate` | Final return channel across the agent/tool boundary |
+| `runNode` | Final-only fast path: await one result without reading/granting all checkpoints |
+
+Seven essential host operations plus one deliberate fast path. All are defined
+once in [NodeAPI](harness/api.py) and exposed by both adapters. See the
+[native PTC audit](docs/native-ptc-primitives.md) for the justification, derivable
+operations, actual composition test and removed APIs.
+
+Generated code normally uses the [shared wrapper](docs/ptc-wrapper.md):
+`nodes.run(request)` for a final receipt, `nodes.with(request, callback)` for scoped
+progress, and `nodes.open(request)` for work spanning eval cells. Functions,
+`Promise.all`, branching, review and retries stay in ordinary code. No model-managed
+lock/unlock tools or extra transformation language is needed.
 
 ## An actual converging graph
-
-This is the investigation portion of the authored graph. The root can run a and c
-concurrently. Both reference b; d later revisits b. D and g also reference f, and
-several procedures reference the same volume, mix and delta producers.
 
 ```mermaid
 flowchart TD
@@ -35,121 +57,81 @@ flowchart TD
     H --> I[Timeline i]
 ```
 
-The delta utility is also shared by b/f/g/h. Fresh audits and synthesis follow the
-investigation. The [executed trajectories](#two-prompts-and-two-executed-trajectories)
-show actual execution IDs and every caller edge; the graph is not rendered by
-pretending each execution has one owning parent.
+A and c can join one running b, while d later reuses its completed result. D and g
+also converge on f; several procedures share k/l/delta work. Each caller keeps its
+own interpretation. C can ask the same b skill a different question with its
+measurement checkpoint as evidence, even while neutral b continues running.
+Fresh audits and a thesis composition follow this investigation graph.
 
-In the recorded parallel scenario, **26 calls produce 18 executions**: two calls
-join running work and six reuse completed results. There is one neutral b execution
-shared by a/c/d, plus one distinct capacity-focused b execution requested by c.
-There is one f, one k and one l execution. A and c observe the same b checkpoint
-before its final artifact, then produce separate interpretations.
-Their arrival order can vary; neither becomes the shared producer's exclusive owner.
+The [executed trajectories](#two-prompts-and-two-executed-trajectories) record every
+caller edge and actual execution ID, including running joins and completed reuse.
+They also record thesis → thesis_draft → artifact → red_team → decision.
 
-## Shared work: start, join, reuse, release
+## Explicit requests and shared work
 
 ```js
-const b = await tools.runNode({ request: {
-  node: "b",
-  task: "Produce snapshot evidence",
-  inputs: { current, previous, observations, units },
-  refs: [],
-  key: "snapshot-for-this-view",
-  reuse: "session"
-}});
+const snapshot = await nodes.run({
+  node: 'b', task: 'Produce snapshot evidence',
+  inputs: {current, previous, observations, units},
+  refs: [], key: 'snapshot', reuse: 'session'
+});
 ```
 
-| State of matching work | What this call does |
+`reuse: "fresh"` is the default. Session reuse matches the exact task, canonical
+inputs, ordered refs and sealed execution configuration. It starts absent work,
+joins running work and reuses completed work. A negative domain decision is still
+a completed result. A caller wanting another attempt uses a new key and `fresh`,
+or changes the task/inputs/evidence to describe the different work.
+
+The same caller/key always replays the original execution, including its error.
+Conflicting use of a key is rejected. A new session request waits for cancelling
+work to drain before replacement. Cancelling a does not cancel shared b while c
+still holds a lease. The host checks active wait cycles and depth across branches.
+See [shared operations](docs/shared-operations.md).
+
+`publishCheckpoint` makes immutable progress available to current and late
+subscribers. Publication does not approve its content. Callers inspect usefulness
+and can invoke another transformation using explicit refs. A final-only `runNode`
+grants only the final artifact; observing progress grants the delivered checkpoints.
+Grants are non-transitive: a hash mentioned inside an artifact is not permission.
+
+## Small contracts
+
+| Concern | Representation |
 | --- | --- |
-| Absent | Atomically create one execution and acquire a wait lease |
-| Running | Acquire another lease and await the same execution |
-| Accepted | Return the existing result and grant its ref to this caller |
-| Cancelling | Wait for cleanup, then resolve/create the replacement |
-| Failed, cancelled, or `needs_review` | A new caller/key may create a new execution |
+| Procedure | `SKILL.md` with `name`, `description`, prose, links and optional resources |
+| Executor | Host registration and skill-to-executor binding |
+| Call | `node`, `task`, `inputs`, `refs`, `key`, `reuse` |
+| Output | `summary`, application-defined `content`, `based_on` |
+| Receipt | `ref`, `summary`, `status: "published"` |
+| Domain approval | An application's decision artifact, never a runtime state |
 
-Same caller/key always identifies the original request. Once bound to an execution,
-an exact retry replays that execution, including its failure. An intentional new
-attempt needs a new key. Conflicting use of a key is rejected, including while
-waiting for cleanup.
+The two frontmatter fields are a deliberately small local convention. Adding an
+expertise or custom executor does not add attributes to all nodes. `[[b|text]]`
+means a prose link to b with the label text; it does not specify a call or arguments.
+Reading a skill records consultation and has no implicit publication obligations.
+The [end-to-end design](docs/dynamic-skill-ptc-design.md) defines every layer.
 
-`reuse: "fresh"` is the default. A fresh call does not join another caller's work.
-Use it for independent reviews and work that must happen separately. Shared identity
-includes the exact task, JSON inputs, ordered evidence refs, skill snapshot and
-sealed execution configuration. Caller IDs and local keys are not shared identity.
-Similar prose is not automatically judged equivalent.
-
-The runtime owns wait leases and releases them on success, failure or cancellation.
-Cancelling a releases a's wait on b; b continues if c still needs it. When the last
-waiter leaves unfinished work, the runtime requests cancellation and drains cleanup
-before permitting replacement. There are no model-managed mutexes or unlock tools.
-
-The [shared-operation design](docs/shared-operations.md) covers atomicity, ownership,
-retry generations, wait-cycle detection, depth bounds, and cancellation races.
-This implementation coordinates one event loop in one session; it is not a
-distributed lock service or durable orchestration engine.
-
-### Progress and another aspect
-
-`openNode` returns an opaque caller-owned handle for an exact request. Each
-`nextNodeEvent({handle, after})` returns the next accepted checkpoint (with a
-one-based cursor) or the terminal result. Events are ordered and replayable to a
-late joiner within this session. The consumer can inspect the granted checkpoint
-while its producer continues; an active wait edge exists only during a pending
-`nextNodeEvent`, while the open handle's lease keeps the producer alive. Call
-`closeNode` when done early, or consume the terminal event; frame shutdown cleans
-up abandoned handles. The producer calls `publishCheckpoint` with its content and
-declared evidence. Checkpoints are immutable records with separate acceptance and
-mandatory reviews; a failed checkpoint is never emitted. A later producer failure
-does not invalidate an already accepted checkpoint. Publication is bounded by
-`max_checkpoints` in the session ledger.
-
-The c procedure asks a distinct capacity question of b with a **new task**, fresh
-reuse policy and the accepted checkpoint as an explicit input ref. This creates a
-new context and execution, even while the neutral b operation remains running.
-The model decides whether the artifact answers its question; the runtime guarantees
-identity, access, ordering and release. This needs no new frontmatter fields and
-does not imply that the checkpoint is semantically useful or true.
-
-## Clean contracts
-
-The [edge-case and KV-cache review](docs/edge-cases-and-kv-cache.md) covers tested
-observation races, failed producers, retry generations, checkpoint ordering and
-the adapter's stable prompt prefixes. Prefix compatibility is tested locally;
-provider cache hits and latency improvements still require live measurement.
-
-| Concern | Representation | Owner |
-| --- | --- | --- |
-| Procedure meaning | `SKILL.md`: name, description, prose, links and optional resources | Skill author |
-| Execution mechanism | Registered executor and skill-to-executor binding | Application |
-| Mandatory publication checks | Required-review policy | Application |
-| This caller's work request | node, task, inputs, refs, key, optional reuse | Calling agent or launcher |
-| Running work and its consumers | Operation, caller/key binding, transient wait leases | Runtime |
-
-Frontmatter still permits only `name` and `description`, a deliberately small local
-convention. Links, resources and revisions are derived. No `shareable`, `lock`,
-`critic`, model, tool-list or workflow attributes were added to skills. Different
-expertise belongs in prose. Different backends belong in executor configuration.
-The [end-to-end contract](docs/dynamic-skill-ptc-design.md) defines the public fields.
-
-The example's shared producers describe standard neutral tasks in prose. Each caller
-requests that exact work, then interprets the artifact for its own question. If two
-calls genuinely ask different questions, their requests differ and they do not share.
+The example thesis composition calls thesis_draft, runs a fresh red_team of the
+exact candidate and can request one revision. It publishes an `approved` or
+`blocked` decision; the root inspects it before reporting completion. The core
+never interprets `verdict`, `decision` or `findings`. Raw candidate artifacts remain
+available to callers with grants; product release decisions belong to the application.
 
 ## Two prompts and two executed trajectories
 
-| Scenario | Prompt | Actual offline trajectory |
+| Scenario | Prompt | Captured graph, PTC and observations |
 | --- | --- | --- |
-| A: parallel consumers | [Prompt A](examples/prompts/scenario_a.md) | [Graph and PTC A](examples/trajectories/scenario_a.md): a/c observe b progress while it runs; c asks a focused follow-up |
-| B: baseline first | [Prompt B](examples/prompts/scenario_b.md) | [Graph and PTC B](examples/trajectories/scenario_b.md): c replays b's checkpoint after completion; policy reuses mix evidence |
+| A: parallel consumers | [Prompt A](examples/prompts/scenario_a.md) | [Trajectory A](examples/trajectories/scenario_a.md): a/c observe progress while b runs; c invokes a focused follow-up |
+| B: baseline first | [Prompt B](examples/prompts/scenario_b.md) | [Trajectory B](examples/trajectories/scenario_b.md): c replays b's checkpoint after completion; policy reuses mix evidence |
 
-These are explicit **offline scripted fixture runs** through actual Deep Agents,
-QuickJS and the runtime. They contain prompts, execution graphs, call dispositions,
-PTC and observations. The fixture selects prewritten fragments from real tool outputs;
-it does not establish live-model code generation or reasoning quality. The shared
-[execution prompt](harness/runners/node_agent.md) is checked in too.
+These are **offline scripted fixtures through real Deep Agents and QuickJS**.
+The model double selects prewritten PTC fragments from actual observations. The
+traces verify execution behavior, not live-model code generation or reasoning quality.
+In live mode the agent writes PTC from the [execution prompt](harness/runners/node_agent.md)
+and skill prose. Only the arithmetic utility is an authored skill script.
 
-## Run it
+## Run and verify
 
 Python 3.11+:
 
@@ -159,95 +141,38 @@ python -m venv .venv
 python -m pip install -r requirements-dev.txt
 python demo.py --offline --case a --trace outputs/scenario_a.json
 python demo.py --offline --case b --trace outputs/scenario_b.json
-python demo.py --offline --case deferred
 python -m unittest discover -s tests -v
 ruff check .
 ruff format --check .
+python -m examples.export_trajectories
 ```
 
-Regenerate both documents with `python -m examples.export_trajectories`.
-The CLI reports calls separately from executions, plus join/reuse counts.
+Other fixture cases: `deferred` (c first requests b), `skip-c`, `a-diversified`,
+`b-no-proposal`, `unchanged`, `incoherent` and `unsupported`. They exercise omitted
+edges, late producers, failed audits and blocked synthesis. Tests cover sharing,
+cancellation, cleanup, cycles, budgets, progress, arbitrary nested transformations,
+exact-candidate approval/repair and both execution adapters.
 
-| Fixture | Behavior exercised |
-| --- | --- |
-| `a` | Parallel a/c consumers, common b, and converging f/k/l work |
-| `b` | a completes before c; c/d reuse accepted b; h/i policy branch |
-| `deferred` | a omits b; c is its first requester |
-| `skip-c` | c's condition omits b; d still reuses a's result |
-| `a-diversified` | Supplier observation does not justify f/g |
-| `b-no-proposal` | No timeline node when no regulation is pending |
-| `unchanged` | b omits k/l; h later creates l when it needs it |
-| `incoherent` | Currency mismatch blocks synthesis |
-| `unsupported` | Seeded unsupported claim blocks synthesis |
-
-The concurrency suite uses events and barriers to force running/completed/cancelling
-states, avoiding timing-based sleeps. It checks shared cancellation, draining before
-replacement, conflicting retry keys, cycles across branches, depth after joining,
-evidence access, fresh isolation and budgets. Fresh required-review repair and native
-and PTC execution remain covered by the adapter suite.
-
-## Where code comes from
-
-In live mode, the agent inside the harness writes PTC from prose and observations:
-
-```sh
-python demo.py --case a --model provider:model-name
-```
-
-Install the selected LangChain provider integration and configure credentials.
-Live-provider behavior remains untested by the offline suite.
-
-| Code | Purpose |
-| --- | --- |
-| Model-written `eval` calls | Runtime orchestration, observations, joins, branches and transformations |
-| `examples/scripted_model.py` and JS helpers | Clearly separate offline test double |
-| `skills/delta_check/scripts/observe_delta.js` | Optional authored arithmetic utility; no orchestration decisions |
-| `examples/application.py` | Executor bindings and mandatory review configuration |
-
-Skill bodies contain prose, not executable orchestration programs. Shared execution
-does not require a script in the skill; b/f/k/l are agent executions.
-
-## Eight host capabilities
-
-Generated PTC normally uses the installed [scoped JS wrapper](docs/ptc-wrapper.md):
-`nodes.run(request)` for a final receipt, or `nodes.with(request, async operation =>
-{ ... })` for checkpoints and final results with automatic scope cleanup. Use
-`nodes.open(request)` when observing across eval cells. The wrapper owns cursors
-and completion loops; the following host endpoints still enforce runtime policy.
-
-| Capability | Effect |
-| --- | --- |
-| `readNode` | Inspect a procedure; `enter: true` also adopts its publication obligations |
-| `runNode` | Run fresh work or acquire/join/reuse explicitly shared work |
-| `readArtifact` | Read bounded slices of an authorized immutable record |
-| `submitCandidate` | Stage an output for host validation and required reviews |
-| `openNode` | Acquire a handle to shared or fresh work without waiting for its final result |
-| `nextNodeEvent` | Await or replay the next accepted checkpoint or terminal result |
-| `closeNode` | Release an observation early; safe to repeat from the same caller |
-| `publishCheckpoint` | Propose independently reviewed progress evidence |
-
-Native snake_case tools use the same API. A successful `runNode` grants the result
-to its caller. Input refs are authorized before every shared acquisition, including
-cache hits. Mentioning a hash inside content does not grant access, and grants are
-not transitive. A review can be accepted with `content.verdict: "fail"`; publication
-status and correctness are separate.
+For live generation, install the chosen LangChain provider integration, configure
+credentials and run `python demo.py --case a --model provider:model-name`.
+Live-provider behavior and KV-cache speedups have not been measured here. The
+[edge-case/KV review](docs/edge-cases-and-kv-cache.md) separates local verification
+from serving work that still needs measurement.
 
 ## Code map
 
 | Location | Responsibility |
 | --- | --- |
-| `harness/contracts.py` | Request, candidate, receipt and context validation |
-| `harness/skills.py` | Immutable prose/resource packages and strict loading |
-| `harness/policy.py` | Application-owned required-review rules |
-| `harness/operations.py` | Work identity bindings, atomic acquisition, leases, draining and active wait graph |
-| `harness/runtime.py` | Execution contexts, access, admission and publication/review lifecycle |
-| `harness/storage.py` | Immutable SQLite records and ordered events |
-| `harness/api.py`, `harness/runners/` | Bound capabilities and execution adapters |
-| `examples/`, `skills/` | The graph, prompts, fixture inputs, PTC and trajectory exporter |
-| `tests/` | Contracts, deterministic concurrency and real-interpreter regression tests |
+| `harness/contracts.py`, `skills.py` | Small request/output contracts and immutable prose packages |
+| `harness/operations.py` | Atomic sharing, leases, cancellation draining and active wait graph |
+| `harness/runtime.py`, `storage.py` | Contexts, access, budgets, publication and immutable records |
+| `harness/api.py`, `runners/` | One capability definition, execution adapters and JS convenience wrapper |
+| `examples/review.py` | Application approval schema and bounded composition |
+| `examples/`, `skills/` | Converging graph, prompts, fixtures and trajectory exporter |
+| `tests/` | Contract, concurrency and real-interpreter regression coverage |
 
-`python tools/package_deliverables.py` packages source and docs. SQLite persists
-records and events; active work, leases, caller keys and budgets remain in memory.
-There is no cross-session cache, automatic semantic equivalence, external-effects
-gateway or crash recovery. Call budgets are not token/currency budgets, and fresh
-context alone does not establish independent judgment.
+`python tools/package_deliverables.py` packages source and docs. Coordination is
+single-session and single-event-loop. SQLite persists artifacts/events; active
+work is not durable. No cross-session cache, fuzzy task equivalence, external-effect
+exactly-once guarantee or crash recovery is implemented. Call budgets are not
+currency/token budgets, and fresh context does not establish independent judgment.

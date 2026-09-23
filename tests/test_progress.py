@@ -3,7 +3,7 @@
 import asyncio
 import unittest
 
-from harness import Ledger, NodeRequest, Registry, Rejected, ReviewPolicy, Runtime, Store
+from harness import Ledger, NodeRequest, Registry, Rejected, Runtime, Store
 from tests.support import draft, skill
 
 
@@ -88,7 +88,7 @@ class ProgressTests(unittest.IsolatedAsyncioTestCase):
             runtime.operations.shared[next(iter(runtime.operations.shared))].state, "running"
         )
         finish_b.set()
-        self.assertEqual((await root)["status"], "accepted")
+        self.assertEqual((await root)["status"], "published")
         self.assertEqual(runtime.operations.waits, {})
         self.assertEqual(runtime._handles, {})
         self.assertTrue(all(not op.waiters for op in runtime.operations.operations.values()))
@@ -149,47 +149,29 @@ class ProgressTests(unittest.IsolatedAsyncioTestCase):
         finish.set()
         self.assertEqual((await runtime.next_node_event(second["handle"], 0))["kind"], "complete")
 
-    async def test_unaccepted_checkpoint_is_not_emitted_or_usable_as_accepted_evidence(self):
-        runtime = self.runtime(names=("b", "review"), reviews={"b": ReviewPolicy(("review",))})
-        ready, finish = asyncio.Event(), asyncio.Event()
-        results = []
-        reviews = []
+    async def test_negative_domain_checkpoint_is_published_without_implicit_review(self):
+        runtime = self.runtime(names=("b", "review"))
 
         async def run(frame, context):
-            if frame.request.node == "review":
-                reviews.append(frame.request.refs[0])
-                passed = len(reviews) > 1
-                return {
-                    "summary": "Review",
-                    "content": {
-                        "candidate_ref": frame.request.refs[0],
-                        "verdict": "pass" if passed else "fail",
-                        "findings": [] if passed else ["Unsupported"],
-                    },
-                }
-            for n in (0, 1):
-                results.append(
-                    await runtime.publish_checkpoint(
-                        frame, {"summary": "Evidence", "content": {"value": n}, "based_on": []}
-                    )
-                )
-            ready.set()
-            await finish.wait()
-            return draft(based_on=[results[1]["ref"]])
+            self.assertEqual(frame.request.node, "b")
+            progress = await runtime.publish_checkpoint(
+                frame, {"summary": "Failed assessment", "content": {"verdict": "fail"}}
+            )
+            return draft(based_on=[progress["ref"]])
 
         runtime.register_executor("agent", run)
         opened = await runtime.open_node(request())
-        await asyncio.wait_for(ready.wait(), 2)
-        self.assertEqual([r["status"] for r in results], ["needs_review", "accepted"])
         event = await runtime.next_node_event(opened["handle"], 0)
-        self.assertEqual(event["receipt"]["ref"], results[1]["ref"])
-        self.assertEqual(event["cursor"], 1)
+        self.assertEqual(event["kind"], "checkpoint")
+        record = runtime.store.get(event["receipt"]["ref"])
+        self.assertEqual(record["content"]["verdict"], "fail")
+        self.assertEqual(record["status"], "published")
+        final = await runtime.next_node_event(opened["handle"], 1)
+        self.assertEqual(final["kind"], "complete")
+        self.assertEqual(runtime.ledger.frames, 1)
         self.assertEqual(
-            len([e for e in runtime.store.events() if e["type"] == "checkpoint_published"]), 1
+            runtime.store.get(final["receipt"]["ref"])["based_on"], [event["receipt"]["ref"]]
         )
-        self.assertEqual(len(set(reviews)), 2)
-        finish.set()
-        self.assertEqual((await runtime.next_node_event(opened["handle"], 1))["kind"], "complete")
 
     async def test_open_handle_ownership_budget_and_auto_release(self):
         runtime = self.runtime(names=("root", "b"), ledger=Ledger(max_checkpoints=1))
@@ -203,7 +185,7 @@ class ProgressTests(unittest.IsolatedAsyncioTestCase):
                     await runtime.next_node_event(opened["handle"], 0, fake)
                 event = await runtime.next_node_event(opened["handle"], 0, frame)
                 self.assertEqual(event["kind"], "checkpoint")
-                self.assertEqual(event["receipt"]["status"], "accepted")
+                self.assertEqual(event["receipt"]["status"], "published")
                 # An unclosed handle cannot be forgotten at publication.
                 return draft()
             await runtime.publish_checkpoint(
@@ -223,6 +205,29 @@ class ProgressTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(runtime._handles, {})
         self.assertTrue(all(not op.waiters for op in runtime.operations.operations.values()))
 
+    async def test_final_only_call_does_not_grant_unobserved_checkpoints(self):
+        runtime = self.runtime(names=("root", "b"))
+        checkpoint = None
+
+        async def run(frame, context):
+            nonlocal checkpoint
+            if frame.request.node == "b":
+                checkpoint = await runtime.publish_checkpoint(frame, draft(1))
+                return draft(2, based_on=[checkpoint["ref"]])
+            final = await runtime.run_node(request(), frame)
+            record = runtime.read(frame, final["ref"])
+            self.assertEqual(record["based_on"], [checkpoint["ref"]])
+            self.assertEqual(frame.grants, {final["ref"]})
+            with self.assertRaisesRegex(Rejected, "not visible"):
+                runtime.read(frame, checkpoint["ref"])
+            self.assertEqual(frame.handles, set())
+            return draft(based_on=[final["ref"]])
+
+        runtime.register_executor("agent", run)
+        await runtime.run_node(request("root", "Use final", key="root", reuse="fresh"))
+        self.assertEqual(runtime.ledger.calls, 2)
+        self.assertEqual(runtime.operations.waits, {})
+
     async def test_expired_session_still_allows_owner_to_release(self):
         runtime = self.runtime(names=("b",))
 
@@ -236,26 +241,18 @@ class ProgressTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(runtime._handles, {})
         self.assertTrue(all(not op.waiters for op in runtime.operations.operations.values()))
 
-    async def test_concurrent_checkpoint_cursors_follow_acceptance_order(self):
-        runtime = self.runtime(names=("b", "review"), reviews={"b": ReviewPolicy(("review",))})
-        reviewing_first, release_first = asyncio.Event(), asyncio.Event()
+    async def test_concurrent_checkpoint_cursors_follow_publication_order(self):
+        runtime = self.runtime(names=("b",))
+        first_started, release_first = asyncio.Event(), asyncio.Event()
 
         async def run(frame, context):
-            if frame.request.node == "review":
-                value = runtime.read(frame, frame.request.refs[0])["content"]["value"]
-                if value == 1:
-                    reviewing_first.set()
-                    await release_first.wait()
-                return {
-                    "summary": "Review",
-                    "content": {
-                        "candidate_ref": frame.request.refs[0],
-                        "verdict": "pass",
-                        "findings": [],
-                    },
-                }
-            first = asyncio.create_task(runtime.publish_checkpoint(frame, draft(1)))
-            await reviewing_first.wait()
+            async def first_checkpoint():
+                first_started.set()
+                await release_first.wait()
+                return await runtime.publish_checkpoint(frame, draft(1))
+
+            first = asyncio.create_task(first_checkpoint())
+            await first_started.wait()
             second = await runtime.publish_checkpoint(frame, draft(2))
             release_first.set()
             first_receipt = await first
@@ -324,7 +321,7 @@ class ProgressTests(unittest.IsolatedAsyncioTestCase):
             with self.assertRaisesRegex(RuntimeError, "producer failed"):
                 await runtime.next_node_event(opened["handle"], event["cursor"])
             self.assertNotIn(opened["handle"], runtime._handles)
-            self.assertEqual(runtime.store.get(refs[-1])["status"], "accepted")
+            self.assertEqual(runtime.store.get(refs[-1])["status"], "published")
         self.assertEqual(refs[0], refs[1])
         self.assertNotEqual(refs[1], refs[2])
         self.assertEqual(runtime.ledger.frames, 2)

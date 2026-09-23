@@ -1,4 +1,4 @@
-"""Deep Agents executes agent nodes; run_node is the application primitive.
+"""Deep Agents executes node transformations through the shared host capabilities.
 
 Both PTC and native tool calls use NodeAPI. The optional framework task bridge is
 retained only as a supervised compatibility route, never an unsupervised worker.
@@ -37,10 +37,7 @@ def node_messages(frame: Frame, context: RunContext) -> list[dict[str, str]]:
     packets = (
         {"entry": context["entry"]},
         {"inputs": frame.request.inputs, "refs": frame.request.refs},
-        {
-            "task": frame.request.task,
-            "context": {key: value for key, value in context.items() if key != "entry"},
-        },
+        {"task": frame.request.task},
     )
     return [{"role": "user", "content": encode(packet)} for packet in packets]
 
@@ -72,46 +69,6 @@ class DeepAgentRunner:
     def build(self, frame: Frame):
         api = NodeAPI(self.runtime, frame)
 
-        @tool
-        async def run_node(request: dict) -> dict:
-            """Run, join or reuse node work through the supervised execution contract."""
-            return await api.run_node(request)
-
-        @tool
-        async def open_node(request: dict) -> dict:
-            """Attach to node work and return a handle for ordered checkpoints."""
-            return await api.open_node(request)
-
-        @tool
-        async def next_node_event(handle: str, after: int) -> dict:
-            """Read the next checkpoint or wait for completion; terminal closes the handle."""
-            return await api.next_node_event(handle, after)
-
-        @tool
-        async def close_node(handle: str) -> dict:
-            """Release a caller's interest in a node before it completes."""
-            return await api.close_node(handle)
-
-        @tool
-        async def publish_checkpoint(summary: str, content: dict, based_on: list[str]) -> dict:
-            """Publish a separately reviewed immutable checkpoint from this node."""
-            return await api.publish_checkpoint(summary, content, based_on)
-
-        @tool
-        async def read_node(node: str, enter: bool = False) -> dict:
-            """Inspect a node and links; enter=True activates inline obligations."""
-            return await api.read_node(node, enter)
-
-        @tool
-        async def read_artifact(ref: str, offset: int = 0, limit: int = 4000) -> dict:
-            """Read a bounded slice of an authorized immutable artifact."""
-            return await api.read_artifact(ref, offset, limit)
-
-        @tool
-        async def submit_candidate(summary: str, content: dict, based_on: list[str]) -> dict:
-            """Stage a candidate for host validation and required review."""
-            return await api.submit_candidate(summary, content, based_on)
-
         async def dispatch(state: dict, config: dict):
             messages = state.get("messages", [])
             if len(messages) != 1 or not isinstance(messages[0].content, str):
@@ -124,16 +81,7 @@ class DeepAgentRunner:
             "description": "Compatibility dispatch. description is a JSON run_node request.",
             "runnable": RunnableLambda(dispatch),
         }
-        functions = [
-            read_node,
-            run_node,
-            open_node,
-            next_node_event,
-            close_node,
-            read_artifact,
-            publish_checkpoint,
-            submit_candidate,
-        ]
+        functions = [tool(method) for method in api.capabilities().values()]
         interpreter = CodeInterpreterMiddleware(
             ptc=functions,
             mode="thread",
@@ -160,9 +108,7 @@ class DeepAgentRunner:
         result = await agent.ainvoke(
             {"messages": messages},
             config={
-                "configurable": {
-                    "thread_id": f"{self.runtime.session}:{frame.id}:{context['attempt']}"
-                },
+                "configurable": {"thread_id": f"{self.runtime.session}:{frame.id}"},
                 "recursion_limit": self.graph_steps,
             },
         )
@@ -175,7 +121,6 @@ class DeepAgentRunner:
                     type="agent_actions",
                     session=self.runtime.session,
                     frame=frame.id,
-                    attempt=context["attempt"],
                     calls=message.tool_calls,
                 )
             elif message.type == "tool":
@@ -183,7 +128,6 @@ class DeepAgentRunner:
                     type="agent_observation",
                     session=self.runtime.session,
                     frame=frame.id,
-                    attempt=context["attempt"],
                     content=str(message.content)[:16000],
                 )
         return api.result()

@@ -1,381 +1,246 @@
-# Callable skill graph: contracts and end-to-end execution
+# End-to-end design: callable skill graphs
 
-Status: implemented local reference, with the design choices below made explicit.
-The objective is to let the harness turn reusable prose into executable work,
-including nested transformations and fresh reviews. RLM is not the primitive.
+A node is a transformation of explicit inputs and authorized artifacts into an
+artifact. It can call other nodes, publish useful progress and return a final
+value. A fresh model context is one way to execute it; a deterministic function
+or another registered executor follows the same contract. RLM is not required.
 
-## 1. Start with the distinctions
+The system separates five things that evolve at different rates:
 
-A **skill** is a reusable procedure: authored prose, a short description, references
-to other procedures, and optional resource files. A **node address** is a skill name
-that the application can execute. A **call** is one caller's request. An **operation**
-owns an execution and its result; multiple calls may share it. A **wait lease** keeps
-unfinished work alive for one awaiting caller. An **executor** supplies the execution
-mechanism. A **publication policy** determines required checks.
-
-Conceptually:
-
-```text
-run_node(node, task, inputs, evidence_refs, caller_key, reuse) -> await receipt
-receipt.ref -> immutable result artifact
-```
-
-This resembles function application but is not a pure function. Executions consume
-budgets, create artifacts, may call a nondeterministic model and can fail or be
-cancelled. Identical inputs are not a promise of equivalent independently generated
-results. Session reuse explicitly asks to share one result. The caller key identifies
-a request/retry; it does not identify equivalent work across callers.
-
-Three graphs have different meanings:
-
-| Graph | Vertices and edges | Meaning |
+| Thing | Meaning | Owner |
 | --- | --- | --- |
-| Authored skill graph | Skill IDs, linked by prose references | Procedures that may be useful together; cycles are allowed |
-| Execution graph | Execution IDs, linked by actual calls | Several branches can join one running producer or reuse its completed result |
-| Artifact evidence graph | Immutable records, linked by declared or observed references | What a result declares or reads; sharing is explicit |
+| Skill | A named, versioned procedure described in prose | Skill author |
+| Request | This caller's task, inputs, evidence and reuse choice | Caller |
+| Execution | One running transformation with context, grants and budget | Supervisor |
+| Artifact | Immutable output plus provenance | Store and supervisor |
+| Composition | Branching, review, approval, repair and downstream decisions | Application or generated PTC |
 
-The active wait graph is the unfinished subset of the execution dependencies. It
-must remain acyclic even though authored links can contain cycles. A creation tree
-cannot represent all consumers or determine shared-work cancellation ownership.
+An authored skill graph is a set of possible references. The execution graph is
+formed by actual calls. Artifact dependencies form a third graph through `based_on`.
+These graphs need not have the same edges. A link may be inspected without being
+called; many callers may join one execution; one artifact can feed several new
+transformations. The active wait graph, used for deadlock checks, is transient.
 
-There is no YAML workflow graph to compile. In live mode, the agent running inside
-the harness reads the prose and observations and writes the next PTC fragment.
-The supervisor enforces mechanics without interpreting phrases like “accelerating
-demand.” Ordinary JavaScript implements branches, joins and transformations.
-
-## 2. Authored frontmatter: a deliberately small local convention
+## 1. Author procedures, not workflow metadata
 
 ```yaml
 ---
-name: c
-description: Interpret capacity evidence for the caller's specific question
+name: b
+description: Produce neutral snapshot evidence for several consumers
 ---
 ```
 
-Only these two fields are accepted in this repository. This is an implementation
-choice for the example, not a universal skill format or a compatibility claim for
-other skill systems. Unknown, duplicate, missing or malformed fields fail loading;
-the runtime must not silently invent their meaning.
+This repo permits exactly `name` and `description` in frontmatter. This is a local
+loader convention, not a proposed universal skill schema. `name` matches the
+package path under `skills/`. The body contains prose. Optional references/scripts
+are pinned package resources. Links, resource paths and revisions are derived.
 
-| Authored element | Contract | Reason |
-| --- | --- | --- |
-| `name` | Nonempty lowercase canonical package path, e.g. `c` or `research/c`; must match its directory | Stable lookup identity; no competing path/name namespaces |
-| `description` | Nonempty string | States what the procedure is for; included in the entry packet |
-| Markdown body | Nonempty prose, preserved as instructions | Describes expertise, questions, use of links and expected application output |
-| Resource files | Optional relative files owned by the package | Versioned utility code or data; not an executor declaration |
+`[[b]]` refers to canonical skill b. `[[b|capacity evidence]]` resolves to the same
+b and retains “capacity evidence” as prose display text. It supplies no task,
+arguments, executor, condition or cache key. This local wikilink convention also
+strips a `#section` from the target when resolving a skill; the section is not an
+execution boundary. Fenced code examples do not add graph edges. Broken targets
+and duplicate/unknown frontmatter keys are rejected. Cyclic authored links are legal.
 
-Names permit lowercase letters, digits, underscores and hyphens, separated by `/`.
-Instructions plus description are bounded to 24 KB. Each resource is bounded to
-1 MB. These are local admission limits, not claims about an ideal universal format.
-Symlinks are rejected. A nested skill owns its resources independently of its parent.
+Different expertise belongs in prose. A different model, tool set or backend is
+configured in an executor. Neither adds attributes to each node. The immutable
+Python `Skill` contains `name`, `description`, `instructions`, `resources`, and
+derived `links`/`revision`. The registry pins a whole-graph snapshot.
 
-Wikilinks such as `[[c|capacity analysis]]` resolve to canonical skill IDs. Display
-labels and anchors do not create new nodes. Links inside fenced code examples are
-ignored. The registry validates referenced skills at load time. A link never runs
-its target, grants artifact access or authorizes a backend.
-
-The in-memory `Skill` has exactly these fields:
-
-| Field | Origin | Meaning |
-| --- | --- | --- |
-| `name` | Frontmatter | Canonical ID |
-| `description` | Frontmatter | Purpose |
-| `instructions` | Markdown body | Procedure prose |
-| `resources` | Package files | Immutable tuple of `Resource(path, data)`; `data` is bytes |
-| `links` | Derived from prose | Deduplicated canonical linked IDs |
-| `revision` | Derived hash | Identity of name, description, instructions and resource bytes |
-
-The registry snapshot hashes all skill revisions. Loading pins resource bytes; later
-filesystem edits cannot silently change an already loaded executor's resource.
-The entry packet exposes resource paths; resource consumption is currently a host
-executor capability. A generic agent resource-reading tool is not implemented.
-
-## 3. Executors and policies belong to the application
-
-There is no `kind`, `critic`, `model`, `tools`, `profile`, `ttl_seconds`, `code` or
-`review` field on `Skill`. There is no unvalidated `metadata` dictionary that merely
-hides the same problem.
-
-The implemented application wiring is:
+## 2. Bind execution in the host application
 
 ```python
 runtime = Runtime(
     Registry.load(ROOT / "skills"),
     Store(),
-    bindings={"delta_check": "snapshot_math"},
-    reviews={"thesis": ReviewPolicy(("red_team",))},
+    bindings={"delta_check": "snapshot_math", "thesis": "reviewed_thesis"},
 )
 runtime.register_executor("agent", DeepAgentRunner(runtime, model_factory))
 runtime.register_executor("snapshot_math", CodeRunner(runtime, "scripts/observe_delta.js"))
+runtime.register_executor(
+    "reviewed_thesis", ReviewedTransformation(runtime, "thesis_draft", "red_team", max_revisions=1)
+)
 ```
 
-`agent` is the default executor. `bindings` maps existing skill names to registered
-executor names. An executor is an async callable accepting `(frame, context)` and
-returning a candidate. The runtime dispatches through that interface; it has no
-agent-vs-code conditional. Configuration seals at first execution. Requests cannot
-select a model, backend or policy override.
+See [`examples/application.py`](../examples/application.py) for the runnable setup.
+Bindings map a skill name to an executor registration. Registration seals before
+the first call. An executor receives `(frame, {"entry": packet})` and returns a
+candidate. Core context has no review attempt, feedback or previous-candidate fields.
+The application supplies repair instructions and refs through ordinary requests.
 
-| Extension | Where it belongs | Changes to Skill fields |
-| --- | --- | --- |
-| Different expertise or review question | New prose skill, or a different call task | None |
-| Different model or system prompt | Another configured `DeepAgentRunner`, bound by the application | None |
-| Different tool capabilities or execution mechanism | Another host executor implementation/configuration | None |
-| Mandatory check before publishing an output | `reviews[skill_name] = ReviewPolicy(...)` | None |
-| New stable concept shared by all skills | Explicit contract proposal and migration after discussion | Deliberate schema change only if justified |
+A frame contains its execution ID, creation origin, request, executor name,
+consulted procedures, granted/observed refs, child waits, handles and closed flag.
+These are execution bookkeeping, not skill attributes or role configuration.
+`origin` explains creation; it gives that caller no exclusive ownership of shared work.
 
-The bundled agent adapter exposes eight application capabilities. Arbitrary
-per-agent tool allowlists are not a YAML feature; an application needing them must
-configure or implement a suitable executor. The `instructions` constructor argument
-allows a separately configured system prompt.
+Trusted executors must keep configured behavior stable and derive shared work from
+the explicit request. Choosing hidden behavior by caller ID defeats exact reuse.
+Executors are host code, not a sandbox for untrusted Python.
 
-A `ReviewPolicy` has `reviewers: tuple[str, ...]` and `max_revisions: int = 0`.
-These are host publication rules, not authored node attributes. Reviewers name
-ordinary skills. A reviewer may itself have a required review if the policy graph
-is acyclic; there is no privileged “critic” type. Inline procedure entry also adopts
-that procedure's requirements. The global revision bound caps local repair policies.
+## 3. Invoke a function through an explicit request
 
-The shared supervisor owns call-count, execution-count, model-operation, active
-dependency depth, deadline and repair bounds. They apply to all executors. Cache
-hits consume calls without admitting new executions. Model operations are metered
-during inference; a caller waiting for dependencies does not hold an inference permit.
-
-## 4. Calls, sharing and execution context
-
-| `NodeRequest` field | Meaning |
+| Field | Contract |
 | --- | --- |
-| `node` | Registered skill name |
-| `task` | Nonempty prose question for this work; part of shared identity |
-| `inputs` | JSON object explicitly selected by the caller |
-| `refs` | Ordered artifact references to grant; defaults to empty |
-| `key` | Nonempty retry key scoped to the caller execution, or launcher scope for roots |
-| `reuse` | `"fresh"` by default; `"session"` opts into identical work within this session |
+| `node` | Canonical skill name |
+| `task` | Nonempty task text for this invocation |
+| `inputs` | Finite JSON object |
+| `refs` | Ordered explicitly authorized evidence refs; default empty |
+| `key` | Nonempty idempotency key local to this caller execution |
+| `reuse` | `fresh` by default, or explicit `session` |
 
-The request is finite JSON, capped at 32 KB. There are no agent-specific fields.
-Parsing copies nested input data before admission. The same caller/key reserves
-one exact node/task/inputs/refs/reuse request and, once bound, its execution. A
-conflicting request is rejected. Retrying a bound key replays that execution even
-if it failed or was cancelled; an intentional new attempt needs a new key.
+Requests are bounded to 32 KB and detached from caller-owned mutable objects.
+There are no per-request model, reviewer, role or executor overrides.
 
-Session sharing uses exact node/task/inputs/ordered-refs plus the pinned skill
-snapshot and sealed execution configuration. Caller IDs and keys are excluded.
-The runtime starts absent work, joins running work, and reuses accepted work.
-Failed, cancelled or `needs_review` work can be replaced under a new caller/key.
-A cancelling execution must finish cleanup before its replacement can start.
-Different prose questions remain different requests; the runtime does not guess
-semantic equivalence. Fresh calls do not use the shared index.
+```js
+const snapshot = await nodes.run({
+  node: 'b', task: 'Produce snapshot evidence',
+  inputs: snapshotInputs, refs: [], key: 'snapshot', reuse: 'session'
+});
+```
 
-Each waiting call owns a separate lease. An open observation owns a lease until
-terminal event, explicit close or frame cleanup. The last lease leaving unfinished work
-requests cancellation; another active consumer keeps it alive. Metadata acquisition
-and release are synchronous critical sections on one event loop. No mutex is held
-while executing, joining or draining work. Active dependency edges are checked for
-cycles and depth at attachment time. The detailed state transitions, identity rules
-and race tests are in [Shared node operations](shared-operations.md).
+Exact identity includes the pinned skill snapshot, sealed bindings/default executor,
+node, task, canonical inputs and ordered refs. Caller/key are separate retry identity.
+`fresh` avoids the shared index but still replays the original execution for an
+identical caller/key. A genuinely new attempt needs a new key; use `fresh` to avoid
+reusing a completed identical request.
 
-The host creates `Frame` state: ID, creation origin, request, selected executor,
-entered procedures, artifact grants, owned call-wait tasks, observed reads and closed
-state. `origin` records who first requested the execution; it does not own the shared
-producer or determine its active dependencies. None of this belongs in frontmatter.
-The adapter receives a `RunContext` containing:
-
-| Field | Meaning |
+| Matching session work | New caller/key behavior |
 | --- | --- |
-| `entry` | Current skill packet: node, description, revision, text, links, resource paths |
-| `attempt` | Zero-based execution/repair attempt |
-| `feedback` | Failed review outcomes from the preceding attempt |
-| `previous` | Previous immutable candidate ref, or null |
+| Absent | Create an execution |
+| Running | Join it |
+| Completed | Reuse its result, including a negative domain assessment |
+| Cancelling | Wait for cleanup, then resolve/create replacement |
+| Failed or cancelled | Create another execution |
 
-Each newly executed agent attempt builds a fresh agent and QuickJS interpreter.
-The agent adapter sends stable entry and input/ref packets before the task/repair
-packet to preserve common prompt prefixes; this does not restore prior conversations.
-Caller messages, globals and interpreter snapshots are not inherited. The child receives its own
-entry, task, inputs and explicitly granted refs. “Fresh” does not mean ignorant of
-all prior information: the caller can intentionally include prior evidence in its
-inputs and grants.
+Repeating a bound caller/key replays its selected execution even after failure.
+Changed task, inputs or refs do not match; similar prose is not treated as equivalent.
+Input authorization runs before lookup, including cache hits. See
+[shared operations](shared-operations.md) for the exact lifetime and race rules.
 
-Joining or reusing an operation does not create another context. Use a fresh call
-and a new key when an independently executed review or interpretation is required.
-Every required reviewer is fresh by host policy.
+## 4. Execute and publish
 
-All frames use the same artifact access rule: own outputs and explicit grants only.
-A successful call grants its result to that caller, including joins and cache hits.
-Input refs are authorized before shared lookup. Granting a record does not grant
-every reference mentioned inside it. There is no ambient artifact discovery,
-cross-session reuse or automatic TTL. Reviewers use the same mechanism; the host
-grants a required reviewer the exact candidate and its declared supporting refs.
+The supervisor checks admission, creates a fresh frame, loads the entry and invokes
+its executor. A model executor gets stable procedure and evidence packets followed
+by the task; no parent transcript or interpreter state is inherited. The model
+writes PTC incrementally. A code executor runs a pinned utility with the same API.
 
-## 5. Eight capabilities, one publication protocol
+PTC has eight host endpoints, with seven essential effects plus a final-only fast
+path. [Native PTC primitives](native-ptc-primitives.md) explains why each remains and
+which operations are ordinary JS wrappers. Promise joins, functions and branching
+are language features. Review and coherence are node names, not special operations.
 
-| Capability | Effect |
+Outputs have `summary` (1–600 characters), `content` (a JSON object) and `based_on`
+(a list of refs; omitted means empty for native runners). The output limit is
+500 KB; large payloads need external blob references. The runtime checks structure,
+finite JSON, liveness and evidence access. All child calls must be joined or closed
+before final publication. The tool `submitCandidate` stages this return value.
+It does not certify correctness or cause a hidden reviewer call.
+
+A published receipt is `{ref, status: "published", summary}`. Successful execution
+state is `completed`; other states are `running`, `cancelling`, `failed`, `cancelled`.
+The receipt status means availability to authorized consumers. `content.verdict`,
+`content.decision` and every other domain field are opaque to the runtime.
+
+Stored artifacts include the output plus session/frame/origin, node/task/executor,
+snapshot/node revision, explicit inputs and refs, consulted procedures, observed
+refs, publication status and timestamp. `based_on` is a producer's declared evidence;
+`observed_refs` records actual reads. Neither implies truth or grants access onward.
+Records are content-addressed and immutable. SQLite persists records/events, not
+live leases, budgets, retry bindings or interpreters.
+
+## 5. Publish progress and ask another question
+
+```js
+await nodes.with(sharedRequest, async operation => {
+  const progress = await operation.next();
+  if (progress) {
+    const capacity = await nodes.run({
+      node: 'b', task: 'Assess capacity from snapshot checkpoint',
+      inputs: snapshotInputs, refs: [progress.ref], key: 'capacity', reuse: 'fresh'
+    });
+    // Read capacity and interpret it for this caller's task.
+  }
+  const final = await operation.result();
+  // Read and use the final artifact if it is relevant.
+});
+```
+
+The producer explicitly calls `publishCheckpoint`. Each checkpoint is validated,
+immutable and immediately available to subscribers. Publication runs no implicit
+reviews. A domain that needs checked progress composes a checker before announcing
+its decision. Raw progress must not be interpreted as approval.
+
+Each subscriber has its own cursor and lease. Late subscribers can replay from
+zero, including after completion or failure. A failed producer does not retract
+previously published evidence. Cursors describe publication order, not source
+freshness. A checkpoint can be useful even when the final artifact is insufficient.
+
+An unusable artifact does not trigger an automatic rerun. The caller/model chooses
+whether to reinterpret it, obtain more explicit evidence, ask the same skill a
+different question, invoke another skill, or stop. An application can implement
+that choice deterministically. The host supplies identity, access and lifetime.
+
+## 6. Compose approval explicitly
+
+[`examples/review.py`](../examples/review.py) binds thesis to ordinary function
+composition: `thesis_draft(inputs)` followed by `red_team(candidate)` in fresh context.
+The checker receives the exact candidate and original granted evidence. Nested
+refs mentioned inside the candidate remain ungranted unless explicitly supplied.
+
+This example approves only a matching `candidate_ref`, `verdict: "pass"` and empty
+`findings`. Missing, stale, failing or inconclusive reviews block. At most one repair
+is configured for the thesis example. Each revision is a new producer call with
+explicit prior-output and feedback refs, followed by a fresh review of the new output.
+Review execution errors and exhausted host budgets fail the composition.
+
+The composition publishes a decision artifact: `decision`, `candidate_ref`,
+`reviews`, `attempts`, `history`, and `result`. Approval includes the candidate's
+content in result; a blocked decision has result null. Both decisions are published
+artifacts. The root example reads the decision before reporting completion.
+
+This is an application protocol, not a general approval authority. Raw drafts remain
+available to callers with grants, and the supervisor does not prevent an application
+from using them. A product needing enforced release must consume the trusted
+composition's approval output at its release boundary. Fresh contexts remove
+inherited conversation, not correlated model bias or the need to inspect findings.
+
+The actual QuickJS test `test_nested_ptc_transformations` also exercises
+`review(a)`, `red_team(a)` and `node_a(coherence(c, d, e))` with ordinary artifacts.
+
+## 7. Follow an actual converging graph
+
+Root calls a and c; both can ask b for identical neutral evidence. A late d call
+reuses b. C can ask b a different question using its checkpoint while neutral b is
+still running. D and g converge on f; b/f/g/h also share lower-level k/l/delta work.
+Each caller produces its own interpretation. Fresh audits and the thesis composition
+complete the graph. The examples contain conditional edges as well as convergence.
+
+| Scenario | Prompt and captured PTC |
 | --- | --- |
-| `read_node(node, enter=False)` | Inspect prose and links; `enter=True` activates inline procedure obligations |
-| `run_node(request)` | Acquire fresh or explicitly shared work; await a compact receipt |
-| `read_artifact(ref, offset, limit)` | Read an authorized immutable record in bounded slices |
-| `submit_candidate(summary, content, based_on)` | Stage a candidate; the host controls publication status |
-| `open_node(request)` | Acquire a caller-owned observation handle, returning it without final completion |
-| `next_node_event(handle, after)` | Replay or await the next accepted checkpoint or terminal result after a cursor |
-| `close_node(handle)` | Release a handle early; idempotent for its owner |
-| `publish_checkpoint(summary, content, based_on)` | Freeze and review an intermediate artifact independently |
+| Parallel a/c; progress consumed while b runs | [Prompt A](../examples/prompts/scenario_a.md), [trajectory A](../examples/trajectories/scenario_a.md) |
+| Baseline a first; c replays b after completion | [Prompt B](../examples/prompts/scenario_b.md), [trajectory B](../examples/trajectories/scenario_b.md) |
 
-PTC exposes camelCase equivalents on `tools`. Native calls use the same bound
-`NodeAPI`. The framework's compatibility `task` route dispatches into the same
-supervisor. No unsupervised application child is provided through that route.
-The installed [PTC wrapper](ptc-wrapper.md) adds scoped operation objects over those
-endpoints without adding host primitives. It owns cursor iteration and cleanup;
-`nodes.open` supports observation across model-authored eval cells.
+These traces run actual Deep Agents, QuickJS and the supervisor with a scripted
+model. The PTC fragments are prewritten test fixtures selected by observed outputs;
+they are not evidence of live-model code generation. Skills remain prose, apart
+from the explicit deterministic arithmetic resource.
 
-A candidate has a nonempty summary of at most 600 characters, a JSON object
-`content`, and `based_on` artifact refs. It is limited to 500 KB. These are the same
-contracts for model and code executors. Application-specific shapes such as evidence
-observations or coherence assessments live inside `content`, not on `Skill`.
+## 8. Verify and extend
 
-Execution proceeds as follows:
+```sh
+python -m pip install -r requirements-dev.txt
+python -m unittest discover -s tests -v
+ruff check .
+ruff format --check .
+python -m examples.export_trajectories
+```
 
-1. Validate request, refs and executor registration; admit a call and resolve its key.
-2. Acquire a lease on an existing execution, or admit a new frame and enter its
-   primary procedure. Existing work follows its own remaining lifecycle below.
-3. Run the configured executor. The agent may inspect links, call children, observe
-   artifacts and write additional code. Child handles must be joined or closed before returning.
-4. Validate and freeze the candidate as an immutable draft.
-5. Run every required reviewer in fresh context, granting the exact draft first and
-   its declared evidence next. Reviews for the candidate can execute concurrently.
-6. Accept only when every required reviewer returns an accepted artifact whose
-   content has that exact `candidate_ref`, `verdict: "pass"` and empty `findings`.
-7. If allowed, create a fresh repair attempt with feedback. A changed candidate
-   receives new reviews; prior verdicts cannot certify it. Otherwise return
-   `needs_review`. Close the frame and release any outstanding calls it owns.
-8. Return the receipt and grant the result to each successful waiting caller.
-   Release each call's lease. Accepted results remain available for exact session
-   reuse without a live lease. `Runtime.aclose()` drains the whole session.
+Tests cover converging graphs, optional branches, running/completed/failed work,
+lease cancellation, cleanup before replacement, cycles and depth, grants, immutable
+progress, wrapper lifecycle, application approval/repair and stable prompt layout.
+The [edge-case and KV discussion](edge-cases-and-kv-cache.md) distinguishes verified
+local behavior from future durable operation and provider caching work.
 
-Optional reviews are ordinary calls made by the agent. Their result must be read:
-`receipt.status == "accepted"` does **not** imply `content.verdict == "pass"`.
-The host enforces only configured mandatory reviews. The fixture's choice to stop
-on a failed optional audit is behavior of the example procedure.
-
-A receipt has `ref`, `status` (`accepted` or `needs_review`) and `summary`.
-Operational errors raise; failure/cancellation events record their category.
-The stored record contains the candidate plus session/frame/origin IDs, skill and
-executor identity, task and inputs, registry snapshot and skill revision, entered
-procedures, input refs, observed refs, review refs, publication status and time.
-`observed_refs` records actual reads; `based_on` is the worker's declared lineage.
-Neither proves that every semantic dependency was declared or understood.
-
-A checkpoint uses the same candidate shape and evidence validation as a final
-artifact. Its accepted receipt is appended to the operation's ordered progress
-stream. A subscriber receives it by cursor and gains its ref; a late joiner can
-replay from cursor zero even after final completion. Failed checkpoint reviews
-produce `needs_review` for the producer, with no subscriber publication. The
-final result and each checkpoint have separate frozen drafts and mandatory reviews.
-Open handles retain the producer but create wait edges only while awaiting an event.
-The ledger bounds publication attempts with `max_checkpoints=128` by default.
-Checkpoint records can remain accepted if the producer later fails. The host
-validates evidence access and review policy, not semantic fitness for every consumer.
-
-## 6. End-to-end converging example
-
-The [README graph](../README.md#an-actual-converging-graph) has eight composite
-investigation procedures: root/a/b/c/d/f/g/h. Multiple branches use the same existing
-producers, with distinct prose explaining how each caller should interpret them.
-
-| Consumers | Shared producer | Distinct use of the same artifact |
-| --- | --- | --- |
-| a, c, later d | b: neutral snapshot evidence | Baseline assumptions, capacity interpretation, supply cross-check |
-| d, g | f: supplier alternatives | Supply risk versus inventory protection |
-| b, f | k: volume evidence | Snapshot explanation versus supplier lead-time interpretation |
-| b, f, g, h | l: mix evidence | Snapshot, alternatives, inventory and policy questions |
-| b, f, g, h | delta_check: arithmetic result | The common measured snapshot difference |
-
-The standard producer task is stated in prose. A caller projects stable snapshot
-inputs and supplies the same evidence refs, then interprets the returned artifact
-inside its own fresh execution. The shared producer is not asked contradictory
-caller-specific questions. For example, f receives the exact b artifact from both
-d and g; k and l receive the exact delta artifact in each branch.
-
-Scenario A starts a and c concurrently. Both request b, so the second arrival joins
-the running execution. Both consume its accepted checkpoint before the neutral b
-result finishes. C asks b a different capacity-specific question in a fresh
-execution grounded in that checkpoint. D later reuses neutral b. D and g converge
-on f, whose nested k/l results already exist. The recorded run has 26 calls and
-18 executions, with two running joins and six completed reuses. One execution of
-each neutral shared producer supports multiple consumer results; the focused b call
-is intentionally separate.
-
-Scenario B runs a before c to exercise completed b reuse and checkpoint replay.
-C's capacity-focused b call starts after the neutral b has completed. Its stable-demand result
-leads into h, which reuses l and conditionally calls i. The `deferred` fixture lets a
-omit b so c creates it. `skip-c` omits c's request. With unchanged snapshots, b omits
-k/l but h can later create l when its own procedure needs it.
-
-The [two task prompts](../examples/prompts/) are inputs used by `demo.py`. The
-[Scenario A](../examples/trajectories/scenario_a.md) and
-[Scenario B](../examples/trajectories/scenario_b.md) trajectories are exported from
-actual offline runs, with IDs relabeled and repeated prelude omitted. Each includes
-all execution tasks, explicit grants, every caller-to-operation edge and dispatch
-disposition, captured PTC, observed outputs and final result. IDs identify executions,
-so a join does not duplicate the producer's vertex or transcript.
-
-In live mode the model writes code from these instructions and observations. Offline
-mode uses a clearly named scripted model that recognizes fixture observations and
-selects prewritten fragments. It checks execution mechanics and expected paths; it
-cannot establish whether a real model interprets arbitrary prose correctly.
-
-The optional delta resource performs stable arithmetic without a model. Its code is
-written by the utility author; orchestration code is written by the executing agent
-in live mode. No skill body embeds an executable orchestration program.
-
-## 7. Migration from the earlier implementation
-
-| Earlier design | Current implementation |
-| --- | --- |
-| `Node` combined prose, role, execution and policy | `Skill`, executor registration, `ReviewPolicy`, `NodeRequest` and internal `Frame` have separate responsibilities |
-| `library.kind` and optional `script` frontmatter | External binding to a configured resource executor |
-| `library.profile: critic` / `critic=True` | Ordinary skill; all calls have explicit artifact grants |
-| `library.review` | Application-owned publication policy |
-| `ttl_seconds`, notes and ambient result discovery | Removed from this reference; callers explicitly pass evidence |
-| Inline `node-js` executable block | Removed; optional authored utilities are resource files selected by the host |
-| YAML name ignored, description unused, unknown metadata silently ignored | Name/path agreement enforced; description exposed; unknown/duplicate fields rejected |
-| Separate hard-coded agent/code dispatch slots | Generic registered runner interface and external bindings |
-| Caller-local idempotency treated as sufficient sharing | Caller keys and exact cross-branch work identity are separate |
-| Each frame owned its producer children | Call tasks own wait leases; session operations own shared producers |
-| `parent`/`lineage` used for topology and cancellation | Diagnostic `origin`, all call edges in events, active wait graph for cycles/depth |
-| Only execution admissions bounded repeated work | Separate call and execution budgets also bound reuse |
-| Same names obscured different uses | Neutral shared evidence plus separate caller interpretations |
-| Fixture names referenced removed e/j gates | `a-diversified` and `b-no-proposal` describe observations in the current graph |
-| Root-level runtime/adapter/test modules and conflicting historical docs | Cohesive `harness/` and `tests/`, one end-to-end contract and a focused sharing design |
-
-These are deliberate breaking changes to the reference API. Old code and historical
-plans remain in Git history. There is no silent compatibility layer that accepts the
-old schema while discarding its policy.
-
-## 8. Red-team the abstraction
-
-The function-like interface is useful for composition. It should be rejected as a
-sufficient production design if any of these stronger claims are required:
-
-| Claim or pressure | Failure mode | Current position |
-| --- | --- | --- |
-| “All nodes are pure transformations” | Models and tools are effectful and nondeterministic | Async supervised operations, not pure-function equivalence |
-| “The prose graph is the execution plan” | Links alone do not determine whether or how to call a procedure | Agent-written PTC decides; call and execution traces establish what ran |
-| “Lock the skill name” | Different tasks or evidence would block or incorrectly share | Sharing is opt-in and keyed by exact work, not skill name |
-| “Same node plus inputs means reusable output” | Different tasks ask different questions; external state may change | Task, evidence and pinned configuration define session work; changed state needs explicit inputs or fresh work |
-| “The first caller owns the producer” | Cancelling a would strand c's shared dependency | Per-await leases, last-waiter cancellation, cleanup before replacement |
-| “A creation tree prevents deadlocks” | Joins create dependencies across previously separate branches | Active wait-cycle and depth checks at every attachment |
-| “Fresh review proves independent correctness” | Same-model correlated errors, incomplete evidence or injected evidence can persist | Fresh transcripts and explicit grants only; no correctness guarantee |
-| “A successful optional audit is always enforced” | The agent may omit or misread an optional check | Required checks must be configured in host policy |
-| “Prose-only skills scale to every capability” | Tool permissions and external effects need executable enforcement | Host adapters own capability configuration; no frontmatter flags with assumed authority |
-| “SQLite means durable orchestration” | Frames, grants, budgets, keys and leases are in memory | Records persist; coordination is one event loop, recovery is not implemented |
-| “A passing offline suite proves the agent works” | Scripted programs can take correct branches without reasoning about prose | Separate live-model evaluation is still required |
-
-The repository also lacks an authenticated external-effects gateway, cross-session
-artifact grants/cache, automatic invalidation, exact token/currency reservation and
-complete crash-time action logging. Agent actions are captured after an invocation
-returns; interrupted execution may have incomplete action transcripts. QuickJS and
-the private state backend are local execution boundaries, not a comprehensive
-multi-tenant security design. The registry assumes a trusted skill repository.
-
-The next useful validation is live execution against these two prompt/input pairs,
-followed by changed wording and counterexamples. That can test whether the harness
-actually writes distinct contextual programs, rather than merely proving that this
-runtime can execute them. No additional universal node attributes are justified by
-the current examples.
+To add expertise, author a linked skill. To change execution, register an executor.
+To change approval, modify a composition. Add a native capability only for a new
+host-owned effect that existing calls, artifacts and ordinary code cannot express.

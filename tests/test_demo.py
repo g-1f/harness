@@ -68,7 +68,7 @@ class DemoTests(unittest.IsolatedAsyncioTestCase):
                 ]
                 self.assertEqual(len(checkpoints), 1)
                 checkpoint_ref = checkpoints[0]["ref"]
-                self.assertEqual(runtime.store.get(checkpoint_ref)["status"], "accepted")
+                self.assertEqual(runtime.store.get(checkpoint_ref)["status"], "published")
                 if focused_b:
                     focus_call = next(e for e in calls if e["operation"] == focused_b[0])
                     self.assertEqual(nodes[focus_call["caller"]], "c")
@@ -77,10 +77,10 @@ class DemoTests(unittest.IsolatedAsyncioTestCase):
                     self.assertEqual(focus_entry["refs"], [checkpoint_ref])
                     self.assertEqual(focus_entry["reuse"], "fresh")
                     self.assertNotEqual(focus_entry["task"], tasks[neutral_b])
-                    accepted_final = next(
+                    completed_final = next(
                         n
                         for n, e in enumerate(events)
-                        if e["type"] == "accepted" and e["frame"] == neutral_b
+                        if e["type"] == "completed" and e["frame"] == neutral_b
                     )
                     c_progress_read = next(
                         n
@@ -90,7 +90,7 @@ class DemoTests(unittest.IsolatedAsyncioTestCase):
                         and e["ref"] == checkpoint_ref
                     )
                     if case == "a":
-                        self.assertLess(c_progress_read, accepted_final)
+                        self.assertLess(c_progress_read, completed_final)
                         a_progress_read = next(
                             n
                             for n, e in enumerate(events)
@@ -98,9 +98,9 @@ class DemoTests(unittest.IsolatedAsyncioTestCase):
                             and nodes[e["frame"]] == "a"
                             and e["ref"] == checkpoint_ref
                         )
-                        self.assertLess(a_progress_read, accepted_final)
+                        self.assertLess(a_progress_read, completed_final)
                     if case in ("b", "b-no-proposal", "unchanged"):
-                        self.assertGreater(c_progress_read, accepted_final)
+                        self.assertGreater(c_progress_read, completed_final)
                 if "f" in followups:
                     f_calls = [e for e in calls if nodes[e["operation"]] == "f"]
                     self.assertEqual({nodes[e["caller"]] for e in f_calls}, {"d", "g"})
@@ -113,14 +113,15 @@ class DemoTests(unittest.IsolatedAsyncioTestCase):
                         for e in events
                         if e["type"] == "agent_actions" and e["frame"] == entry["frame"]
                     ]
-                    self.assertEqual(bool(actions), entry["executor"] != "snapshot_math")
+                    self.assertEqual(bool(actions), entry["executor"] == "agent")
                     if entry["node"] in ("red_team", "artifact_coherence"):
                         self.assertEqual(entry["reuse"], "fresh")
-                thesis = runtime.store.get(report["thesis"])
+                thesis = runtime.store.get(report["thesis"])["content"]
+                self.assertEqual(thesis["decision"], "approved")
                 self.assertEqual(len(thesis["reviews"]), 1)
                 review = runtime.store.get(thesis["reviews"][0])["content"]
                 self.assertEqual(
-                    runtime.store.get(review["candidate_ref"])["content"], thesis["content"]
+                    runtime.store.get(review["candidate_ref"])["content"], thesis["result"]
                 )
                 self.assertEqual(review["verdict"], "pass")
                 self.assertEqual(runtime.operations.waits, {})
@@ -183,7 +184,7 @@ await tools.submitCandidate({summary: 'Sum', content: {
         runtime.register_executor("code", CodeRunner(runtime, "run.js", timeout=0.02))
         with self.assertRaises(JSTimeoutError):
             await asyncio.wait_for(runtime.run_node(NodeRequest("loop", "loop", {}, "root")), 2)
-        self.assertFalse(any(e["type"] == "accepted" for e in runtime.store.events()))
+        self.assertFalse(any(e["type"] == "completed" for e in runtime.store.events()))
 
     async def test_execution_mode_must_be_explicit(self):
         for argv in ([], ["--offline", "--model", "provider:model"]):

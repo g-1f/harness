@@ -5,7 +5,7 @@ import unittest
 
 from langchain_core.messages import AIMessage
 
-from harness import NodeRequest, Registry, ReviewPolicy, Runtime, Store
+from harness import NodeRequest, Registry, Runtime, Store
 from harness.runners.agent import DeepAgentRunner
 from harness.runners.code import CodeRunner
 from tests.support import code_skill, draft, skill
@@ -27,7 +27,7 @@ class PTCWrapperTests(unittest.IsolatedAsyncioTestCase):
 
     async def run_root(self, runtime):
         receipt = await runtime.run_node(NodeRequest("root", "test", {}, "root"))
-        self.assertEqual(receipt["status"], "accepted")
+        self.assertEqual(receipt["status"], "published")
         self.assertEqual(runtime._handles, {})
         self.assertEqual(runtime.operations.waits, {})
         self.assertTrue(all(not op.waiters for op in runtime.operations.operations.values()))
@@ -47,7 +47,7 @@ const refsSeen = await nodes.with(REQUEST, async operation => {
   const first = await operation.result();
   first.status = 'corrupted';
   const second = await operation.result();
-  if (second.status !== 'accepted') throw new Error('Mutable cached receipt');
+  if (second.status !== 'published') throw new Error('Mutable cached receipt');
   if (await operation.next() !== null) throw new Error('Expected end of checkpoints');
   return [...refs, second.ref];
 });
@@ -189,33 +189,17 @@ await tools.submitCandidate({summary:'Done',content:{ok:true},based_on:[]});
         self.assertEqual(runtime._handles, {})
         self.assertTrue(all(not op.waiters for op in runtime.operations.operations.values()))
 
-    async def test_result_preserves_needs_review_for_the_caller_to_decide(self):
+    async def test_result_keeps_domain_decisions_in_artifact_content(self):
         source = """
 const result = await nodes.with(REQUEST, operation => operation.result());
-if (result.status !== 'needs_review') throw new Error('Publication status changed');
-await tools.submitCandidate({summary:'Unaccepted child handled',content:{ok:true},based_on:[]});
+if (result.status !== 'published') throw new Error('Unexpected receipt status');
+const record = JSON.parse((await tools.readArtifact({ref: result.ref})).text);
+if (record.content.decision !== 'blocked') throw new Error('Decision changed');
+await tools.submitCandidate({summary:'Blocked child handled',content:{ok:true},based_on:[result.ref]});
 """.replace("REQUEST", REQUEST)
-        runtime = Runtime(
-            Registry([code_skill("root", source), skill("b"), skill("review")]),
-            Store(),
-            bindings={"root": "code"},
-            reviews={"b": ReviewPolicy(("review",))},
-        )
-        self.addCleanup(runtime.store.close)
-        self.addAsyncCleanup(runtime.aclose)
 
         async def producer(frame, context):
-            if frame.request.node == "review":
-                return {
-                    "summary": "Failed check",
-                    "content": {
-                        "candidate_ref": frame.request.refs[0],
-                        "verdict": "fail",
-                        "findings": ["Missing support"],
-                    },
-                }
-            return draft()
+            return {"summary": "Assessment", "content": {"decision": "blocked", "verdict": "fail"}}
 
-        runtime.register_executor("agent", producer)
-        runtime.register_executor("code", CodeRunner(runtime, "run.js"))
+        runtime = self.runtime(source, producer)
         await self.run_root(runtime)

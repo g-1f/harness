@@ -20,7 +20,7 @@ if (typeof globalThis.nodes === 'undefined') {
       if (closed) throw new Error('Node observation is closed');
       const event = await tools.nextNodeEvent({handle: opened.handle, after: cursor});
       if (!event || !event.receipt || typeof event.receipt.ref !== 'string' ||
-          !['accepted', 'needs_review'].includes(event.receipt.status)) {
+          event.receipt.status !== 'published') {
         throw new Error('Invalid node event');
       }
       if (event.kind === 'complete' && event.cursor === cursor) {
@@ -28,8 +28,7 @@ if (typeof globalThis.nodes === 'undefined') {
         closed = true; // The host releases on terminal delivery.
         return null;
       }
-      if (event.kind !== 'checkpoint' || event.cursor !== cursor + 1 ||
-          event.receipt.status !== 'accepted') {
+      if (event.kind !== 'checkpoint' || event.cursor !== cursor + 1) {
         throw new Error('Invalid checkpoint event or cursor');
       }
       cursor = event.cursor;

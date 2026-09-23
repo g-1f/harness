@@ -15,5 +15,5 @@ D revisits the same b and may compose further shared procedures. Inspect the vie
 Apply fresh [[artifact_coherence]] calls individually to a, c and d, plus a joint
 check, and a fresh [[red_team]] call to a. Read verdicts, not just receipt status.
 Return a blocked report if a check fails or is inconclusive. Otherwise pass the
-accepted views and audit refs to [[thesis]]. Keep evidence refs and explain which
+views and audit refs to [[thesis]]. Inspect the thesis decision and complete only when it is approved. Keep evidence refs and explain which
 conditional investigations ran. This is a synthetic example.

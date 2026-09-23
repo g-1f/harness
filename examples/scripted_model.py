@@ -98,7 +98,7 @@ const shared = input.baseline_requires_snapshot
       if (!progress) throw new Error('Expected snapshot measurement');
       const measured = await read(progress.ref);
       const b = await operation.result();
-      if (b.status !== 'accepted') throw new Error('Snapshot unaccepted');
+      if (b.status !== 'published') throw new Error('Snapshot unpublished');
       return {progress, measured, b};
     }) : {progress: null, measured: null, b: null};
 const {progress, measured, b} = shared;
@@ -125,7 +125,7 @@ var shared = await nodes.with(sharedRequest('b'), async operation => {
   const focused = await run('b', [progress.ref],
     'Assess capacity from snapshot checkpoint', 'fresh', sharedInputs());
   const snapshot = await operation.result();
-  if (snapshot.status !== 'accepted') throw new Error('Snapshot unaccepted');
+  if (snapshot.status !== 'published') throw new Error('Snapshot unpublished');
   return {progress, measured, focused, snapshot};
 });
 var {progress, measured, focused, snapshot} = shared;
@@ -148,7 +148,7 @@ var checkpoint = await tools.publishCheckpoint({
     source: measurement.source, text: 'Snapshot measurement'},
   based_on: [delta.ref]
 });
-if (checkpoint.status !== 'accepted') throw new Error('Snapshot checkpoint unaccepted');
+if (checkpoint.status !== 'published') throw new Error('Snapshot checkpoint unpublished');
 observe('delta', await read(delta.ref));
 """
         if self.node == "d":
@@ -190,7 +190,7 @@ if (typeof rootPrivate !== 'undefined') throw new Error('Inherited parent global
 var targets = await Promise.all(suppliedRefs.map(read));
 observe('review', targets);
 """
-        if self.node == "thesis":
+        if self.node == "thesis_draft":
             return "observe('synthesis', await Promise.all(suppliedRefs.map(read)));"
         raise RuntimeError("No fixture for " + self.node)
 
@@ -211,7 +211,7 @@ await tools.submitCandidate({
             ("h", "policy"): self.policy,
             ("red_team", "review"): self.red_team,
             ("artifact_coherence", "review"): self.coherence,
-            ("thesis", "synthesis"): self.synthesis,
+            ("thesis_draft", "synthesis"): self.synthesis,
         }
         handler = handlers.get((self.node, stage))
         if handler is None:
@@ -241,10 +241,11 @@ await tools.submitCandidate({
         return """
 const evidence = [...state.artifacts.map(item => item.receipt.ref), ...state.audits.map(audit => audit.ref)];
 const thesis = await run('thesis', evidence, 'Synthesize the independently interpreted views and audit findings');
+const decision = await read(thesis.ref);
 await tools.submitCandidate({
-  summary: 'Completed graph investigation with a reviewed thesis',
+  summary: 'Graph investigation with a thesis decision',
   content: {
-    outcome: 'complete', thesis: thesis.ref,
+    outcome: decision.decision === 'approved' ? 'complete' : 'blocked', thesis: thesis.ref,
     views: state.artifacts.map(item => ({node: item.name, ref: item.receipt.ref})),
     snapshot_refs: state.snapshots, audited: state.artifacts.map(item => item.receipt.ref)
   },
@@ -361,7 +362,6 @@ observe('evidence', observation);
                 "verdict": "fail" if unsupported else "pass",
                 "findings": ["Unsupported assertion in candidate"] if unsupported else [],
             },
-            refs="[]",
         )
 
     def coherence(self, value):

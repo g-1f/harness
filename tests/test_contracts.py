@@ -27,6 +27,11 @@ class ContractTests(unittest.TestCase):
     def test_candidate_validates_the_same_boundary_for_all_executors(self):
         base = {"summary": "Observation", "content": {"value": 1}}
         self.assertEqual(candidate(base)["based_on"], [])
-        for extra in ({"status": "accepted"}, {"content": []}, {"based_on": [1]}, {"summary": " "}):
+        for extra in (
+            {"status": "published"},
+            {"content": []},
+            {"based_on": [1]},
+            {"summary": " "},
+        ):
             with self.subTest(extra=extra), self.assertRaises(Rejected):
                 candidate({**base, **extra})

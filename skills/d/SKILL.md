@@ -6,7 +6,7 @@ description: Cross-check supply and compose supplier and inventory analyses
 
 Read the explicitly supplied baseline and capacity views. Request [[b|common
 snapshot evidence]] using its standard neutral task, projected inputs, empty refs
-and session reuse. This later call can reuse b's accepted result.
+and session reuse. This later call can reuse b's completed result.
 
 If b indicates accelerating demand and `inputs.observations.d` identifies
 concentrated supplier exposure, run [[f|supplier alternatives]] and [[g|inventory

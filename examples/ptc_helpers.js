@@ -15,7 +15,7 @@ async function run(node, refs = [], task = 'Interpret the supplied evidence', re
   const receipt = await nodes.run({
     node, task, inputs, refs, reuse, key: node + ':' + (++sequence)
   });
-  if (receipt.status !== 'accepted') throw new Error(node + ': ' + receipt.status);
+  if (receipt.status !== 'published') throw new Error(node + ': ' + receipt.status);
   return receipt;
 }
 
