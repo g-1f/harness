@@ -2,8 +2,13 @@
 
 This package makes the proposed boundary executable: graph-aware skill entry,
 recursive supervised agent calls, external intermediate state, and mandatory
-bounded reviews before acceptance. Read `../library-harness-design.md` for the
+bounded reviews before acceptance. Read
+[`docs/library-harness-design.md`](docs/library-harness-design.md) for the
 complete architecture, migration decisions, and deployment contracts.
+
+For the proposed extension covering agent-written PTC after observations,
+embedded skill scripts, dynamic branches, and execution provenance, read
+[`docs/dynamic-skill-ptc-design.md`](docs/dynamic-skill-ptc-design.md).
 
 ## Run the offline integration
 
