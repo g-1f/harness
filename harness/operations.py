@@ -27,6 +27,8 @@ class Operation:
     task: asyncio.Task[Receipt]
     stopping: bool = False
     waiters: set[str] = field(default_factory=set)
+    checkpoints: list[Receipt] = field(default_factory=list)
+    changed: asyncio.Event = field(default_factory=asyncio.Event)
 
     @property
     def state(self) -> str:
@@ -76,6 +78,7 @@ class OperationPool:
         reuse: Literal["fresh", "session"],
         start: Start,
         validate: Callable[[], None],
+        block_until_complete: bool = True,
     ) -> Lease:
         """Acquire a waiter or wait for a cancelled generation's cleanup first."""
         while True:
@@ -116,7 +119,9 @@ class OperationPool:
                     disposition = "started"
 
             target = operation.id if operation else uuid.uuid4().hex
-            waiting = operation is None or not operation.task.done()
+            if caller == target:
+                raise Rejected("An operation cannot attach to itself")
+            waiting = block_until_complete and (operation is None or not operation.task.done())
             if caller is not None and waiting:
                 self._add_wait(caller, target)
             try:
@@ -148,6 +153,51 @@ class OperationPool:
             )
             return lease
 
+    def publish(self, operation_id: str, receipt: Receipt) -> int:
+        """Announce an independently accepted checkpoint to every current/future caller."""
+        operation = self.operations[operation_id]
+        if operation.stopping or operation.task.done() or receipt["status"] != "accepted":
+            raise Rejected("Only a running operation can publish an accepted checkpoint")
+        cursor = len(operation.checkpoints) + 1
+        self.emit(
+            type="checkpoint_published", operation=operation_id, cursor=cursor, ref=receipt["ref"]
+        )
+        operation.checkpoints.append(dict(receipt))
+        self._signal(operation)
+        return cursor
+
+    async def next_event(self, lease: Lease, after: int) -> dict:
+        """Replay a checkpoint, or wait for the next one or terminal state."""
+        if type(after) is not int or after < 0 or lease.released:
+            raise Rejected("Invalid checkpoint cursor or closed handle")
+        operation = lease.operation
+        while True:
+            if lease.released:
+                raise Rejected("Node handle closed while awaiting an event")
+            if after < len(operation.checkpoints):
+                return {
+                    "kind": "checkpoint",
+                    "cursor": after + 1,
+                    "receipt": dict(operation.checkpoints[after]),
+                }
+            if after > len(operation.checkpoints):
+                raise Rejected("Checkpoint cursor is ahead of this operation")
+            if operation.task.done():
+                return {"kind": "terminal", "cursor": after}
+            changed = operation.changed
+            if lease.caller is not None:
+                self._add_wait(lease.caller, operation.id)
+            try:
+                await changed.wait()
+            finally:
+                if lease.caller is not None:
+                    self._remove_wait(lease.caller, operation.id)
+
+    @staticmethod
+    def _signal(operation: Operation) -> None:
+        operation.changed.set()
+        operation.changed = asyncio.Event()
+
     def release(self, lease: Lease) -> asyncio.Task[Receipt] | None:
         """Release once; return the producer to drain when its last waiter leaves."""
         if lease.released:
@@ -155,6 +205,7 @@ class OperationPool:
         lease.released = True
         operation = lease.operation
         operation.waiters.remove(lease.id)
+        self._signal(operation)
         if lease.caller is not None and lease.waiting:
             self._remove_wait(lease.caller, operation.id)
         self.emit(
@@ -206,11 +257,12 @@ class OperationPool:
     def _finished(self, operation: Operation) -> None:
         # Reading state also consumes exceptions from abandoned task results.
         self.emit(type="operation_finished", operation=operation.id, state=operation.state)
+        self._signal(operation)
 
     async def close(self) -> None:
         self.closed = True
         for operation in self.operations.values():
-            if not operation.task.done():
+            if not operation.task.done() and not operation.stopping:
                 operation.stopping = True
                 operation.task.cancel()
         await asyncio.gather(*(op.task for op in self.operations.values()), return_exceptions=True)

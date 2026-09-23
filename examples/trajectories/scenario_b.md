@@ -6,7 +6,7 @@ Reproduce: `python demo.py --offline --case b --trace outputs/scenario_b.json`.
 
 Regenerate both documents: `python -m examples.export_trajectories`.
 
-Outcome: `complete`. **21 calls, 17 executions**, 0 in-flight joins, 4 completed-result reuses. 52 scripted model operations; zero model API calls. All acquired leases were released; no active wait edges remain.
+Outcome: `complete`. **22 calls, 18 executions**, 0 in-flight joins, 4 completed-result reuses. 55 scripted model operations; zero model API calls. All acquired leases were released; no active wait edges remain.
 
 ## Prompt
 
@@ -15,8 +15,10 @@ Source: [scenario_b.md](../prompts/scenario_b.md).
 Investigate the synthetic snapshot using the root skill. Complete baseline view a
 before starting capacity view c, as requested by sequence_baseline in the input.
 If c needs the same neutral b snapshot, reuse its accepted artifact through the
-same explicit request. Investigate the policy outlook when observations warrant
-it; shared mix evidence may already exist. After both views, run d's cross-check.
+same explicit request. Replay b's accepted checkpoint after completion and request
+a distinct capacity-focused b call grounded in it. Investigate the policy outlook
+when observations warrant it; shared mix evidence may already exist. After both
+views, run d's cross-check.
 Keep caller interpretations separate from shared evidence, inspect the outputs,
 and use fresh independent audits before synthesis. Write PTC incrementally from
 the skill prose and observations; respect any flags that omit a dependency.
@@ -61,9 +63,10 @@ flowchart TD
     E5["k (E5)"]
     E6["l (E6)"]
     E7["c (E7)"]
-    E8["h (E8)"]
-    E9["i (E9)"]
-    E10["d (E10)"]
+    E8["b focus (E8)"]
+    E9["h (E9)"]
+    E10["i (E10)"]
+    E11["d (E11)"]
     E1 -->|started| E2
     E2 -->|started| E3
     E3 -->|started| E4
@@ -72,11 +75,12 @@ flowchart TD
     E1 -->|started| E7
     E7 -->|reused| E3
     E7 -->|started| E8
-    E8 -->|reused| E4
-    E8 -->|reused| E6
-    E8 -->|started| E9
-    E1 -->|started| E10
-    E10 -->|reused| E3
+    E7 -->|started| E9
+    E9 -->|reused| E4
+    E9 -->|reused| E6
+    E9 -->|started| E10
+    E1 -->|started| E11
+    E11 -->|reused| E3
 ```
 
 ## Executions
@@ -92,20 +96,21 @@ Each row has one context and one produced result. `origin` in the raw trace reco
 | `E5:k` | Report volume evidence | `agent` | `E4:delta_check/result` |
 | `E6:l` | Report mix evidence | `agent` | `E4:delta_check/result` |
 | `E7:c` | Interpret capacity after the baseline is complete | `agent` | None |
-| `E8:h` | Investigate the policy outlook | `agent` | `E3:b/result` |
-| `E9:i` | Inspect the proposal timeline | `agent` | `E3:b/result` |
-| `E10:d` | Cross-check supply against the completed views | `agent` | `E2:a/result`, `E7:c/result` |
-| `E11:artifact_coherence` | Audit this artifact | `agent` | `E2:a/result` |
-| `E12:artifact_coherence` | Audit this artifact | `agent` | `E7:c/result` |
-| `E13:artifact_coherence` | Audit this artifact | `agent` | `E10:d/result` |
-| `E14:artifact_coherence` | Audit joint coherence | `agent` | `E2:a/result`, `E7:c/result`, `E10:d/result` |
-| `E15:red_team` | Challenge candidate E2:a/result | `agent` | `E2:a/result` |
-| `E16:thesis` | Synthesize the independently interpreted views and audit findings | `agent` | `E2:a/result`, `E7:c/result`, `E10:d/result`, `E11:artifact_coherence/result`, `E12:artifact_coherence/result`, `E13:artifact_coherence/result`, `E14:artifact_coherence/result`, `E15:red_team/result` |
-| `E17:red_team` | Review candidate E16:thesis/draft; independently test claims. Return content with candidate_ref, verdict pass/fail/inconclusive, and findings array. | `agent` | `E16:thesis/draft`, `E2:a/result`, `E7:c/result`, `E10:d/result`, `E11:artifact_coherence/result`, `E12:artifact_coherence/result`, `E13:artifact_coherence/result`, `E14:artifact_coherence/result`, `E15:red_team/result` |
+| `E8:b` | Assess capacity from snapshot checkpoint | `agent` | `E3:b/checkpoint:1` |
+| `E9:h` | Investigate the policy outlook | `agent` | `E3:b/result` |
+| `E10:i` | Inspect the proposal timeline | `agent` | `E3:b/result` |
+| `E11:d` | Cross-check supply against the completed views | `agent` | `E2:a/result`, `E7:c/result` |
+| `E12:artifact_coherence` | Audit this artifact | `agent` | `E2:a/result` |
+| `E13:artifact_coherence` | Audit this artifact | `agent` | `E7:c/result` |
+| `E14:artifact_coherence` | Audit this artifact | `agent` | `E11:d/result` |
+| `E15:artifact_coherence` | Audit joint coherence | `agent` | `E2:a/result`, `E7:c/result`, `E11:d/result` |
+| `E16:red_team` | Challenge candidate E2:a/result | `agent` | `E2:a/result` |
+| `E17:thesis` | Synthesize the independently interpreted views and audit findings | `agent` | `E2:a/result`, `E7:c/result`, `E11:d/result`, `E12:artifact_coherence/result`, `E13:artifact_coherence/result`, `E14:artifact_coherence/result`, `E15:artifact_coherence/result`, `E16:red_team/result` |
+| `E18:red_team` | Review candidate E17:thesis/draft; independently test claims. Return content with candidate_ref, verdict pass/fail/inconclusive, and findings array. | `agent` | `E17:thesis/draft`, `E2:a/result`, `E7:c/result`, `E11:d/result`, `E12:artifact_coherence/result`, `E13:artifact_coherence/result`, `E14:artifact_coherence/result`, `E15:artifact_coherence/result`, `E16:red_team/result` |
 
 ## Calls and ownership
 
-Every successful acquisition has its own wait lease. Multiple rows can target the same execution. The runtime releases each lease on return, error or cancellation; callers never lock/unlock a skill themselves.
+Every successful acquisition has its own lease. Multiple rows can target the same execution. A pending observation adds a temporary wait edge. The runtime releases each lease on completion, close, error or cancellation; callers never lock/unlock a skill themselves.
 
 | Caller | Target execution | Caller key | Dispatch | Reuse policy |
 | --- | --- | --- | --- | --- |
@@ -117,19 +122,28 @@ Every successful acquisition has its own wait lease. Multiple rows can target th
 | `E3:b` | `E6:l` | `l:3` | started | session |
 | `E1:root` | `E7:c` | `c:2` | started | fresh |
 | `E7:c` | `E3:b` | `b:1` | reused | session |
-| `E7:c` | `E8:h` | `h:2` | started | fresh |
-| `E8:h` | `E4:delta_check` | `delta_check:1` | reused | session |
-| `E8:h` | `E6:l` | `l:2` | reused | session |
-| `E8:h` | `E9:i` | `i:3` | started | fresh |
-| `E1:root` | `E10:d` | `d:3` | started | fresh |
-| `E10:d` | `E3:b` | `b:1` | reused | session |
-| `E1:root` | `E11:artifact_coherence` | `artifact_coherence:4` | started | fresh |
-| `E1:root` | `E12:artifact_coherence` | `artifact_coherence:5` | started | fresh |
-| `E1:root` | `E13:artifact_coherence` | `artifact_coherence:6` | started | fresh |
-| `E1:root` | `E14:artifact_coherence` | `artifact_coherence:7` | started | fresh |
-| `E1:root` | `E15:red_team` | `red_team:8` | started | fresh |
-| `E1:root` | `E16:thesis` | `thesis:9` | started | fresh |
-| `E16:thesis` | `E17:red_team` | `review:0:red_team` | started | fresh |
+| `E7:c` | `E8:b` | `b:2` | started | fresh |
+| `E7:c` | `E9:h` | `h:3` | started | fresh |
+| `E9:h` | `E4:delta_check` | `delta_check:1` | reused | session |
+| `E9:h` | `E6:l` | `l:2` | reused | session |
+| `E9:h` | `E10:i` | `i:3` | started | fresh |
+| `E1:root` | `E11:d` | `d:3` | started | fresh |
+| `E11:d` | `E3:b` | `b:1` | reused | session |
+| `E1:root` | `E12:artifact_coherence` | `artifact_coherence:4` | started | fresh |
+| `E1:root` | `E13:artifact_coherence` | `artifact_coherence:5` | started | fresh |
+| `E1:root` | `E14:artifact_coherence` | `artifact_coherence:6` | started | fresh |
+| `E1:root` | `E15:artifact_coherence` | `artifact_coherence:7` | started | fresh |
+| `E1:root` | `E16:red_team` | `red_team:8` | started | fresh |
+| `E1:root` | `E17:thesis` | `thesis:9` | started | fresh |
+| `E17:thesis` | `E18:red_team` | `review:0:red_team` | started | fresh |
+
+## Checkpoints and observation order
+
+Each row is an accepted, immutable checkpoint from a producer. The reads are observed grants, ordered by the session event log; 'before final' means the consumer obtained it while the producer was still running. A late subscriber can replay the same checkpoint after completion.
+
+| Producer | Checkpoint | Subscriber reads |
+| --- | --- | --- |
+| `E3:b` | `E3:b/checkpoint:1` (cursor 1) | `E2:a` (before final), `E7:c` (after final), `E8:b` (after final) |
 
 ## Captured PTC and observations
 
@@ -144,6 +158,13 @@ async function run(node, refs = [], task = 'Interpret the supplied evidence', re
   return receipt;
 }
 
+function sharedInputs() {
+  return {
+    current: input.current, previous: input.previous,
+    observations: input.observations, units: input.units
+  };
+}
+
 // These exact neutral tasks also appear in each producer's prose. Consumer
 // interpretation stays in a/c/d/f/g; it is not smuggled into shared work identity.
 var sharedTasks = {
@@ -154,11 +175,30 @@ var sharedTasks = {
   f: 'Assess supplier alternatives'
 };
 async function share(node, refs = []) {
-  const inputs = {
-    current: input.current, previous: input.previous,
-    observations: input.observations, units: input.units
-  };
-  return run(node, refs, sharedTasks[node], 'session', inputs);
+  return run(node, refs, sharedTasks[node], 'session', sharedInputs());
+}
+async function openShared(node, refs = []) {
+  return tools.openNode({request: {
+    node, task: sharedTasks[node], inputs: sharedInputs(), refs,
+    reuse: 'session', key: node + ':' + (++sequence)
+  }});
+}
+async function nextCheckpoint(handle, after = 0) {
+  const event = await tools.nextNodeEvent({handle, after});
+  if (event.kind !== 'checkpoint' || event.receipt.status !== 'accepted') {
+    throw new Error('Expected an accepted checkpoint');
+  }
+  return event;
+}
+async function complete(handle, after) {
+  let event = await tools.nextNodeEvent({handle, after});
+  while (event.kind === 'checkpoint') {
+    event = await tools.nextNodeEvent({handle, after: event.cursor});
+  }
+  if (event.kind !== 'complete' || event.receipt.status !== 'accepted') {
+    throw new Error('Node did not complete with an accepted result');
+  }
+  return event.receipt;
 }
 ```
 
@@ -180,7 +220,7 @@ Observed:
 
 ```text
 <stdout>
-OBS:{"stage":"views","value":[{"scope":"Interpret baseline assumptions","snapshot":"E3:b/result","source":"synthetic/a","subchecks":[{"changed":true,"internal":["k","l"],"scope":"Produce snapshot evidence","source":"synthetic/b","subchecks":[{"evidence_count":1,"scope":"Report volume evidence","source":"synthetic/k","text":"Volume increased in the supplied snapshot.","unit":"USD"},{"evidence_count":1,"scope":"Report mix evidence","source":"synthetic/l","text":"Mix is stable in the supplied snapshot.","unit":"USD"}],"text":"Demand is stable; investigate the policy outlook.","unit":"USD"}],"text":"Source evidence supports the baseline claim.","unit":"USD"},{"policy":"E8:h/result","scope":"Interpret capacity after the baseline is complete","snapshot":"E3:b/result","source":"synthetic/c","subchecks":[{"changed":true,"internal":["k","l"],"scope":"Produce snapshot evidence","source":"synthetic/b","subchecks":[{"evidence_count":1,"scope":"Report volume evidence","source":"synthetic/k","text":"Volume increased in the supplied snapshot.","unit":"USD"},{"evidence_count":1,"scope":"Report mix evidence","source":"synthetic/l","text":"Mix is stable in the supplied snapshot.","unit":"USD"}],"text":"Demand is stable; investigate the policy outlook.","unit":"USD"},{"scope":"Investigate the policy outlook","source":"synthetic/h","subchecks":[{"evidence_count":1,"scope":"Report mix evidence","source":"synthetic/l","text":"Mix is stable in the supplied snapshot.","unit":"USD"},{"evidence_count":1,"scope":"Inspect the proposal timeline","source":"synthetic/i","text":"The proposed rule takes effect next quarter.","unit":"USD"}],"text":"A pending regulatory change warrants investigation.","unit":"USD"}],"text":"Capacity additions lag demand.","unit":"USD"}]}
+OBS:{"stage":"views","value":[{"checkpoint":"E3:b/checkpoint:1","scope":"Interpret baseline assumptions","snapshot":"E3:b/result","source":"synthetic/a","subchecks":[{"delta":5,"source":"synthetic snapshot pair","text":"Snapshot measurement","unit":"USD"},{"changed":true,"internal":["k","l"],"scope":"Produce snapshot evidence","source":"synthetic/b","subchecks":[{"evidence_count":1,"scope":"Report volume evidence","source":"synthetic/k","text":"Volume increased in the supplied snapshot.","unit":"USD"},{"evidence_count":1,"scope":"Report mix evidence","source":"synthetic/l","text":"Mix is stable in the supplied snapshot.","unit":"USD"}],"text":"Demand is stable; investigate the policy outlook.","unit":"USD"}],"text":"Source evidence supports the baseline claim.","unit":"USD"},{"checkpoint":"E3:b/checkpoint:1","focus":"E8:b/result","policy":"E9:h/result","scope":"Interpret capacity after the baseline is complete","snapshot":"E3:b/result","source":"synthetic/c","subchecks":[{"delta":5,"source":"synthetic snapshot pair","text":"Snapshot measurement","unit":"USD"},{"checkpoint":"E3:b/checkpoint:1","delta":5,"scope":"Assess capacity from snapshot checkpoint","source":"synthetic/b:capacity","text":"Capacity additions lag demand.","unit":"USD"},{"changed":true,"internal":["k","l"],"scope":"Produce snapshot evidence","source":"synthetic/b","subchecks":[{"evidence_count":1,"scope":"Report volume evidence","source":"synthetic/k","text":"Volume increased in the supplied snapshot.","unit":"USD"},{"evidence_count":1,"scope":"Report mix evidence","source":"synthetic/l","text":"Mix is stable in the supplied snapshot.","unit":"USD"}],"text":"Demand is stable; investigate the policy outlook.","unit":"USD"},{"scope":"Investigate the policy outlook","source":"synthetic/h","subchecks":[{"evidence_count":1,"scope":"Report mix evidence","source":"synthetic/l","text":"Mix is stable in the supplied snapshot.","unit":"USD"},{"evidence_count":1,"scope":"Inspect the proposal timeline","source":"synthetic/i","text":"The proposed rule takes effect next quarter.","unit":"USD"}],"text":"A pending regulatory change warrants investigation.","unit":"USD"}],"text":"Capacity additions lag demand.","unit":"USD"}]}
 </stdout>
 <result>null</result>
 ```
@@ -202,7 +242,7 @@ Observed:
 
 ```text
 <stdout>
-OBS:{"stage":"audits","value":[{"coverage":1,"findings":[],"targets":["E2:a/result"],"verdict":"pass"},{"coverage":1,"findings":[],"targets":["E7:c/result"],"verdict":"pass"},{"coverage":1,"findings":[],"targets":["E10:d/result"],"verdict":"pass"},{"coverage":3,"findings":[],"targets":["E2:a/result","E7:c/result","E10:d/result"],"verdict":"pass"},{"candidate_ref":"E2:a/result","findings":[],"verdict":"pass"}]}
+OBS:{"stage":"audits","value":[{"coverage":1,"findings":[],"targets":["E2:a/result"],"verdict":"pass"},{"coverage":1,"findings":[],"targets":["E7:c/result"],"verdict":"pass"},{"coverage":1,"findings":[],"targets":["E11:d/result"],"verdict":"pass"},{"coverage":3,"findings":[],"targets":["E2:a/result","E7:c/result","E11:d/result"],"verdict":"pass"},{"candidate_ref":"E2:a/result","findings":[],"verdict":"pass"}]}
 </stdout>
 <result>null</result>
 ```
@@ -230,10 +270,15 @@ Observed:
 ### E2:a
 
 ```js
-const b = input.baseline_requires_snapshot ? await share('b') : null;
-var evidenceRefs = [...suppliedRefs, ...(b ? [b.ref] : [])];
+const opened = input.baseline_requires_snapshot ? await openShared('b') : null;
+const progress = opened ? await nextCheckpoint(opened.handle) : null;
+const measured = progress ? await read(progress.receipt.ref) : null;
+const b = opened ? await complete(opened.handle, progress.cursor) : null;
+var evidenceRefs = [...suppliedRefs,
+  ...(progress ? [progress.receipt.ref] : []), ...(b ? [b.ref] : [])];
 var observation = evidence('a', {
-  snapshot: b?.ref || null, subchecks: b ? [await read(b.ref)] : []
+  snapshot: b?.ref || null, checkpoint: progress?.receipt.ref || null,
+  subchecks: b ? [measured, await read(b.ref)] : []
 });
 observe('evidence', observation);
 ```
@@ -242,7 +287,7 @@ Observed:
 
 ```text
 <stdout>
-OBS:{"stage":"evidence","value":{"text":"Source evidence supports the baseline claim.","unit":"USD","source":"synthetic/a","scope":"Interpret baseline assumptions","snapshot":"E3:b/result","subchecks":[{"changed":true,"internal":["k","l"],"scope":"Produce snapshot evidence","source":"synthetic/b","subchecks":[{"evidence_count":1,"scope":"Report volume evidence","source":"synthetic/k","text":"Volume increased in the supplied snapshot.","unit":"USD"},{"evidence_count":1,"scope":"Report mix evidence","source":"synthetic/l","text":"Mix is stable in the supplied snapshot.","unit":"USD"}],"text":"Demand is stable; investigate the policy outlook.","unit":"USD"}]}}
+OBS:{"stage":"evidence","value":{"text":"Source evidence supports the baseline claim.","unit":"USD","source":"synthetic/a","scope":"Interpret baseline assumptions","snapshot":"E3:b/result","checkpoint":"E3:b/checkpoint:1","subchecks":[{"delta":5,"source":"synthetic snapshot pair","text":"Snapshot measurement","unit":"USD"},{"changed":true,"internal":["k","l"],"scope":"Produce snapshot evidence","source":"synthetic/b","subchecks":[{"evidence_count":1,"scope":"Report volume evidence","source":"synthetic/k","text":"Volume increased in the supplied snapshot.","unit":"USD"},{"evidence_count":1,"scope":"Report mix evidence","source":"synthetic/l","text":"Mix is stable in the supplied snapshot.","unit":"USD"}],"text":"Demand is stable; investigate the policy outlook.","unit":"USD"}]}}
 </stdout>
 <result>null</result>
 ```
@@ -263,6 +308,14 @@ Observed:
 
 ```js
 var delta = await share('delta_check');
+var measurement = await read(delta.ref);
+var checkpoint = await tools.publishCheckpoint({
+  summary: 'Measured snapshot evidence for other interpretations',
+  content: {delta: measurement.delta, unit: measurement.unit,
+    source: measurement.source, text: 'Snapshot measurement'},
+  based_on: [delta.ref]
+});
+if (checkpoint.status !== 'accepted') throw new Error('Snapshot checkpoint unaccepted');
 observe('delta', await read(delta.ref));
 ```
 
@@ -281,7 +334,7 @@ await tools.submitCandidate({
   summary: 'Shared snapshot evidence',
   content: evidence('b', {changed: true, internal: ['k', 'l'],
     subchecks: await Promise.all(parts.map(part => read(part.ref)))}),
-  based_on: [delta.ref, ...parts.map(part => part.ref)]
+  based_on: [checkpoint.ref, delta.ref, ...parts.map(part => part.ref)]
 });
 ```
 
@@ -294,25 +347,35 @@ Observed:
 ### E7:c
 
 ```js
-var snapshot = await share('b');
-observe('capacity_snapshot', await read(snapshot.ref));
+var opened = await openShared('b');
+var progress = await nextCheckpoint(opened.handle);
+var measured = await read(progress.receipt.ref);
+var focused = await run('b', [progress.receipt.ref],
+  'Assess capacity from snapshot checkpoint', 'fresh', sharedInputs());
+var snapshot = await complete(opened.handle, progress.cursor);
+observe('capacity_snapshot', {
+  snapshot: await read(snapshot.ref), focus: await read(focused.ref), checkpoint: measured
+});
 ```
 
 Observed:
 
 ```text
 <stdout>
-OBS:{"stage":"capacity_snapshot","value":{"changed":true,"internal":["k","l"],"scope":"Produce snapshot evidence","source":"synthetic/b","subchecks":[{"evidence_count":1,"scope":"Report volume evidence","source":"synthetic/k","text":"Volume increased in the supplied snapshot.","unit":"USD"},{"evidence_count":1,"scope":"Report mix evidence","source":"synthetic/l","text":"Mix is stable in the supplied snapshot.","unit":"USD"}],"text":"Demand is stable; investigate the policy outlook.","unit":"USD"}}
+OBS:{"stage":"capacity_snapshot","value":{"snapshot":{"changed":true,"internal":["k","l"],"scope":"Produce snapshot evidence","source":"synthetic/b","subchecks":[{"evidence_count":1,"scope":"Report volume evidence","source":"synthetic/k","text":"Volume increased in the supplied snapshot.","unit":"USD"},{"evidence_count":1,"scope":"Report mix evidence","source":"synthetic/l","text":"Mix is stable in the supplied snapshot.","unit":"USD"}],"text":"Demand is stable; investigate the policy outlook.","unit":"USD"},"focus":{"checkpoint":"E3:b/checkpoint:1","delta":5,"scope":"Assess capacity from snapshot checkpoint","source":"synthetic/b:capacity","text":"Capacity additions lag demand.","unit":"USD"},"checkpoint":{"delta":5,"source":"synthetic snapshot pair","text":"Snapshot measurement","unit":"USD"}}}
 </stdout>
 <result>null</result>
 ```
 
 ```js
 const policy = await run('h', [snapshot.ref], 'Investigate the policy outlook');
-var evidenceRefs = [...suppliedRefs, snapshot.ref, ...(policy ? [policy.ref] : [])];
+var evidenceRefs = [...suppliedRefs, progress.receipt.ref, focused.ref, snapshot.ref,
+  ...(policy ? [policy.ref] : [])];
 var observation = evidence('c', {
-  snapshot: snapshot.ref, policy: policy?.ref || null,
-  subchecks: [await read(snapshot.ref), ...(policy ? [await read(policy.ref)] : [])]
+  snapshot: snapshot.ref, checkpoint: progress.receipt.ref,
+  focus: focused.ref, policy: policy?.ref || null,
+  subchecks: [measured, await read(focused.ref), await read(snapshot.ref),
+    ...(policy ? [await read(policy.ref)] : [])]
 });
 observe('evidence', observation);
 ```
@@ -321,7 +384,7 @@ Observed:
 
 ```text
 <stdout>
-OBS:{"stage":"evidence","value":{"text":"Capacity additions lag demand.","unit":"USD","source":"synthetic/c","scope":"Interpret capacity after the baseline is complete","snapshot":"E3:b/result","policy":"E8:h/result","subchecks":[{"changed":true,"internal":["k","l"],"scope":"Produce snapshot evidence","source":"synthetic/b","subchecks":[{"evidence_count":1,"scope":"Report volume evidence","source":"synthetic/k","text":"Volume increased in the supplied snapshot.","unit":"USD"},{"evidence_count":1,"scope":"Report mix evidence","source":"synthetic/l","text":"Mix is stable in the supplied snapshot.","unit":"USD"}],"text":"Demand is stable; investigate the policy outlook.","unit":"USD"},{"scope":"Investigate the policy outlook","source":"synthetic/h","subchecks":[{"evidence_count":1,"scope":"Report mix evidence","source":"synthetic/l","text":"Mix is stable in the supplied snapshot.","unit":"USD"},{"evidence_count":1,"scope":"Inspect the proposal timeline","source":"synthetic/i","text":"The proposed rule takes effect next quarter.","unit":"USD"}],"text":"A pending regulatory change warrants investigation.","unit":"USD"}]}}
+OBS:{"stage":"evidence","value":{"text":"Capacity additions lag demand.","unit":"USD","source":"synthetic/c","scope":"Interpret capacity after the baseline is complete","snapshot":"E3:b/result","checkpoint":"E3:b/checkpoint:1","focus":"E8:b/result","policy":"E9:h/result","subchecks":[{"delta":5,"source":"synthetic snapshot pair","text":"Snapshot measurement","unit":"USD"},{"checkpoint":"E3:b/checkpoint:1","delta":5,"scope":"Assess capacity from snapshot checkpoint","source":"synthetic/b:capacity","text":"Capacity additions lag demand.","unit":"USD"},{"changed":true,"internal":["k","l"],"scope":"Produce snapshot evidence","source":"synthetic/b","subchecks":[{"evidence_count":1,"scope":"Report volume evidence","source":"synthetic/k","text":"Volume increased in the supplied snapshot.","unit":"USD"},{"evidence_count":1,"scope":"Report mix evidence","source":"synthetic/l","text":"Mix is stable in the supplied snapshot.","unit":"USD"}],"text":"Demand is stable; investigate the policy outlook.","unit":"USD"},{"scope":"Investigate the policy outlook","source":"synthetic/h","subchecks":[{"evidence_count":1,"scope":"Report mix evidence","source":"synthetic/l","text":"Mix is stable in the supplied snapshot.","unit":"USD"},{"evidence_count":1,"scope":"Inspect the proposal timeline","source":"synthetic/i","text":"The proposed rule takes effect next quarter.","unit":"USD"}],"text":"A pending regulatory change warrants investigation.","unit":"USD"}]}}
 </stdout>
 <result>null</result>
 ```
@@ -338,7 +401,39 @@ Observed:
 <result>{staged: true}</result>
 ```
 
-### E8:h
+### E8:b
+
+```js
+var measured = await read(suppliedRefs[0]);
+observe('focused', measured);
+```
+
+Observed:
+
+```text
+<stdout>
+OBS:{"stage":"focused","value":{"delta":5,"source":"synthetic snapshot pair","text":"Snapshot measurement","unit":"USD"}}
+</stdout>
+<result>null</result>
+```
+
+```js
+await tools.submitCandidate({
+  summary: 'Capacity-specific follow-up on measured evidence',
+  content: {text: input.observations.c, unit: measured.unit,
+    source: 'synthetic/b:capacity', scope: assignedTask,
+    delta: measured.delta, checkpoint: suppliedRefs[0]},
+  based_on: suppliedRefs
+});
+```
+
+Observed:
+
+```text
+<result>{staged: true}</result>
+```
+
+### E9:h
 
 ```js
 observe('policy', input.observations.h);
@@ -385,7 +480,7 @@ Observed:
 <result>{staged: true}</result>
 ```
 
-### E10:d
+### E11:d
 
 ```js
 var views = await Promise.all(suppliedRefs.map(read));
@@ -441,7 +536,7 @@ Observed:
   "audited": [
     "E2:a/result",
     "E7:c/result",
-    "E10:d/result"
+    "E11:d/result"
   ],
   "outcome": "complete",
   "snapshot_refs": [
@@ -449,7 +544,7 @@ Observed:
     "E3:b/result",
     "E3:b/result"
   ],
-  "thesis": "E16:thesis/result",
+  "thesis": "E17:thesis/result",
   "views": [
     {
       "node": "a",
@@ -461,7 +556,7 @@ Observed:
     },
     {
       "node": "d",
-      "ref": "E10:d/result"
+      "ref": "E11:d/result"
     }
   ]
 }

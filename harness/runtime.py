@@ -20,7 +20,7 @@ from harness.contracts import (
     digest,
     encode,
 )
-from harness.operations import OperationPool
+from harness.operations import Lease, OperationPool
 from harness.policy import ReviewPolicy, validate_policies
 from harness.skills import Registry
 from harness.storage import Store
@@ -37,6 +37,7 @@ class Frame:
     active: set[str] = field(default_factory=set)
     grants: set[str] = field(default_factory=set)
     children: set[asyncio.Task] = field(default_factory=set)
+    handles: set[str] = field(default_factory=set)
     closed: bool = False
     observed: set[str] = field(default_factory=set)
 
@@ -54,16 +55,19 @@ class Ledger:
         max_model_calls: int = 256,
         model_parallelism: int = 8,
         max_calls: int = 512,
+        max_checkpoints: int = 128,
     ):
         if any(
             type(n) is not int or n < 1
-            for n in (max_frames, max_model_calls, model_parallelism, max_calls)
+            for n in (max_frames, max_model_calls, model_parallelism, max_calls, max_checkpoints)
         ):
             raise Rejected("Ledger limits must be positive integers")
         self.max_frames = max_frames
         self.max_model_calls = max_model_calls
         self.max_calls = max_calls
+        self.max_checkpoints = max_checkpoints
         self.calls = 0
+        self.checkpoints = 0
         self.frames = 0
         self.model_calls = 0
         self.slots = asyncio.Semaphore(model_parallelism)
@@ -77,6 +81,12 @@ class Ledger:
         if self.frames >= self.max_frames:
             raise Rejected("Session frame budget exhausted")
         self.frames += 1
+
+    def admit_checkpoint(self) -> int:
+        if self.checkpoints >= self.max_checkpoints:
+            raise Rejected("Session checkpoint budget exhausted")
+        self.checkpoints += 1
+        return self.checkpoints
 
     async def model_call(self, invoke: Callable[[], Awaitable[Any]]) -> Any:
         async with self.slots:
@@ -127,6 +137,8 @@ class Runtime:
         self.deadline = time.monotonic() + deadline_seconds
         self.operations = OperationPool(max_depth=max_depth, emit=self._operation_event)
         self._call_tasks: set[asyncio.Task[Receipt]] = set()
+        self._handles: dict[str, tuple[Frame | None, Lease]] = {}
+        self._closed_handles: dict[str, Frame | None] = {}
         self._closed = False
         self._execution_identity = digest(
             {
@@ -226,21 +238,7 @@ class Runtime:
         return packet
 
     async def run_node(self, request: NodeRequest, caller: Frame | None = None) -> Receipt:
-        request = NodeRequest.parse(asdict(request))
-        if request.node not in self.registry.nodes:
-            raise Rejected("Unknown skill")
-        self._seal()
-        self._validate_call(request, caller)
-        self.ledger.admit_call()
-        identity = digest(
-            {
-                "execution": self._execution_identity,
-                "node": request.node,
-                "task": request.task,
-                "inputs": request.inputs,
-                "refs": request.refs,
-            }
-        )
+        request, identity = self._prepare_request(request, caller)
         # The caller owns this wait, not the producer it may share with others.
         waiting = asyncio.create_task(self._call(request, caller, identity))
         self._call_tasks.add(waiting)
@@ -249,6 +247,108 @@ class Runtime:
             caller.children.add(waiting)
             waiting.add_done_callback(caller.children.discard)
         return await waiting
+
+    def _prepare_request(
+        self, request: NodeRequest, caller: Frame | None
+    ) -> tuple[NodeRequest, str]:
+        request = NodeRequest.parse(asdict(request))
+        if request.node not in self.registry.nodes:
+            raise Rejected("Unknown skill")
+        self._seal()
+        self._validate_call(request, caller)
+        self.ledger.admit_call()
+        return request, digest(
+            {
+                "execution": self._execution_identity,
+                "node": request.node,
+                "task": request.task,
+                "inputs": request.inputs,
+                "refs": request.refs,
+            }
+        )
+
+    async def open_node(self, request: NodeRequest, caller: Frame | None = None) -> dict:
+        """Attach a caller-scoped lease without waiting for the producer's result."""
+        request, identity = self._prepare_request(request, caller)
+        lease = await self.operations.acquire(
+            caller=caller.id if caller else None,
+            key=request.key,
+            identity=identity,
+            reuse=request.reuse,
+            start=lambda operation_id: self._start(operation_id, request, caller),
+            validate=lambda: self._validate_call(request, caller),
+            block_until_complete=False,
+        )
+        self._handles[lease.id] = (caller, lease)
+        if caller:
+            caller.handles.add(lease.id)
+        return {"handle": lease.id}
+
+    def _owned_handle(self, handle: str, caller: Frame | None) -> Lease:
+        if type(handle) is not str or handle not in self._handles:
+            raise Rejected("Unknown or closed node handle")
+        owner, lease = self._handles[handle]
+        if owner is not caller:
+            raise Rejected("Node handle belongs to another caller")
+        if caller:
+            self.check_live(caller)
+        elif self._closed or time.monotonic() >= self.deadline:
+            raise Rejected("Session closed or deadline exceeded")
+        return lease
+
+    def _release_handle(self, handle: str) -> asyncio.Task[Receipt] | None:
+        owner, lease = self._handles.pop(handle)
+        self._closed_handles[handle] = owner
+        if owner:
+            owner.handles.discard(handle)
+        return self.operations.release(lease)
+
+    async def close_node(self, handle: str, caller: Frame | None = None) -> dict:
+        """Release this caller's lease early; the producer survives other leases."""
+        if handle in self._closed_handles and self._closed_handles[handle] is caller:
+            return {"closed": True}
+        self._owned_handle(handle, caller)
+        draining = self._release_handle(handle)
+        if draining is not None:
+            await asyncio.gather(asyncio.shield(draining), return_exceptions=True)
+        return {"closed": True}
+
+    async def next_node_event(self, handle: str, after: int, caller: Frame | None = None) -> dict:
+        """Replay progress or await one event. Terminal delivery releases the handle."""
+        lease = self._owned_handle(handle, caller)
+        event = await self.operations.next_event(lease, after)
+        self._owned_handle(handle, caller)
+        if event["kind"] == "checkpoint":
+            if caller:
+                caller.grants.add(event["receipt"]["ref"])
+            return event
+        try:
+            receipt = await asyncio.shield(lease.operation.task)
+            if caller:
+                caller.grants.add(receipt["ref"])
+            return {"kind": "complete", "cursor": event["cursor"], "receipt": dict(receipt)}
+        finally:
+            await self.close_node(handle, caller)
+
+    async def publish_checkpoint(self, frame: Frame, value: Candidate) -> Receipt:
+        """Publish an independently reviewed artifact while this node is running."""
+        self.check_live(frame)
+        draft = candidate(value)
+        attempt = self.ledger.admit_checkpoint()
+        draft_ref = self._record(
+            frame, draft, "draft", kind="checkpoint", checkpoint_attempt=attempt
+        )
+        reviews, feedback, _ = await self._review(
+            frame, draft, draft_ref, 0, review_key=f"checkpoint:{attempt}"
+        )
+        status = "needs_review" if feedback else "accepted"
+        ref = self._record(
+            frame, draft, status, reviews, kind="checkpoint", checkpoint_attempt=attempt
+        )
+        receipt: Receipt = {"ref": ref, "status": status, "summary": draft["summary"]}
+        if status == "accepted":
+            self.operations.publish(frame.id, receipt)
+        return receipt
 
     def _validate_call(self, request: NodeRequest, caller: Frame | None) -> None:
         if self._closed or time.monotonic() >= self.deadline:
@@ -309,11 +409,20 @@ class Runtime:
         waiting = list(self._call_tasks)
         for task in waiting:
             task.cancel()
+        for handle in list(self._handles):
+            self._release_handle(handle)
         await self.operations.close()
         await asyncio.gather(*waiting, return_exceptions=True)
 
     def _record(
-        self, frame: Frame, draft: Candidate, status: str, reviews: tuple | list = ()
+        self,
+        frame: Frame,
+        draft: Candidate,
+        status: str,
+        reviews: tuple | list = (),
+        *,
+        kind: str = "result",
+        checkpoint_attempt: int | None = None,
     ) -> str:
         self.check_live(frame)
         for ref in draft["based_on"]:
@@ -336,13 +445,24 @@ class Runtime:
                 "observed_refs": sorted(frame.observed),
                 "status": status,
                 "created_at": time.time(),
+                **(
+                    {"kind": kind, "checkpoint_attempt": checkpoint_attempt}
+                    if kind == "checkpoint"
+                    else {}
+                ),
                 **draft,
                 "reviews": list(reviews),
             }
         )
 
     async def _review(
-        self, frame: Frame, draft: Candidate, draft_ref: str, attempt: int
+        self,
+        frame: Frame,
+        draft: Candidate,
+        draft_ref: str,
+        attempt: int,
+        *,
+        review_key: str = "review",
     ) -> tuple[list[str], list[dict[str, Any]], int]:
         policies = [self.reviews[name] for name in sorted(frame.active) if name in self.reviews]
         reviewers = tuple(dict.fromkeys(name for p in policies for name in p.reviewers))
@@ -355,7 +475,7 @@ class Runtime:
                     f"Review candidate {draft_ref}; independently test claims. "
                     "Return content with candidate_ref, verdict pass/fail/inconclusive, and findings array.",
                     frame.request.inputs,
-                    f"review:{attempt}:{name}",
+                    f"{review_key}:{attempt}:{name}",
                     tuple(dict.fromkeys([draft_ref, *draft["based_on"]])),
                 ),
                 frame,
@@ -397,8 +517,8 @@ class Runtime:
                     if (task := asyncio.current_task()) is not None and task.cancelling():
                         raise asyncio.CancelledError
                     draft = candidate(output)
-                    if any(not task.done() for task in frame.children):
-                        raise Rejected("Join children before returning a draft")
+                    if any(not task.done() for task in frame.children) or frame.handles:
+                        raise Rejected("Join or close all child calls before returning a draft")
                     draft_ref = self._record(frame, draft, "draft")
                     reviews, feedback, round_limit = await self._review(
                         frame, draft, draft_ref, attempt
@@ -422,9 +542,11 @@ class Runtime:
             raise
         finally:
             frame.closed = True
+            draining = [self._release_handle(handle) for handle in list(frame.handles)]
             for child in frame.children:
                 if not child.done():
                     child.cancel()
-            if frame.children:
-                await asyncio.gather(*frame.children, return_exceptions=True)
+            tasks = [*frame.children, *(task for task in draining if task is not None)]
+            if tasks:
+                await asyncio.gather(*tasks, return_exceptions=True)
             self.store.event(type="closed", session=self.session, frame=frame.id)

@@ -40,9 +40,11 @@ investigation. The [executed trajectories](#two-prompts-and-two-executed-traject
 show actual execution IDs and every caller edge; the graph is not rendered by
 pretending each execution has one owning parent.
 
-In the recorded parallel scenario, **25 calls produce 17 executions**: two calls
-join running work and six reuse completed results. There is one b, one f, one k
-and one l execution. A and c produce separate interpretations of the same b artifact.
+In the recorded parallel scenario, **26 calls produce 18 executions**: two calls
+join running work and six reuse completed results. There is one neutral b execution
+shared by a/c/d, plus one distinct capacity-focused b execution requested by c.
+There is one f, one k and one l execution. A and c observe the same b checkpoint
+before its final artifact, then produce separate interpretations.
 Their arrival order can vary; neither becomes the shared producer's exclusive owner.
 
 ## Shared work: start, join, reuse, release
@@ -87,6 +89,28 @@ retry generations, wait-cycle detection, depth bounds, and cancellation races.
 This implementation coordinates one event loop in one session; it is not a
 distributed lock service or durable orchestration engine.
 
+### Progress and another aspect
+
+`openNode` returns an opaque caller-owned handle for an exact request. Each
+`nextNodeEvent({handle, after})` returns the next accepted checkpoint (with a
+one-based cursor) or the terminal result. Events are ordered and replayable to a
+late joiner within this session. The consumer can inspect the granted checkpoint
+while its producer continues; an active wait edge exists only during a pending
+`nextNodeEvent`, while the open handle's lease keeps the producer alive. Call
+`closeNode` when done early, or consume the terminal event; frame shutdown cleans
+up abandoned handles. The producer calls `publishCheckpoint` with its content and
+declared evidence. Checkpoints are immutable records with separate acceptance and
+mandatory reviews; a failed checkpoint is never emitted. A later producer failure
+does not invalidate an already accepted checkpoint. Publication is bounded by
+`max_checkpoints` in the session ledger.
+
+The c procedure asks a distinct capacity question of b with a **new task**, fresh
+reuse policy and the accepted checkpoint as an explicit input ref. This creates a
+new context and execution, even while the neutral b operation remains running.
+The model decides whether the artifact answers its question; the runtime guarantees
+identity, access, ordering and release. This needs no new frontmatter fields and
+does not imply that the checkpoint is semantically useful or true.
+
 ## Clean contracts
 
 | Concern | Representation | Owner |
@@ -111,8 +135,8 @@ calls genuinely ask different questions, their requests differ and they do not s
 
 | Scenario | Prompt | Actual offline trajectory |
 | --- | --- | --- |
-| A: parallel consumers | [Prompt A](examples/prompts/scenario_a.md) | [Graph and PTC A](examples/trajectories/scenario_a.md): running b/f joins, later b/k/l reuse |
-| B: baseline first | [Prompt B](examples/prompts/scenario_b.md) | [Graph and PTC B](examples/trajectories/scenario_b.md): c and d reuse completed b; policy reuses mix evidence |
+| A: parallel consumers | [Prompt A](examples/prompts/scenario_a.md) | [Graph and PTC A](examples/trajectories/scenario_a.md): a/c observe b progress while it runs; c asks a focused follow-up |
+| B: baseline first | [Prompt B](examples/prompts/scenario_b.md) | [Graph and PTC B](examples/trajectories/scenario_b.md): c replays b's checkpoint after completion; policy reuses mix evidence |
 
 These are explicit **offline scripted fixture runs** through actual Deep Agents,
 QuickJS and the runtime. They contain prompts, execution graphs, call dispositions,
@@ -178,7 +202,7 @@ Live-provider behavior remains untested by the offline suite.
 Skill bodies contain prose, not executable orchestration programs. Shared execution
 does not require a script in the skill; b/f/k/l are agent executions.
 
-## Four host capabilities
+## Eight host capabilities
 
 | Capability | Effect |
 | --- | --- |
@@ -186,6 +210,10 @@ does not require a script in the skill; b/f/k/l are agent executions.
 | `runNode` | Run fresh work or acquire/join/reuse explicitly shared work |
 | `readArtifact` | Read bounded slices of an authorized immutable record |
 | `submitCandidate` | Stage an output for host validation and required reviews |
+| `openNode` | Acquire a handle to shared or fresh work without waiting for its final result |
+| `nextNodeEvent` | Await or replay the next accepted checkpoint or terminal result |
+| `closeNode` | Release an observation early; safe to repeat from the same caller |
+| `publishCheckpoint` | Propose independently reviewed progress evidence |
 
 Native snake_case tools use the same API. A successful `runNode` grants the result
 to its caller. Input refs are authorized before every shared acquisition, including

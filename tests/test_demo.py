@@ -32,13 +32,24 @@ class DemoTests(unittest.IsolatedAsyncioTestCase):
                 events = runtime.store.events()
                 admissions = [e for e in events if e["type"] == "admitted"]
                 nodes = {e["frame"]: e["node"] for e in admissions}
+                tasks = {e["frame"]: e["task"] for e in admissions}
                 calls = [e for e in events if e["type"] == "call_acquired"]
                 self.assertEqual(report["outcome"], "complete")
                 self.assertEqual(set(nodes.values()) & {"f", "g", "h", "i"}, followups)
-                for name in ("b", "l", "delta_check"):
+                for name in ("l", "delta_check"):
                     self.assertEqual(list(nodes.values()).count(name), 1)
+                neutral_b = next(
+                    frame for frame, task in tasks.items() if task == "Produce snapshot evidence"
+                )
+                focused_b = [
+                    frame
+                    for frame, task in tasks.items()
+                    if task == "Assess capacity from snapshot checkpoint"
+                ]
+                self.assertEqual(len(focused_b), 0 if case == "skip-c" else 1)
+                self.assertEqual(list(nodes.values()).count("b"), 1 + len(focused_b))
                 self.assertEqual(list(nodes.values()).count("k"), 0 if case == "unchanged" else 1)
-                b_calls = [e for e in calls if nodes[e["operation"]] == "b"]
+                b_calls = [e for e in calls if e["operation"] == neutral_b]
                 expected = {"a", "c", "d"} - (
                     {"a"} if case == "deferred" else {"c"} if case == "skip-c" else set()
                 )
@@ -50,6 +61,46 @@ class DemoTests(unittest.IsolatedAsyncioTestCase):
                     c_call = next(e for e in b_calls if nodes[e["caller"]] == "c")
                     self.assertEqual(c_call["disposition"], "reused")
                 self.assertEqual(len(set(report["snapshot_refs"])), 1)
+                checkpoints = [
+                    e
+                    for e in events
+                    if e["type"] == "checkpoint_published" and e["operation"] == neutral_b
+                ]
+                self.assertEqual(len(checkpoints), 1)
+                checkpoint_ref = checkpoints[0]["ref"]
+                self.assertEqual(runtime.store.get(checkpoint_ref)["status"], "accepted")
+                if focused_b:
+                    focus_call = next(e for e in calls if e["operation"] == focused_b[0])
+                    self.assertEqual(nodes[focus_call["caller"]], "c")
+                    self.assertEqual(focus_call["disposition"], "started")
+                    focus_entry = next(e for e in admissions if e["frame"] == focused_b[0])
+                    self.assertEqual(focus_entry["refs"], [checkpoint_ref])
+                    self.assertEqual(focus_entry["reuse"], "fresh")
+                    self.assertNotEqual(focus_entry["task"], tasks[neutral_b])
+                    accepted_final = next(
+                        n
+                        for n, e in enumerate(events)
+                        if e["type"] == "accepted" and e["frame"] == neutral_b
+                    )
+                    c_progress_read = next(
+                        n
+                        for n, e in enumerate(events)
+                        if e["type"] == "artifact_read"
+                        and nodes[e["frame"]] == "c"
+                        and e["ref"] == checkpoint_ref
+                    )
+                    if case == "a":
+                        self.assertLess(c_progress_read, accepted_final)
+                        a_progress_read = next(
+                            n
+                            for n, e in enumerate(events)
+                            if e["type"] == "artifact_read"
+                            and nodes[e["frame"]] == "a"
+                            and e["ref"] == checkpoint_ref
+                        )
+                        self.assertLess(a_progress_read, accepted_final)
+                    if case in ("b", "b-no-proposal", "unchanged"):
+                        self.assertGreater(c_progress_read, accepted_final)
                 if "f" in followups:
                     f_calls = [e for e in calls if nodes[e["operation"]] == "f"]
                     self.assertEqual({nodes[e["caller"]] for e in f_calls}, {"d", "g"})

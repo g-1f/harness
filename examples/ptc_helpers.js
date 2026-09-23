@@ -19,6 +19,13 @@ async function run(node, refs = [], task = 'Interpret the supplied evidence', re
   return receipt;
 }
 
+function sharedInputs() {
+  return {
+    current: input.current, previous: input.previous,
+    observations: input.observations, units: input.units
+  };
+}
+
 // These exact neutral tasks also appear in each producer's prose. Consumer
 // interpretation stays in a/c/d/f/g; it is not smuggled into shared work identity.
 var sharedTasks = {
@@ -29,11 +36,30 @@ var sharedTasks = {
   f: 'Assess supplier alternatives'
 };
 async function share(node, refs = []) {
-  const inputs = {
-    current: input.current, previous: input.previous,
-    observations: input.observations, units: input.units
-  };
-  return run(node, refs, sharedTasks[node], 'session', inputs);
+  return run(node, refs, sharedTasks[node], 'session', sharedInputs());
+}
+async function openShared(node, refs = []) {
+  return tools.openNode({request: {
+    node, task: sharedTasks[node], inputs: sharedInputs(), refs,
+    reuse: 'session', key: node + ':' + (++sequence)
+  }});
+}
+async function nextCheckpoint(handle, after = 0) {
+  const event = await tools.nextNodeEvent({handle, after});
+  if (event.kind !== 'checkpoint' || event.receipt.status !== 'accepted') {
+    throw new Error('Expected an accepted checkpoint');
+  }
+  return event;
+}
+async function complete(handle, after) {
+  let event = await tools.nextNodeEvent({handle, after});
+  while (event.kind === 'checkpoint') {
+    event = await tools.nextNodeEvent({handle, after: event.cursor});
+  }
+  if (event.kind !== 'complete' || event.receipt.status !== 'accepted') {
+    throw new Error('Node did not complete with an accepted result');
+  }
+  return event.receipt;
 }
 
 function evidence(node, extra = {}) {

@@ -123,7 +123,7 @@ select a model, backend or policy override.
 | Mandatory check before publishing an output | `reviews[skill_name] = ReviewPolicy(...)` | None |
 | New stable concept shared by all skills | Explicit contract proposal and migration after discussion | Deliberate schema change only if justified |
 
-The bundled agent adapter exposes the same four application capabilities. Arbitrary
+The bundled agent adapter exposes eight application capabilities. Arbitrary
 per-agent tool allowlists are not a YAML feature; an application needing them must
 configure or implement a suitable executor. The `instructions` constructor argument
 allows a separately configured system prompt.
@@ -164,8 +164,8 @@ A cancelling execution must finish cleanup before its replacement can start.
 Different prose questions remain different requests; the runtime does not guess
 semantic equivalence. Fresh calls do not use the shared index.
 
-Each waiting call owns a separate lease. It shields the producer and releases its
-lease on completion or cancellation. The last waiter leaving unfinished work
+Each waiting call owns a separate lease. An open observation owns a lease until
+terminal event, explicit close or frame cleanup. The last lease leaving unfinished work
 requests cancellation; another active consumer keeps it alive. Metadata acquisition
 and release are synchronous critical sections on one event loop. No mutex is held
 while executing, joining or draining work. Active dependency edges are checked for
@@ -202,7 +202,7 @@ every reference mentioned inside it. There is no ambient artifact discovery,
 cross-session reuse or automatic TTL. Reviewers use the same mechanism; the host
 grants a required reviewer the exact candidate and its declared supporting refs.
 
-## 5. Four capabilities, one publication protocol
+## 5. Eight capabilities, one publication protocol
 
 | Capability | Effect |
 | --- | --- |
@@ -210,6 +210,10 @@ grants a required reviewer the exact candidate and its declared supporting refs.
 | `run_node(request)` | Acquire fresh or explicitly shared work; await a compact receipt |
 | `read_artifact(ref, offset, limit)` | Read an authorized immutable record in bounded slices |
 | `submit_candidate(summary, content, based_on)` | Stage a candidate; the host controls publication status |
+| `open_node(request)` | Acquire a caller-owned observation handle, returning it without final completion |
+| `next_node_event(handle, after)` | Replay or await the next accepted checkpoint or terminal result after a cursor |
+| `close_node(handle)` | Release a handle early; idempotent for its owner |
+| `publish_checkpoint(summary, content, based_on)` | Freeze and review an intermediate artifact independently |
 
 PTC exposes camelCase equivalents on `tools`. Native calls use the same bound
 `NodeAPI`. The framework's compatibility `task` route dispatches into the same
@@ -226,7 +230,7 @@ Execution proceeds as follows:
 2. Acquire a lease on an existing execution, or admit a new frame and enter its
    primary procedure. Existing work follows its own remaining lifecycle below.
 3. Run the configured executor. The agent may inspect links, call children, observe
-   artifacts and write additional code. Children must be joined before returning.
+   artifacts and write additional code. Child handles must be joined or closed before returning.
 4. Validate and freeze the candidate as an immutable draft.
 5. Run every required reviewer in fresh context, granting the exact draft first and
    its declared evidence next. Reviews for the candidate can execute concurrently.
@@ -252,6 +256,17 @@ procedures, input refs, observed refs, review refs, publication status and time.
 `observed_refs` records actual reads; `based_on` is the worker's declared lineage.
 Neither proves that every semantic dependency was declared or understood.
 
+A checkpoint uses the same candidate shape and evidence validation as a final
+artifact. Its accepted receipt is appended to the operation's ordered progress
+stream. A subscriber receives it by cursor and gains its ref; a late joiner can
+replay from cursor zero even after final completion. Failed checkpoint reviews
+produce `needs_review` for the producer, with no subscriber publication. The
+final result and each checkpoint have separate frozen drafts and mandatory reviews.
+Open handles retain the producer but create wait edges only while awaiting an event.
+The ledger bounds publication attempts with `max_checkpoints=128` by default.
+Checkpoint records can remain accepted if the producer later fails. The host
+validates evidence access and review policy, not semantic fitness for every consumer.
+
 ## 6. End-to-end converging example
 
 The [README graph](../README.md#an-actual-converging-graph) has eight composite
@@ -273,12 +288,16 @@ caller-specific questions. For example, f receives the exact b artifact from bot
 d and g; k and l receive the exact delta artifact in each branch.
 
 Scenario A starts a and c concurrently. Both request b, so the second arrival joins
-the running execution. D later reuses b. D and g converge on f, whose nested k/l
-results already exist. The recorded run has 25 calls and 17 executions, with two
-running joins and six completed reuses. One execution of each shared producer
-supports multiple consumer results; this is an executed graph, not a repeated tree.
+the running execution. Both consume its accepted checkpoint before the neutral b
+result finishes. C asks b a different capacity-specific question in a fresh
+execution grounded in that checkpoint. D later reuses neutral b. D and g converge
+on f, whose nested k/l results already exist. The recorded run has 26 calls and
+18 executions, with two running joins and six completed reuses. One execution of
+each neutral shared producer supports multiple consumer results; the focused b call
+is intentionally separate.
 
-Scenario B runs a before c to exercise completed b reuse. C's stable-demand result
+Scenario B runs a before c to exercise completed b reuse and checkpoint replay.
+C's capacity-focused b call starts after the neutral b has completed. Its stable-demand result
 leads into h, which reuses l and conditionally calls i. The `deferred` fixture lets a
 omit b so c creates it. `skip-c` omits c's request. With unchanged snapshots, b omits
 k/l but h can later create l when its own procedure needs it.

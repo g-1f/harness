@@ -92,10 +92,15 @@ observe('views', await Promise.all([read(a.ref), read(c.ref)]));
             )
         if self.node == "a":
             return """
-const b = input.baseline_requires_snapshot ? await share('b') : null;
-var evidenceRefs = [...suppliedRefs, ...(b ? [b.ref] : [])];
+const opened = input.baseline_requires_snapshot ? await openShared('b') : null;
+const progress = opened ? await nextCheckpoint(opened.handle) : null;
+const measured = progress ? await read(progress.receipt.ref) : null;
+const b = opened ? await complete(opened.handle, progress.cursor) : null;
+var evidenceRefs = [...suppliedRefs,
+  ...(progress ? [progress.receipt.ref] : []), ...(b ? [b.ref] : [])];
 var observation = evidence('a', {
-  snapshot: b?.ref || null, subchecks: b ? [await read(b.ref)] : []
+  snapshot: b?.ref || null, checkpoint: progress?.receipt.ref || null,
+  subchecks: b ? [measured, await read(b.ref)] : []
 });
 observe('evidence', observation);
 """
@@ -107,12 +112,32 @@ var observation = evidence('c', {snapshot: null, policy: null});
 observe('evidence', observation);
 """
             return """
-var snapshot = await share('b');
-observe('capacity_snapshot', await read(snapshot.ref));
+var opened = await openShared('b');
+var progress = await nextCheckpoint(opened.handle);
+var measured = await read(progress.receipt.ref);
+var focused = await run('b', [progress.receipt.ref],
+  'Assess capacity from snapshot checkpoint', 'fresh', sharedInputs());
+var snapshot = await complete(opened.handle, progress.cursor);
+observe('capacity_snapshot', {
+  snapshot: await read(snapshot.ref), focus: await read(focused.ref), checkpoint: measured
+});
 """
         if self.node == "b":
+            if self.task == "Assess capacity from snapshot checkpoint":
+                return """
+var measured = await read(suppliedRefs[0]);
+observe('focused', measured);
+"""
             return """
 var delta = await share('delta_check');
+var measurement = await read(delta.ref);
+var checkpoint = await tools.publishCheckpoint({
+  summary: 'Measured snapshot evidence for other interpretations',
+  content: {delta: measurement.delta, unit: measurement.unit,
+    source: measurement.source, text: 'Snapshot measurement'},
+  based_on: [delta.ref]
+});
+if (checkpoint.status !== 'accepted') throw new Error('Snapshot checkpoint unaccepted');
 observe('delta', await read(delta.ref));
 """
         if self.node == "d":
@@ -169,6 +194,7 @@ await tools.submitCandidate({
             ("root", "views"): self.root_views,
             ("root", "audits"): self.root_audits,
             ("b", "delta"): self.snapshot,
+            ("b", "focused"): self.focused,
             ("c", "capacity_snapshot"): self.capacity,
             ("d", "supplier_snapshot"): self.supplier,
             ("h", "policy"): self.policy,
@@ -220,7 +246,7 @@ await tools.submitCandidate({
             return """
 await tools.submitCandidate({
   summary: 'Snapshot unchanged', content: evidence('b', {changed: false, internal: []}),
-  based_on: [delta.ref]
+  based_on: [checkpoint.ref, delta.ref]
 });
 """
         return """
@@ -229,12 +255,23 @@ await tools.submitCandidate({
   summary: 'Shared snapshot evidence',
   content: evidence('b', {changed: true, internal: ['k', 'l'],
     subchecks: await Promise.all(parts.map(part => read(part.ref)))}),
-  based_on: [delta.ref, ...parts.map(part => part.ref)]
+  based_on: [checkpoint.ref, delta.ref, ...parts.map(part => part.ref)]
+});
+"""
+
+    def focused(self, value):
+        return """
+await tools.submitCandidate({
+  summary: 'Capacity-specific follow-up on measured evidence',
+  content: {text: input.observations.c, unit: measured.unit,
+    source: 'synthetic/b:capacity', scope: assignedTask,
+    delta: measured.delta, checkpoint: suppliedRefs[0]},
+  based_on: suppliedRefs
 });
 """
 
     def capacity(self, value):
-        inspect_policy = "accelerating" not in value["text"].lower()
+        inspect_policy = "accelerating" not in value["snapshot"]["text"].lower()
         code = (
             "const policy = await run('h', [snapshot.ref], 'Investigate the policy outlook');"
             if inspect_policy
@@ -243,10 +280,13 @@ await tools.submitCandidate({
         return (
             code
             + """
-var evidenceRefs = [...suppliedRefs, snapshot.ref, ...(policy ? [policy.ref] : [])];
+var evidenceRefs = [...suppliedRefs, progress.receipt.ref, focused.ref, snapshot.ref,
+  ...(policy ? [policy.ref] : [])];
 var observation = evidence('c', {
-  snapshot: snapshot.ref, policy: policy?.ref || null,
-  subchecks: [await read(snapshot.ref), ...(policy ? [await read(policy.ref)] : [])]
+  snapshot: snapshot.ref, checkpoint: progress.receipt.ref,
+  focus: focused.ref, policy: policy?.ref || null,
+  subchecks: [measured, await read(focused.ref), await read(snapshot.ref),
+    ...(policy ? [await read(policy.ref)] : [])]
 });
 observe('evidence', observation);
 """

@@ -11,7 +11,7 @@ converging execution graph, not an unrolled creation tree.
 | Skill | Canonical name and immutable revision | Describes a procedure |
 | Call binding | Caller execution ID plus local request key | Reserves one exact request and, once selected, its execution |
 | Operation | Unique execution ID; optional shared-work identity | Owns the producer task and its eventual result |
-| Wait lease | One active `run_node` await | Keeps an unfinished producer needed by this caller |
+| Wait lease | One active `run_node` await or open observation handle | Keeps an unfinished producer needed by this caller |
 
 A and c can each have a call binding and wait lease pointing to one b operation.
 B's first caller ID is recorded as its `origin`; origin is diagnostic, not ownership.
@@ -21,8 +21,9 @@ producer execution; call events record every consumer edge.
 
 No lock/release attributes are added to skills. `NodeRequest` gains one optional
 call-level choice: `reuse: "fresh" | "session"`, default `"fresh"`. Joining and
-release are automatic within `await run_node(...)`. The four tool capabilities
-remain sufficient; there is no exposed lock token for a model to forget to release.
+release are automatic within `await run_node(...)`. `open_node` adds a caller-owned
+observation handle for progress; it releases on terminal event, explicit close or
+frame cleanup. This handle is not a lock token and cannot block other callers.
 
 ## 2. Exact shared-work identity
 
@@ -152,6 +153,11 @@ wait ends. Authored skill links can contain cycles; active waits cannot deadlock
 a cycle. Fresh recursive execution is bounded by active depth and shared budgets.
 A detected cycle is a request error that the caller may handle or propagate.
 
+An open observation holds a lease but adds **no active wait edge** until its caller
+actually awaits a new event. Each pending `next_node_event` temporarily adds an edge
+and checks cycle/depth bounds. A returned checkpoint removes the edge while the
+lease persists. This distinguishes a live subscriber from a blocked caller.
+
 ## 7. Artifact access and publication
 
 Before inspecting any shared index entry, the runtime checks the caller's liveness
@@ -165,6 +171,16 @@ mentioned inside b. Consumers can request compatible shared producers themselves
 receive explicit grants from their caller. Required reviewers get the exact frozen
 draft and declared evidence. An accepted review with `verdict: "fail"` remains a
 failing review; publication status is not a correctness assertion.
+
+An operation keeps up to `max_checkpoints` accepted checkpoints, each with an
+ordered cursor starting at 1. Each publication freezes its own draft and runs its
+configured mandatory reviewers, independent of final-result review. Rejected
+checkpoint drafts stay private and never advance the subscriber cursor. Every
+subscriber gets an artifact grant when reading its event; a late subscriber can
+replay earlier accepted checkpoints within the session. On terminal failure the
+subscriber gets a terminal error and the already accepted checkpoints remain
+independent records. A new task/refs/key starts a separate execution if the caller
+needs a different aspect. The host does not assess semantic usefulness.
 
 ## 8. Executable evidence
 
@@ -190,3 +206,7 @@ End-to-end tests use the real interpreter and scripted model to verify the conve
 b/f/k/l graph, optional dependencies, fresh audits and failure outcomes. The exported
 two prompt/trajectory pairs show observed results, not hypothetical execution traces.
 They do not validate live-model reasoning quality or distributed/durable operation.
+
+`tests/test_progress.py` covers two simultaneous subscribers receiving the same
+checkpoint, distinct follow-up tasks before final completion, late replay, failed
+checkpoint review, owner-scoped handles, budgets and cleanup.

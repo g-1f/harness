@@ -1,4 +1,4 @@
-"""Four frame-bound capabilities shared by generated code and native calls."""
+"""Frame-bound capabilities shared by generated code and native calls."""
 
 from harness.contracts import Candidate, NodeRequest, Receipt, Rejected, candidate
 from harness.runtime import Frame, Runtime
@@ -11,6 +11,20 @@ class NodeAPI:
 
     async def run_node(self, request: dict) -> Receipt:
         return await self.runtime.run_node(NodeRequest.parse(request), self.frame)
+
+    async def open_node(self, request: dict) -> dict:
+        return await self.runtime.open_node(NodeRequest.parse(request), self.frame)
+
+    async def next_node_event(self, handle: str, after: int) -> dict:
+        return await self.runtime.next_node_event(handle, after, self.frame)
+
+    async def close_node(self, handle: str) -> dict:
+        return await self.runtime.close_node(handle, self.frame)
+
+    async def publish_checkpoint(self, summary: str, content: dict, based_on: list[str]) -> Receipt:
+        return await self.runtime.publish_checkpoint(
+            self.frame, {"summary": summary, "content": content, "based_on": based_on}
+        )
 
     async def read_node(self, node: str, enter: bool = False) -> dict:
         return self.runtime.read_node(self.frame, node, enter=enter)

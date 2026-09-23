@@ -23,6 +23,8 @@ def render(case: str, runtime: Runtime, receipt: dict) -> str:
     aliases = {frame: f"{ids[frame]}:{node}" for frame, node in nodes.items()}
     records = {}
     for event in events:
+        if event["type"] == "checkpoint_published":
+            aliases[event["ref"]] = aliases[event["operation"]] + f"/checkpoint:{event['cursor']}"
         if event["type"] in ("accepted", "needs_review"):
             record = runtime.store.get(event["ref"])
             records[event["frame"]] = record
@@ -90,7 +92,14 @@ def render(case: str, runtime: Runtime, receipt: dict) -> str:
     included = {frame for frame, node in nodes.items() if node in INVESTIGATION}
     for frame in ids:
         if frame in included:
-            lines.append(f'    {ids[frame]}["{nodes[frame]} ({ids[frame]})"]')
+            display = (
+                "b focus"
+                if nodes[frame] == "b"
+                and next(e for e in admissions if e["frame"] == frame)["task"]
+                == "Assess capacity from snapshot checkpoint"
+                else nodes[frame]
+            )
+            lines.append(f'    {ids[frame]}["{display} ({ids[frame]})"]')
     edges = set()
     for call in calls:
         source, target = call["caller"], call["operation"]
@@ -118,9 +127,10 @@ def render(case: str, runtime: Runtime, receipt: dict) -> str:
         "",
         "## Calls and ownership",
         "",
-        "Every successful acquisition has its own wait lease. Multiple rows can target "
-        "the same execution. The runtime releases each lease on return, error or "
-        "cancellation; callers never lock/unlock a skill themselves.",
+        "Every successful acquisition has its own lease. Multiple rows can target "
+        "the same execution. A pending observation adds a temporary wait edge. The "
+        "runtime releases each lease on completion, close, error or cancellation; "
+        "callers never lock/unlock a skill themselves.",
         "",
         "| Caller | Target execution | Caller key | Dispatch | Reuse policy |",
         "| --- | --- | --- | --- | --- |",
@@ -129,6 +139,43 @@ def render(case: str, runtime: Runtime, receipt: dict) -> str:
         lines.append(
             f"| `{label(call['caller'])}` | `{label(call['operation'])}` | "
             f"`{call['key']}` | {call['disposition']} | {call['reuse']} |"
+        )
+    lines += [
+        "",
+        "## Checkpoints and observation order",
+        "",
+        "Each row is an accepted, immutable checkpoint from a producer. The reads "
+        "are observed grants, ordered by the session event log; 'before final' "
+        "means the consumer obtained it while the producer was still running. "
+        "A late subscriber can replay the same checkpoint after completion.",
+        "",
+        "| Producer | Checkpoint | Subscriber reads |",
+        "| --- | --- | --- |",
+    ]
+    for position, event in enumerate(events):
+        if event["type"] != "checkpoint_published":
+            continue
+        final_at = next(
+            (
+                i
+                for i, item in enumerate(events)
+                if i > position
+                and item["type"] in ("accepted", "needs_review", "failed", "cancelled")
+                and item.get("frame") == event["operation"]
+            ),
+            None,
+        )
+        reads = [
+            f"`{label(item['frame'])}` ({'before final' if final_at is None or i < final_at else 'after final'})"
+            for i, item in enumerate(events)
+            if i > position
+            and item["type"] == "artifact_read"
+            and item["ref"] == event["ref"]
+            and item["frame"] != event["operation"]
+        ]
+        lines.append(
+            f"| `{label(event['operation'])}` | `{normalize(event['ref'])}` "
+            f"(cursor {event['cursor']}) | {', '.join(reads) or 'None'} |"
         )
     lines += [
         "",

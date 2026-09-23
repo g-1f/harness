@@ -1,4 +1,4 @@
-"""Run a pinned package resource with no model and the same four host capabilities."""
+"""Run a pinned package resource with the same supervised host capabilities."""
 
 import asyncio
 
@@ -26,6 +26,15 @@ class CodeRunner:
                 async def run(args):
                     return await api.run_node(**args)
 
+                async def open_node(args):
+                    return await api.open_node(**args)
+
+                async def next_node_event(args):
+                    return await api.next_node_event(**args)
+
+                async def close_node(args):
+                    return await api.close_node(**args)
+
                 async def inspect(args):
                     return await api.read_node(**args)
 
@@ -35,14 +44,24 @@ class CodeRunner:
                 async def submit(args):
                     return await api.submit_candidate(**args)
 
+                async def checkpoint(args):
+                    return await api.publish_checkpoint(**args)
+
                 for name, fn in [
                     ("runNode", run),
+                    ("openNode", open_node),
+                    ("nextNodeEvent", next_node_event),
+                    ("closeNode", close_node),
                     ("readNode", inspect),
                     ("readArtifact", read),
+                    ("publishCheckpoint", checkpoint),
                     ("submitCandidate", submit),
                 ]:
                     ctx.register(name, fn)
-                prelude = "const tools = {runNode, readNode, readArtifact, submitCandidate};\n"
+                prelude = (
+                    "const tools = {runNode, openNode, nextNodeEvent, closeNode, "
+                    "readNode, readArtifact, publishCheckpoint, submitCandidate};\n"
+                )
                 prelude += "const input = " + encode(frame.request.inputs) + ";\n"
                 prelude += "const task = " + encode(frame.request.task) + ";\n"
                 prelude += "const refs = " + encode(frame.request.refs) + ";\n"
