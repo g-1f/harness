@@ -2,6 +2,8 @@
 
 Status: proposed architecture, September 2026. This document extends [the Library harness design](library-harness-design.md). It describes the intended end-to-end behavior and identifies gaps in the current reference implementation; it is not a claim that the full design already runs.
 
+Implementation decision: read the [red-team assessment and implementation plan](node-composition-red-team-plan.md) before implementing this proposal. It documents synthetic failure probes, narrows the guarantees around review and isolation, and supersedes the rollout sequence below with a smaller experiment using the existing interpreter and recursive call surface. In particular, a dedicated `runScript` service is optional, and a fresh frame does not currently restrict access to accepted session artifacts.
+
 ## 1. Design thesis
 
 A skill is a reusable unit of expertise that an agent can enter or invoke. It can contain prose, links to other skills, and a reviewed script or other local resource. The agent observes results and writes programmatic tool calls (PTC) incrementally. The resulting program can invoke skills in parallel, inspect artifacts, return early, and continue after new observations. The host supplies execution, authority, and durable records. It does not compile natural-language conditions into a fixed workflow.
