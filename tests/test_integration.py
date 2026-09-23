@@ -32,6 +32,14 @@ class ScriptedModel(BaseChatModel):
         return ChatResult(generations=[ChatGeneration(message=value)])
 
 
+class CapturingModel(ScriptedModel):
+    prompts: list[Any] = []
+
+    def _generate(self, messages, stop=None, run_manager=None, **kwargs):
+        self.prompts.append([(m.type, m.content) for m in messages])
+        return super()._generate(messages, stop, run_manager, **kwargs)
+
+
 def eval_response(code):
     return AIMessage(
         content="", tool_calls=[{"name": "eval", "args": {"code": code}, "id": "eval-1"}]
@@ -39,6 +47,38 @@ def eval_response(code):
 
 
 class IntegrationTests(unittest.IsolatedAsyncioTestCase):
+    async def test_fresh_agent_calls_share_stable_prefix_without_sharing_history(self):
+        runtime = Runtime(Registry([skill("work")]), Store())
+        self.addCleanup(runtime.store.close)
+        self.addAsyncCleanup(runtime.aclose)
+        models = []
+
+        def factory(frame):
+            model = CapturingModel(
+                responses=[
+                    eval_response(
+                        "await tools.submitCandidate({summary:'Done',content:{ok:true},based_on:[]});"
+                    ),
+                    AIMessage(content="Private response from " + frame.request.task),
+                ]
+            )
+            models.append(model)
+            return metered_model(model, runtime.ledger)
+
+        runtime.register_executor("agent", DeepAgentRunner(runtime, factory))
+        for task in ("baseline", "capacity"):
+            await runtime.run_node(NodeRequest("work", task, {"snapshot": 42}, task))
+        first, second = [model.prompts[0] for model in models]
+        self.assertEqual(first[:-1], second[:-1])
+        self.assertNotEqual(first[-1], second[-1])
+        self.assertFalse(any(kind in ("ai", "tool") for kind, _ in second))
+        packets = [json.loads(content) for kind, content in second if kind == "human"]
+        self.assertEqual(len(packets), 3)
+        self.assertIn("entry", packets[0])
+        self.assertEqual(packets[1], {"inputs": {"snapshot": 42}, "refs": []})
+        self.assertEqual(packets[2]["task"], "capacity")
+        self.assertEqual(runtime.ledger.frames, 2)
+
     async def test_real_interpreter_review_repair_loop(self):
         registry = Registry([skill("work"), skill("critic")])
         kernel = Runtime(registry, Store(), reviews={"work": ReviewPolicy(("critic",), 1)})

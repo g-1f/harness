@@ -284,12 +284,16 @@ class Runtime:
             caller.handles.add(lease.id)
         return {"handle": lease.id}
 
-    def _owned_handle(self, handle: str, caller: Frame | None) -> Lease:
+    def _owned_handle(
+        self, handle: str, caller: Frame | None, *, require_live: bool = True
+    ) -> Lease:
         if type(handle) is not str or handle not in self._handles:
             raise Rejected("Unknown or closed node handle")
         owner, lease = self._handles[handle]
         if owner is not caller:
             raise Rejected("Node handle belongs to another caller")
+        if not require_live:
+            return lease
         if caller:
             self.check_live(caller)
         elif self._closed or time.monotonic() >= self.deadline:
@@ -305,9 +309,11 @@ class Runtime:
 
     async def close_node(self, handle: str, caller: Frame | None = None) -> dict:
         """Release this caller's lease early; the producer survives other leases."""
+        if type(handle) is not str:
+            raise Rejected("Unknown or closed node handle")
         if handle in self._closed_handles and self._closed_handles[handle] is caller:
             return {"closed": True}
-        self._owned_handle(handle, caller)
+        self._owned_handle(handle, caller, require_live=False)
         draining = self._release_handle(handle)
         if draining is not None:
             await asyncio.gather(asyncio.shield(draining), return_exceptions=True)
@@ -316,19 +322,26 @@ class Runtime:
     async def next_node_event(self, handle: str, after: int, caller: Frame | None = None) -> dict:
         """Replay progress or await one event. Terminal delivery releases the handle."""
         lease = self._owned_handle(handle, caller)
-        event = await self.operations.next_event(lease, after)
-        self._owned_handle(handle, caller)
-        if event["kind"] == "checkpoint":
-            if caller:
-                caller.grants.add(event["receipt"]["ref"])
-            return event
+        if lease.observing:
+            raise Rejected("A read is already pending on this node handle")
+        lease.observing = True
         try:
-            receipt = await asyncio.shield(lease.operation.task)
-            if caller:
-                caller.grants.add(receipt["ref"])
-            return {"kind": "complete", "cursor": event["cursor"], "receipt": dict(receipt)}
+            event = await self.operations.next_event(lease, after)
+            if event["kind"] == "checkpoint":
+                self._owned_handle(handle, caller)
+                if caller:
+                    caller.grants.add(event["receipt"]["ref"])
+                return event
+            try:
+                self._owned_handle(handle, caller)
+                receipt = await asyncio.shield(lease.operation.task)
+                if caller:
+                    caller.grants.add(receipt["ref"])
+                return {"kind": "complete", "cursor": event["cursor"], "receipt": dict(receipt)}
+            finally:
+                await self.close_node(handle, caller)
         finally:
-            await self.close_node(handle, caller)
+            lease.observing = False
 
     async def publish_checkpoint(self, frame: Frame, value: Candidate) -> Receipt:
         """Publish an independently reviewed artifact while this node is running."""

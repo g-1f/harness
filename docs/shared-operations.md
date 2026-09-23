@@ -24,6 +24,10 @@ call-level choice: `reuse: "fresh" | "session"`, default `"fresh"`. Joining and
 release are automatic within `await run_node(...)`. `open_node` adds a caller-owned
 observation handle for progress; it releases on terminal event, explicit close or
 frame cleanup. This handle is not a lock token and cannot block other callers.
+Each handle permits one pending event read. Cancelling a read retains its handle
+for retry; closing is allowed after deadline expiry because it only releases
+resources and still checks ownership. Cursors follow accepted publication order,
+which may differ from start order when reviews run concurrently.
 
 ## 2. Exact shared-work identity
 

@@ -79,12 +79,12 @@ flowchart TD
     E9 -->|reused| E4
     E9 -->|started| E10
     E9 -->|started| E11
-    E11 -->|reused| E5
     E10 -->|reused| E5
-    E11 -->|reused| E8
-    E11 -->|joined| E10
+    E11 -->|reused| E5
     E10 -->|reused| E7
     E10 -->|reused| E8
+    E11 -->|reused| E8
+    E11 -->|joined| E10
 ```
 
 ## Executions
@@ -131,12 +131,12 @@ Every successful acquisition has its own lease. Multiple rows can target the sam
 | `E9:d` | `E4:b` | `b:1` | reused | session |
 | `E9:d` | `E10:f` | `f:2` | started | session |
 | `E9:d` | `E11:g` | `g:3` | started | fresh |
-| `E11:g` | `E5:delta_check` | `delta_check:1` | reused | session |
 | `E10:f` | `E5:delta_check` | `delta_check:1` | reused | session |
-| `E11:g` | `E8:l` | `l:2` | reused | session |
-| `E11:g` | `E10:f` | `f:3` | joined | session |
+| `E11:g` | `E5:delta_check` | `delta_check:1` | reused | session |
 | `E10:f` | `E7:k` | `k:2` | reused | session |
 | `E10:f` | `E8:l` | `l:3` | reused | session |
+| `E11:g` | `E8:l` | `l:2` | reused | session |
+| `E11:g` | `E10:f` | `f:3` | joined | session |
 | `E1:root` | `E12:artifact_coherence` | `artifact_coherence:4` | started | fresh |
 | `E1:root` | `E13:artifact_coherence` | `artifact_coherence:5` | started | fresh |
 | `E1:root` | `E14:artifact_coherence` | `artifact_coherence:6` | started | fresh |
@@ -151,7 +151,7 @@ Each row is an accepted, immutable checkpoint from a producer. The reads are obs
 
 | Producer | Checkpoint | Subscriber reads |
 | --- | --- | --- |
-| `E4:b` | `E4:b/checkpoint:1` (cursor 1) | `E3:c` (before final), `E2:a` (before final), `E6:b` (before final) |
+| `E4:b` | `E4:b/checkpoint:1` (cursor 1) | `E2:a` (before final), `E3:c` (before final), `E6:b` (before final) |
 
 ## Captured PTC and observations
 

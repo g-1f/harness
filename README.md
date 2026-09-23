@@ -113,6 +113,11 @@ does not imply that the checkpoint is semantically useful or true.
 
 ## Clean contracts
 
+The [edge-case and KV-cache review](docs/edge-cases-and-kv-cache.md) covers tested
+observation races, failed producers, retry generations, checkpoint ordering and
+the adapter's stable prompt prefixes. Prefix compatibility is tested locally;
+provider cache hits and latency improvements still require live measurement.
+
 | Concern | Representation | Owner |
 | --- | --- | --- |
 | Procedure meaning | `SKILL.md`: name, description, prose, links and optional resources | Skill author |

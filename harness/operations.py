@@ -57,6 +57,7 @@ class Lease:
     operation: Operation
     waiting: bool
     released: bool = False
+    observing: bool = False
 
 
 class OperationPool:

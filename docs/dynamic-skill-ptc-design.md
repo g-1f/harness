@@ -185,8 +185,10 @@ The adapter receives a `RunContext` containing:
 | `feedback` | Failed review outcomes from the preceding attempt |
 | `previous` | Previous immutable candidate ref, or null |
 
-Each newly executed agent attempt builds a fresh agent and QuickJS interpreter. Caller messages,
-globals and interpreter snapshots are not inherited. The child receives its own
+Each newly executed agent attempt builds a fresh agent and QuickJS interpreter.
+The agent adapter sends stable entry and input/ref packets before the task/repair
+packet to preserve common prompt prefixes; this does not restore prior conversations.
+Caller messages, globals and interpreter snapshots are not inherited. The child receives its own
 entry, task, inputs and explicitly granted refs. “Fresh” does not mean ignorant of
 all prior information: the caller can intentionally include prior evidence in its
 inputs and grants.

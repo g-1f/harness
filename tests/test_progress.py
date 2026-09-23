@@ -223,6 +223,144 @@ class ProgressTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(runtime._handles, {})
         self.assertTrue(all(not op.waiters for op in runtime.operations.operations.values()))
 
+    async def test_expired_session_still_allows_owner_to_release(self):
+        runtime = self.runtime(names=("b",))
+
+        async def run(frame, context):
+            await asyncio.Event().wait()
+
+        runtime.register_executor("agent", run)
+        opened = await runtime.open_node(request())
+        runtime.deadline = 0
+        await runtime.close_node(opened["handle"])
+        self.assertEqual(runtime._handles, {})
+        self.assertTrue(all(not op.waiters for op in runtime.operations.operations.values()))
+
+    async def test_concurrent_checkpoint_cursors_follow_acceptance_order(self):
+        runtime = self.runtime(names=("b", "review"), reviews={"b": ReviewPolicy(("review",))})
+        reviewing_first, release_first = asyncio.Event(), asyncio.Event()
+
+        async def run(frame, context):
+            if frame.request.node == "review":
+                value = runtime.read(frame, frame.request.refs[0])["content"]["value"]
+                if value == 1:
+                    reviewing_first.set()
+                    await release_first.wait()
+                return {
+                    "summary": "Review",
+                    "content": {
+                        "candidate_ref": frame.request.refs[0],
+                        "verdict": "pass",
+                        "findings": [],
+                    },
+                }
+            first = asyncio.create_task(runtime.publish_checkpoint(frame, draft(1)))
+            await reviewing_first.wait()
+            second = await runtime.publish_checkpoint(frame, draft(2))
+            release_first.set()
+            first_receipt = await first
+            return draft(3, based_on=[first_receipt["ref"], second["ref"]])
+
+        runtime.register_executor("agent", run)
+        opened = await runtime.open_node(request())
+        one = await runtime.next_node_event(opened["handle"], 0)
+        two = await runtime.next_node_event(opened["handle"], one["cursor"])
+        self.assertEqual([one["cursor"], two["cursor"]], [1, 2])
+        self.assertEqual(
+            [runtime.store.get(e["receipt"]["ref"])["content"]["value"] for e in (one, two)], [2, 1]
+        )
+        await runtime.next_node_event(opened["handle"], two["cursor"])
+
+    async def test_deadline_failure_during_pending_read_releases_terminal_handle(self):
+        runtime = self.runtime(names=("b",))
+
+        async def run(frame, context):
+            runtime.deadline = 0
+            return draft()
+
+        runtime.register_executor("agent", run)
+        opened = await runtime.open_node(request())
+        with self.assertRaisesRegex(Rejected, "deadline"):
+            await runtime.next_node_event(opened["handle"], 0)
+        self.assertEqual(runtime._handles, {})
+
+    async def test_one_pending_read_per_handle_and_cancelled_read_can_retry(self):
+        runtime = self.runtime(names=("b",))
+        finish = asyncio.Event()
+
+        async def run(frame, context):
+            await finish.wait()
+            await runtime.publish_checkpoint(frame, draft(42))
+            return draft()
+
+        runtime.register_executor("agent", run)
+        opened = await runtime.open_node(request())
+        pending = asyncio.create_task(runtime.next_node_event(opened["handle"], 0))
+        await asyncio.sleep(0)
+        with self.assertRaisesRegex(Rejected, "already"):
+            await asyncio.wait_for(runtime.next_node_event(opened["handle"], 0), 0.1)
+        pending.cancel()
+        with self.assertRaises(asyncio.CancelledError):
+            await pending
+        self.assertIn(opened["handle"], runtime._handles)
+        finish.set()
+        event = await runtime.next_node_event(opened["handle"], 0)
+        self.assertEqual(event["kind"], "checkpoint")
+        await runtime.next_node_event(opened["handle"], event["cursor"])
+
+    async def test_failed_producer_preserves_checkpoint_and_retry_generation(self):
+        runtime = self.runtime(names=("b",))
+
+        async def run(frame, context):
+            await runtime.publish_checkpoint(frame, draft(42))
+            raise RuntimeError("producer failed")
+
+        runtime.register_executor("agent", run)
+        refs = []
+        for key in ("original", "original", "new-attempt"):
+            opened = await runtime.open_node(request(key=key))
+            event = await runtime.next_node_event(opened["handle"], 0)
+            refs.append(event["receipt"]["ref"])
+            with self.assertRaisesRegex(RuntimeError, "producer failed"):
+                await runtime.next_node_event(opened["handle"], event["cursor"])
+            self.assertNotIn(opened["handle"], runtime._handles)
+            self.assertEqual(runtime.store.get(refs[-1])["status"], "accepted")
+        self.assertEqual(refs[0], refs[1])
+        self.assertNotEqual(refs[1], refs[2])
+        self.assertEqual(runtime.ledger.frames, 2)
+
+    async def test_observation_cycle_across_existing_branches(self):
+        runtime = self.runtime(names=("x", "y"))
+        ready, finish = asyncio.Event(), asyncio.Event()
+        frames = {}
+
+        async def run(frame, context):
+            frames[frame.request.node] = frame
+            if len(frames) == 2:
+                ready.set()
+            await finish.wait()
+            return draft()
+
+        runtime.register_executor("agent", run)
+        roots = [await runtime.open_node(request(name, key=name)) for name in ("x", "y")]
+        await asyncio.wait_for(ready.wait(), 2)
+        xy = await runtime.open_node(request("y", key="xy"), frames["x"])
+        yx = await runtime.open_node(request("x", key="yx"), frames["y"])
+        self.assertEqual(runtime.operations.waits, {})
+        pending = asyncio.create_task(runtime.next_node_event(xy["handle"], 0, frames["x"]))
+        await asyncio.sleep(0)
+        with self.assertRaisesRegex(Rejected, "Wait cycle"):
+            await runtime.next_node_event(yx["handle"], 0, frames["y"])
+        pending.cancel()
+        with self.assertRaises(asyncio.CancelledError):
+            await pending
+        await runtime.close_node(xy["handle"], frames["x"])
+        await runtime.close_node(yx["handle"], frames["y"])
+        self.assertEqual(runtime.operations.waits, {})
+        finish.set()
+        for opened in roots:
+            await runtime.next_node_event(opened["handle"], 0)
+
 
 if __name__ == "__main__":
     unittest.main()

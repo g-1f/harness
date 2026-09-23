@@ -26,6 +26,23 @@ from harness.runtime import Frame, Runtime
 RUNTIME_PROMPT = Path(__file__).with_name("node_agent.md").read_text(encoding="utf-8")
 
 
+def node_messages(frame: Frame, context: RunContext) -> list[dict[str, str]]:
+    """Stable procedure/evidence prefix followed by this execution's changing task.
+
+    This is prompt layout, not a KV store or a promise of provider cache hits.
+    References stay explicit; no parent messages or private state are copied.
+    """
+    packets = (
+        {"entry": context["entry"]},
+        {"inputs": frame.request.inputs, "refs": frame.request.refs},
+        {
+            "task": frame.request.task,
+            "context": {key: value for key, value in context.items() if key != "entry"},
+        },
+    )
+    return [{"role": "user", "content": encode(packet)} for packet in packets]
+
+
 class DeepAgentRunner:
     def __init__(
         self,
@@ -127,22 +144,9 @@ class DeepAgentRunner:
 
     async def __call__(self, frame: Frame, context: RunContext) -> Candidate:
         agent, api = self.build(frame)
+        messages = node_messages(frame, context)
         result = await agent.ainvoke(
-            {
-                "messages": [
-                    {
-                        "role": "user",
-                        "content": encode(
-                            {
-                                "task": frame.request.task,
-                                "inputs": frame.request.inputs,
-                                "refs": frame.request.refs,
-                                "context": context,
-                            }
-                        ),
-                    }
-                ]
-            },
+            {"messages": messages},
             config={
                 "configurable": {
                     "thread_id": f"{self.runtime.session}:{frame.id}:{context['attempt']}"
@@ -153,7 +157,7 @@ class DeepAgentRunner:
         if (task := asyncio.current_task()) is not None and task.cancelling():
             raise asyncio.CancelledError
         # Explicit model actions and tool observations, not hidden model reasoning.
-        for message in result["messages"][1:]:
+        for message in result["messages"][len(messages) :]:
             if getattr(message, "tool_calls", None):
                 self.runtime.store.event(
                     type="agent_actions",
