@@ -1,223 +1,303 @@
-# Node execution and artifact composition
+# Callable skill graph: contracts and end-to-end execution
 
-Status: implemented reference, clarified 2026-09-23. Skills normally contain prose
-and links; the agent writes PTC at runtime after observations. An optional bundled
-utility script is authored separately. Offline tests select prewritten fragments
-and are explicitly distinguished from actual LLM code generation. This is a
-single-process implementation.
+Status: implemented local reference, with the design choices below made explicit.
+The objective is to let the harness turn reusable prose into executable work,
+including nested transformations and fresh reviews. RLM is not the primitive.
 
-## 1. Execution contract
+## 1. Start with the distinctions
 
-A node is a versioned procedure with prose, links, and an implementation. The
-runtime admits an invocation; its implementation produces a candidate; the host
-validates and publishes a receipt. Agent execution is one implementation of a node.
-Code execution is another and makes no model calls. A fresh agent context is a
-property of agent-node invocation, not the definition of all node execution.
+A **skill** is a reusable procedure: authored prose, a short description, references
+to other procedures, and optional resource files. A **node address** is a skill name
+that the application can execute. An **invocation** is one application of that
+procedure to a particular task, inputs and evidence. An **executor** supplies its
+execution mechanism. A **publication policy** determines required checks.
 
-The primary path is a prose-driven agent node: read the procedure, observe inputs,
-generate PTC, execute it, observe the result, and generate the next fragment. The
-host executes and supervises this loop; it does not generate or compile the
-domain's branch logic. All research, review, and synthesis skills in the example
-use this path. A skill does not need an authored execution program to be callable.
+Conceptually:
+
+```text
+invoke(skill_name, task, inputs, evidence_refs) -> await receipt
+receipt.ref -> immutable result artifact
+```
+
+This resembles function application but is not a pure function. Invocations consume
+budgets, create artifacts, may call a nondeterministic model and can fail or be
+cancelled. Identical inputs are not a promise of equivalent results. The operation
+key provides exact retry identity within one caller; it is not semantic memoization.
+
+Three graphs have different meanings:
+
+| Graph | Vertices and edges | Meaning |
+| --- | --- | --- |
+| Authored skill graph | Skill IDs, linked by prose references | Procedures that may be useful together; cycles are allowed |
+| Invocation tree | Fresh frames, linked by caller/child relationships | Work actually admitted for this session; repeated skills create separate vertices |
+| Artifact evidence graph | Immutable records, linked by declared or observed references | What a result declares or reads; sharing is explicit |
+
+There is no YAML workflow graph to compile. In live mode, the agent running inside
+the harness reads the prose and observations and writes the next PTC fragment.
+The supervisor enforces mechanics without interpreting phrases like “accelerating
+demand.” Ordinary JavaScript implements branches, joins and transformations.
+
+## 2. Authored frontmatter: a deliberately small local convention
+
+```yaml
+---
+name: c
+description: Interpret capacity evidence for the caller's specific question
+---
+```
+
+Only these two fields are accepted in this repository. This is an implementation
+choice for the example, not a universal skill format or a compatibility claim for
+other skill systems. Unknown, duplicate, missing or malformed fields fail loading;
+the runtime must not silently invent their meaning.
+
+| Authored element | Contract | Reason |
+| --- | --- | --- |
+| `name` | Nonempty lowercase canonical package path, e.g. `c` or `research/c`; must match its directory | Stable lookup identity; no competing path/name namespaces |
+| `description` | Nonempty string | States what the procedure is for; included in the entry packet |
+| Markdown body | Nonempty prose, preserved as instructions | Describes expertise, questions, use of links and expected application output |
+| Resource files | Optional relative files owned by the package | Versioned utility code or data; not an executor declaration |
+
+Names permit lowercase letters, digits, underscores and hyphens, separated by `/`.
+Instructions plus description are bounded to 24 KB. Each resource is bounded to
+1 MB. These are local admission limits, not claims about an ideal universal format.
+Symlinks are rejected. A nested skill owns its resources independently of its parent.
+
+Wikilinks such as `[[c|capacity analysis]]` resolve to canonical skill IDs. Display
+labels and anchors do not create new nodes. Links inside fenced code examples are
+ignored. The registry validates referenced skills at load time. A link never runs
+its target, grants artifact access or authorizes a backend.
+
+The in-memory `Skill` has exactly these fields:
+
+| Field | Origin | Meaning |
+| --- | --- | --- |
+| `name` | Frontmatter | Canonical ID |
+| `description` | Frontmatter | Purpose |
+| `instructions` | Markdown body | Procedure prose |
+| `resources` | Package files | Immutable tuple of `Resource(path, data)`; `data` is bytes |
+| `links` | Derived from prose | Deduplicated canonical linked IDs |
+| `revision` | Derived hash | Identity of name, description, instructions and resource bytes |
+
+The registry snapshot hashes all skill revisions. Loading pins resource bytes; later
+filesystem edits cannot silently change an already loaded executor's resource.
+The entry packet exposes resource paths; resource consumption is currently a host
+executor capability. A generic agent resource-reading tool is not implemented.
+
+## 3. Executors and policies belong to the application
+
+There is no `kind`, `critic`, `model`, `tools`, `profile`, `ttl_seconds`, `code` or
+`review` field on `Skill`. There is no unvalidated `metadata` dictionary that merely
+hides the same problem.
+
+The implemented application wiring is:
 
 ```python
-from runtime import NodeRequest, Registry, Runtime, Store
-from code_runner import CodeRunner
-from deepagents_adapter import DeepAgentRunner
-
-runtime = Runtime(registry, Store())
-runtime.code_runner = CodeRunner(runtime)
-runtime.agent_runner = DeepAgentRunner(runtime, model_factory)
-receipt = await runtime.run_node(NodeRequest(
-    node="root", task="Investigate the supplied evidence",
-    inputs=inputs, refs=(), key="root",
-))
+runtime = Runtime(
+    Registry.load(ROOT / "skills"),
+    Store(),
+    bindings={"delta_check": "snapshot_math"},
+    reviews={"thesis": ReviewPolicy(("red_team",))},
+)
+runtime.register_executor("agent", DeepAgentRunner(runtime, model_factory))
+runtime.register_executor("snapshot_math", CodeRunner(runtime, "scripts/observe_delta.js"))
 ```
 
-`registry`, `inputs`, and `model_factory` are supplied by the application; `demo.py`
-contains executable wiring. A code-only application needs no agent runner. Code
-nodes can invoke other code or agent nodes using the same operation.
+`agent` is the default executor. `bindings` maps existing skill names to registered
+executor names. An executor is an async callable accepting `(frame, context)` and
+returning a candidate. The runtime dispatches through that interface; it has no
+agent-vs-code conditional. Configuration seals at first execution. Requests cannot
+select a model, backend or policy override.
 
-## 2. Native capabilities
+| Extension | Where it belongs | Changes to Skill fields |
+| --- | --- | --- |
+| Different expertise or review question | New prose skill, or a different call task | None |
+| Different model or system prompt | Another configured `DeepAgentRunner`, bound by the application | None |
+| Different tool capabilities or execution mechanism | Another host executor implementation/configuration | None |
+| Mandatory check before publishing an output | `reviews[skill_name] = ReviewPolicy(...)` | None |
+| New stable concept shared by all skills | Explicit contract proposal and migration after discussion | Deliberate schema change only if justified |
 
-| Operation | Semantics |
+The bundled agent adapter exposes the same four application capabilities. Arbitrary
+per-agent tool allowlists are not a YAML feature; an application needing them must
+configure or implement a suitable executor. The `instructions` constructor argument
+allows a separately configured system prompt.
+
+A `ReviewPolicy` has `reviewers: tuple[str, ...]` and `max_revisions: int = 0`.
+These are host publication rules, not authored node attributes. Reviewers name
+ordinary skills. A reviewer may itself have a required review if the policy graph
+is acyclic; there is no privileged “critic” type. Inline procedure entry also adopts
+that procedure's requirements. The global revision bound caps local repair policies.
+
+The shared supervisor owns frame-count, model-operation, depth, deadline and repair
+bounds. They apply to all executors. Model operations are metered during inference;
+a parent waiting for children does not hold an inference permit.
+
+## 4. The invocation contract
+
+| `NodeRequest` field | Meaning |
 | --- | --- |
-| `read_node(node, enter=False)` | Return a bounded packet with the procedure, kind, revision, links, and eligible context. Inspection alone does not activate review obligations. `enter=True` adopts the procedure inline. |
-| `run_node(request)` | Admit and await a distinct node invocation. Host-derived parent identity, source revision, grants, and limits apply. Returns a compact artifact receipt. |
-| `read_artifact(ref, offset, limit)` | Read an authorized immutable version in bounded slices, recording explicit access. |
-| `submit_candidate(summary, content, based_on)` | Stage an output in the current frame. Publication and required review happen after the runner returns. |
+| `node` | Registered skill name |
+| `task` | Nonempty prose question for this invocation; part of request identity |
+| `inputs` | JSON object explicitly selected by the caller |
+| `refs` | Ordered artifact references to grant; defaults to empty |
+| `key` | Nonempty operation key scoped to the caller frame, or launcher scope for roots |
 
-All four are available from generated JavaScript as `tools.readNode`, `runNode`,
-`readArtifact`, and `submitCandidate`. They also have native tool forms and use
-`NodeAPI` internally. The QuickJS PTC `task()` facility is disabled. The remaining
-native framework `task` tool dispatches into the same supervised `run_node` API
-for compatibility; it cannot create an ungoverned worker.
+The request is finite JSON, capped at 32 KB. There are no agent-specific fields.
+Parsing copies nested input data before admission. Same caller/key and identical
+node/task/inputs/refs share the in-flight or completed operation. A conflicting
+request with that key is rejected. A repeated active subproblem is rejected;
+narrower recursive tasks remain subject to depth, frame and deadline bounds.
 
-Node discovery starts with canonical links. The host does not interpret wikilinks
-as executable dependencies or compile prose into a branch table. `Promise.all`,
-`allSettled`, loops, and data transformations come from JavaScript. A model receives
-an observation, reasons with it, then writes its next program fragment. An optional
-authored utility can perform a stable computation, but the example's conditional
-investigation logic belongs to the agent's generated PTC.
+The host creates `Frame` state: ID, parent, request, lineage, selected executor,
+entered procedures, artifact grants, child tasks, observed reads and closed state.
+None belongs in skill frontmatter. The adapter receives a `RunContext` containing:
 
-## 3. Prose-driven skills and optional utilities
-
-An agent node has `library.kind: agent` (the default), prose, and wikilinks. All
-example nodes except `delta_check` have this form. There is no JavaScript body to
-execute from their skill files. `DeepAgentRunner` creates a fresh agent and mutable
-interpreter state for every invocation/repair attempt. The model receives its
-objective, inputs, selected refs, entry packet, and repair feedback and writes PTC.
-It does not inherit the parent's conversation or JavaScript globals. `StateBackend`
-provides private scratch, not shared POSIX files or a real shell.
-
-A skill author may optionally bundle a stable utility. The example's delta check
-is packaged as a separate code node so it can use the existing `run_node` operation:
-
-```yaml
----
-name: delta_check
-library:
-  kind: code
-  script: scripts/observe_delta.js
----
-```
-
-The script contains only input validation, numeric subtraction, and output
-submission. It contains no fan-out, scenario selection, or decision to investigate.
-The agent in `b` writes the invocation code and observes the result before deciding
-whether to call `k` and `l`. Packaging a utility this way is optional; it is not a
-requirement for writing skills or invoking agent nodes.
-
-`Registry.load` pins both prose and script bytes. A bundled script must be a
-JavaScript file within the node's directory; escaping paths and symlinks are
-rejected. A code node may alternatively use one inline `node-js` body for backward
-compatibility, but cannot declare both sources. No example SKILL.md embeds code.
-
-`CodeRunner` executes the pinned utility with `input`, `refs`, and invocation
-`context` bound as data plus the four host capabilities. It provides no OS,
-Python evaluation, network, or filesystem access. Memory and execution-time limits
-apply, and the session deadline bounds host-call waits. Reading a skill does not
-execute its script automatically.
-
-`read_node(..., enter=True)` lets the current agent adopt a linked procedure
-inline and accumulate its obligations. It does not start another agent. Separate
-execution uses `run_node`.
-
-## 4. Reviews are nodes
-
-`red_team` and `artifact_coherence` use normal node invocation and publication.
-Their `profile: critic` restricts evidence access. They are fresh agent nodes in
-the demo; deterministic validators could instead be code nodes.
-
-Optional review choreography belongs to the agent's program. In the example,
-root audits produced `a`, `b`, and (if present) `c` separately, checks their joint
-coherence, and requests a red-team assessment of `a`. Failed verdicts result in a
-blocked report without a thesis. The report can be accepted because it truthfully
-reports the blocked investigation. Optional findings are not automatically a host
-publication veto.
-
-A node may separately declare mandatory reviewers:
-
-```yaml
-library:
-  kind: agent
-  review:
-    critics: [red_team]
-    max_revisions: 0
-```
-
-The host freezes the exact candidate, invokes the same reviewer-node API, and
-checks `candidate_ref`, `verdict`, and `findings`. Only a well-formed `pass` without
-unresolved findings satisfies a required check. `fail`, `inconclusive`, exceptions,
-and malformed output cannot pass. A repair creates a new candidate and requires
-new reviews. Reviewer nodes cannot themselves declare mandatory reviewers in this
-version, but may make ordinary bounded node calls.
-
-A review's accepted *receipt* means its own execution/publication completed. The
-review's `content.verdict` describes the candidate. An accepted review can contain
-a failing verdict. Coherence checks bind an exact target set; individual passes
-do not imply consistency of a set or of a later synthesis.
-
-## 5. Evidence scope and trace
-
-Normal workers can read accepted artifacts within the current session and receive
-eligible one-hop results during node inspection. Drafts require ownership or an
-explicit grant. Critic frames and all their descendants additionally require a
-grant for accepted artifacts. The entry-context path applies the same restriction
-and omits ambient memory notes for critics. Mandatory reviewers receive the exact
-draft and its declared `based_on` evidence; they cannot widen those grants by
-changing node names or reading another procedure inline.
-
-The host records invocation identity, parent, node kind/revision, input refs,
-explicit artifact reads, lifecycle, accepted output, and review receipts. Agent
-runners also save returned tool actions and bounded observations at completion.
-These records contain no hidden reasoning, but can contain supplied evidence and
-should be treated as session data. They are inspection records, not crash-resume
-checkpoints. Actions from a runner that fails before returning may lack a complete
-agent-action trace; admission and lifecycle events still exist.
-
-`input_refs`, explicitly `observed_refs`, and declared `based_on` remain distinct.
-Their presence does not prove that every causal influence was tracked, or make an
-LLM invocation a pure cacheable function. Source corrections require a new bound
-snapshot and rerun. There is no automatic invalidation engine in this reference.
-
-## 6. Reproducible graph
-
-Choose an execution mode explicitly:
-
-- `python demo.py --model provider:model-name --case a`: the real model reads
-  prose and observations and generates PTC for all agent nodes. The scripted
-  fixture module is not imported. Provider setup is required.
-- `python demo.py --offline --case a`: an offline model double selects prewritten
-  PTC fragments after actual observations. This checks mechanics; it does not
-  demonstrate new code being generated by an LLM.
-
-Both paths use the same prose skill graph and optional delta utility. Reports
-record `execution_mode` and `ptc_origin`; the CLI has no implicit scripted fallback.
-
-| Observation | Example next work |
+| Field | Meaning |
 | --- | --- |
-| `b` reads nonzero delta | `k` and `l` concurrently, then return to parent |
-| `b` reads unchanged snapshot | Return without `k` or `l` |
-| Root reads accelerating-demand narrative from `b` | `c` and `d` concurrently |
-| Root reads stable-demand narrative from `b` | `h` |
-| Root reads concentration concern from `d` | `f` and `g` concurrently |
-| Root reads pending regulation from `h` | `i` |
-| Any optional review fails | Blocked report; no thesis |
-| Optional reviews pass | `thesis`, then required fresh review of its candidate |
+| `entry` | Current skill packet: node, description, revision, text, links, resource paths |
+| `attempt` | Zero-based execution/repair attempt |
+| `feedback` | Failed review outcomes from the preceding attempt |
+| `previous` | Previous immutable candidate ref, or null |
 
-These fixture expectations test paths and observation boundaries. They do not
-establish real-model semantic reliability. All data is synthetic. The tests also
-exercise missing/incorrect/inconclusive reviews, candidate rebinding, same-session
-critic isolation, inherited restrictions, code-only composition, limits,
-cancellation, idempotent retries, and source revision changes.
+Each agent attempt builds a fresh agent and QuickJS interpreter. Parent messages,
+globals and interpreter snapshots are not inherited. The child receives its own
+entry, task, inputs and explicitly granted refs. “Fresh” does not mean ignorant of
+all prior information: the caller can intentionally include prior evidence in its
+inputs and grants.
 
-## 7. Migration
+All frames use the same artifact access rule: own outputs and explicit grants only.
+A child receipt grants its result to its caller. Granting a record does not grant
+every reference mentioned inside it. No ambient session-result cache or TTL-based
+reuse remains. Reviewers use the same mechanism; the host grants a required reviewer
+the exact candidate and its declared supporting refs.
 
-From the first node-runtime demo: research leaves are now agent nodes with prose,
-not authored code bodies. The only bundled code example is the delta utility,
-whose source moved to `skills/delta_check/scripts/observe_delta.js`. The test double
-moved to `examples/scripted_model.py`. Add `--offline` to offline demo commands or
-choose `--model`; Python callers similarly pass `offline=True` or `model=...`.
+## 5. Four capabilities, one publication protocol
 
-
-| Previous API | Current API |
+| Capability | Effect |
 | --- | --- |
-| `kernel.Kernel` | `runtime.Runtime` |
-| `Call(skill=...)` | `NodeRequest(node=...)` |
-| `Skill` | `Node`, with `kind` and optional pinned code |
-| `kernel.call(...)` | `runtime.run_node(...)` |
-| `kernel.runner` | `runtime.agent_runner`; code uses `runtime.code_runner` |
-| `libraryOpen` | `readNode`; explicit `enter:true` for old inline activation |
-| `libraryRead` | `readArtifact` |
-| `librarySubmit` | `submitCandidate` |
-| RLM-named helper / PTC `task()` | `tools.runNode({request})` |
+| `read_node(node, enter=False)` | Inspect prose and links; `enter=True` activates inline procedure obligations |
+| `run_node(request)` | Await a fresh supervised call; return a compact receipt |
+| `read_artifact(ref, offset, limit)` | Read an authorized immutable record in bounded slices |
+| `submit_candidate(summary, content, based_on)` | Stage a candidate; the host controls publication status |
 
-This refactor intentionally changes the small reference API and artifact envelope
-(`skill` becomes `node`). Existing external callers and old persisted records need
-migration; use a fresh store for the demo. Prior docs and their benchmark counts
-are historical. The provider proxy counts model operations rather than exact
-billable attempts or currency. The in-memory job/grant ledger is not recovered
-after restart, and there is no cross-session reuse, effect gateway, or production
-authorization backend. Required review still returns unresolved status when its
-bounded allowance cannot complete the protocol.
+PTC exposes camelCase equivalents on `tools`. Native calls use the same bound
+`NodeAPI`. The framework's compatibility `task` route dispatches into the same
+supervisor. No unsupervised application child is provided through that route.
+
+A candidate has a nonempty summary of at most 600 characters, a JSON object
+`content`, and `based_on` artifact refs. It is limited to 500 KB. These are the same
+contracts for model and code executors. Application-specific shapes such as evidence
+observations or coherence assessments live inside `content`, not on `Skill`.
+
+Execution proceeds as follows:
+
+1. Validate request, refs and executor registration; enforce idempotency and bounds.
+2. Start a fresh frame and enter its primary procedure.
+3. Run the configured executor. The agent may inspect links, call children, observe
+   artifacts and write additional code. Children must be joined before returning.
+4. Validate and freeze the candidate as an immutable draft.
+5. Run every required reviewer in fresh context, granting the exact draft first and
+   its declared evidence next. Reviews for the candidate can execute concurrently.
+6. Accept only when every required reviewer returns an accepted artifact whose
+   content has that exact `candidate_ref`, `verdict: "pass"` and empty `findings`.
+7. If allowed, create a fresh repair attempt with feedback. A changed candidate
+   receives new reviews; prior verdicts cannot certify it. Otherwise return
+   `needs_review`. Close the frame and cancel any outstanding descendants.
+
+Optional reviews are ordinary calls made by the agent. Their result must be read:
+`receipt.status == "accepted"` does **not** imply `content.verdict == "pass"`.
+The host enforces only configured mandatory reviews. The fixture's choice to stop
+on a failed optional audit is behavior of the example procedure.
+
+A receipt has `ref`, `status` (`accepted` or `needs_review`) and `summary`.
+Operational errors raise; failure/cancellation events record their category.
+The stored record contains the candidate plus session/frame/parent IDs, skill and
+executor identity, task and inputs, registry snapshot and skill revision, entered
+procedures, input refs, observed refs, review refs, publication status and time.
+`observed_refs` records actual reads; `based_on` is the worker's declared lineage.
+Neither proves that every semantic dependency was declared or understood.
+
+## 6. End-to-end nested example
+
+The authored reuse graph is shown in the [README](../README.md). Links in a and b
+reuse existing c/k/l procedures under different prose; there are no duplicate skills
+named “baseline-c” and “acceleration-c.”
+
+| Caller | Callee | Task carried by the example invocation |
+| --- | --- | --- |
+| root | a | Establish the baseline claim and test its assumptions |
+| a | c | Test baseline capacity assumptions without presuming acceleration |
+| a | l | Check whether mix stability supports the baseline comparison |
+| c, inside a | k | Corroborate volume for the baseline capacity question |
+| b | k | Explain volume against the measured snapshot delta |
+| b | l | Explain mix against the measured snapshot delta |
+| root, after observing acceleration | c | Assess whether capacity can meet accelerating demand |
+| c, inside root | k | Corroborate volume for that acceleration question |
+
+Scenario A executes both c contexts, then supplier investigation and fresh audits.
+Scenario B retains a's nested capacity work but takes the h/i policy branch at root.
+Its root does not fabricate an acceleration-specific c result or audit. The unchanged
+fixture omits k/l only under b; a still owns its baseline work.
+
+The [two task prompts](../examples/prompts/) are inputs used by `demo.py`. The
+[Scenario A](../examples/trajectories/scenario_a.md) and
+[Scenario B](../examples/trajectories/scenario_b.md) trajectories are exported from
+actual offline runs, with IDs relabeled and repeated prelude omitted. Each includes
+all invocation tasks, explicit grants, captured PTC, observed outputs and final result.
+
+In live mode the model writes code from these instructions and observations. Offline
+mode uses a clearly named scripted model that recognizes fixture observations and
+selects prewritten fragments. It checks execution mechanics and expected paths; it
+cannot establish whether a real model interprets arbitrary prose correctly.
+
+The optional delta resource performs stable arithmetic without a model. Its code is
+written by the utility author; orchestration code is written by the executing agent
+in live mode. No skill body embeds an executable orchestration program.
+
+## 7. Migration from the earlier implementation
+
+| Earlier design | Current implementation |
+| --- | --- |
+| `Node` combined prose, role, execution and policy | `Skill`, executor registration, `ReviewPolicy`, `NodeRequest` and internal `Frame` have separate responsibilities |
+| `library.kind` and optional `script` frontmatter | External binding to a configured resource executor |
+| `library.profile: critic` / `critic=True` | Ordinary skill; all calls have explicit artifact grants |
+| `library.review` | Application-owned publication policy |
+| `ttl_seconds`, notes and ambient result discovery | Removed from this reference; callers explicitly pass evidence |
+| Inline `node-js` executable block | Removed; optional authored utilities are resource files selected by the host |
+| YAML name ignored, description unused, unknown metadata silently ignored | Name/path agreement enforced; description exposed; unknown/duplicate fields rejected |
+| Separate hard-coded agent/code dispatch slots | Generic registered runner interface and external bindings |
+| Same names obscured different uses | Tasks recorded on admissions and artifacts; contextual reuse tested |
+| Root-level runtime/adapter/test modules and conflicting historical docs | Cohesive `harness/`, `tests/` and one current design document |
+
+These are deliberate breaking changes to the reference API. Old code and historical
+plans remain in Git history. There is no silent compatibility layer that accepts the
+old schema while discarding its policy.
+
+## 8. Red-team the abstraction
+
+The function-like interface is useful for composition. It should be rejected as a
+sufficient production design if any of these stronger claims are required:
+
+| Claim or pressure | Failure mode | Current position |
+| --- | --- | --- |
+| “All nodes are pure transformations” | Models and tools are effectful and nondeterministic | Async supervised operations, not pure-function equivalence |
+| “The prose graph is the execution plan” | Links alone do not determine whether or how to call a procedure | Agent-written PTC decides; invocation traces establish what ran |
+| “Same node plus inputs means reusable output” | Different tasks ask different questions | No automatic semantic cache; task is part of call identity |
+| “Fresh review proves independent correctness” | Same-model correlated errors, incomplete evidence or injected evidence can persist | Fresh transcripts and explicit grants only; no correctness guarantee |
+| “A successful optional audit is always enforced” | The agent may omit or misread an optional check | Required checks must be configured in host policy |
+| “Prose-only skills scale to every capability” | Tool permissions and external effects need executable enforcement | Host adapters own capability configuration; no frontmatter flags with assumed authority |
+| “SQLite means durable orchestration” | Frames, grants, budgets and in-flight keys are in memory | Records persist; recovery is not implemented |
+| “A passing offline suite proves the agent works” | Scripted programs can take correct branches without reasoning about prose | Separate live-model evaluation is still required |
+
+The repository also lacks an authenticated external-effects gateway, cross-session
+artifact grants/cache, automatic invalidation, exact token/currency reservation and
+complete crash-time action logging. Agent actions are captured after an invocation
+returns; interrupted execution may have incomplete action transcripts. QuickJS and
+the private state backend are local execution boundaries, not a comprehensive
+multi-tenant security design. The registry assumes a trusted skill repository.
+
+The next useful validation is live execution against these two prompt/input pairs,
+followed by changed wording and counterexamples. That can test whether the harness
+actually writes distinct contextual programs, rather than merely proving that this
+runtime can execute them. No additional universal node attributes are justified by
+the current examples.

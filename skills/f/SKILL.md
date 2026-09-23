@@ -1,8 +1,6 @@
 ---
 name: f
 description: Inspect the evidence assigned to f
-library:
-  kind: agent
 ---
 # f
 

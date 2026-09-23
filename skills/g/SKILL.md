@@ -1,8 +1,6 @@
 ---
 name: g
 description: Inspect the evidence assigned to g
-library:
-  kind: agent
 ---
 # g
 

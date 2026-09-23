@@ -1,14 +1,15 @@
 ---
 name: b
-description: Demo b node
-library:
-  kind: agent
+description: Interpret a snapshot change and investigate its drivers
 ---
-# b
+# Snapshot investigation
 
-Use the optional bundled [[delta_check]] utility to compute a factual change.
-Write the PTC that invokes it; the utility itself contains no orchestration logic.
-Observe the output. If unchanged, return the supplied narrative and the delta
-without further work. Otherwise run [[k]] and [[l]] concurrently and combine their
-observations with the supplied narrative. Return evidence refs. The host does not
-know what changed means; interpret the local instruction in this node.
+Use [[delta_check]] to compute the numeric change. Read its result. If unchanged,
+return the supplied b narrative and delta evidence without further investigation.
+Otherwise run [[k|volume evidence]] and [[l|mix evidence]] concurrently. Ask k to
+explain volume against the measured delta, and l to explain mix against that delta.
+Pass the delta reference explicitly and read their observations.
+
+These are the same k and l procedures used in baseline analysis, with different
+questions and evidence. Combine their observations with `inputs.observations.b`.
+Return `text`, `unit`, `changed`, and `internal` child names; declare evidence refs.

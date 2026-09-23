@@ -1,13 +1,10 @@
 flowchart TD
-    Agent[Agent observes and writes PTC] --> API[Frame-bound node API]
-    API --> Inspect[Read node or artifact]
-    API --> Run[Run node]
-    Run --> Code[Code runner]
-    Run --> Fresh[Fresh agent runner]
-    Code --> API
-    Fresh --> API
-    API --> Stage[Stage candidate]
-    Stage --> Review{Required reviews}
-    Review -->|invoke reviewer nodes| Run
-    Review -->|pass| Accepted[Accepted artifact]
-    Review -->|unresolved| Unresolved[Needs review]
+    R[Root] --> A[Baseline a]
+    R --> B[Snapshot b]
+    R -->|Acceleration question| C[Capacity c]
+    A -->|Baseline assumptions| C
+    A -->|Baseline comparison| L[Mix l]
+    C -->|Caller-specific corroboration| K[Volume k]
+    B -->|Explain measured change| K
+    B -->|Explain measured change| L
+    B --> D[Delta utility]

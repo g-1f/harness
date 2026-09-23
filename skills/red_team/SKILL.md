@@ -1,9 +1,6 @@
 ---
 name: red_team
 description: Demo red_team node
-library:
-  kind: agent
-  profile: critic
 ---
 # red_team
 

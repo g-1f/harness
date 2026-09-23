@@ -1,18 +1,17 @@
 ---
 name: a
-description: Inspect the evidence assigned to a
-library:
-  kind: agent
+description: Establish the baseline claim using capacity and mix evidence
 ---
-# a
+# Baseline evidence
 
-Inspect `inputs.observations.a` and any supplied evidence references. Produce
-an observation that preserves the source's claim and uncertainty. Distinguish
-what the evidence says from your inference; do not invent supporting facts.
+Inspect `inputs.observations.a` and the refs explicitly supplied by your caller.
+Use [[c|capacity analysis]] to test the baseline's capacity assumptions, without
+presuming demand is accelerating. In parallel, use [[l|mix analysis]] to check
+whether a stable mix makes that baseline comparison meaningful. Give each child
+that purpose in its task. Read their results before forming your observation.
 
-Return content with `text`, `unit`, and `source`. Use `inputs.units.a` if
-provided, otherwise the synthetic fixture's USD unit; identify the source as
-`synthetic/a`. Keep supplied evidence references in `based_on`.
-
-Write whatever PTC is useful after inspecting the input. This node supplies prose,
-not an authored execution program or a predetermined next branch.
+Preserve the source claim and its uncertainty. Return `text`, `unit`, `source`,
+`scope` (the task you were asked), and `subchecks` containing the child observations.
+Use `inputs.units.a` or the fixture's USD default, and source `synthetic/a`.
+Declare supplied and child refs in `based_on`. This is a baseline interpretation;
+the root may later invoke the same capacity skill for a different question.

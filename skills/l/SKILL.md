@@ -1,10 +1,11 @@
 ---
 name: l
 description: Inspect the evidence assigned to l
-library:
-  kind: agent
 ---
 # l
+
+Read the caller’s task: baseline corroboration and explaining a measured delta
+are different uses of this same procedure. Preserve that task as `scope`.
 
 Inspect `inputs.observations.l` and any supplied evidence references. Produce
 an observation that preserves the source's claim and uncertainty. Distinguish

@@ -1,18 +1,18 @@
 ---
 name: c
-description: Inspect the evidence assigned to c
-library:
-  kind: agent
+description: Interpret capacity evidence for the caller's specific question
 ---
-# c
+# Capacity evidence
 
-Inspect `inputs.observations.c` and any supplied evidence references. Produce
-an observation that preserves the source's claim and uncertainty. Distinguish
-what the evidence says from your inference; do not invent supporting facts.
+Read your task first. A baseline check asks whether the starting assumptions are
+supported; an acceleration investigation asks whether capacity can meet growing
+demand. These are different questions even with identical supplied observations.
 
-Return content with `text`, `unit`, and `source`. Use `inputs.units.c` if
-provided, otherwise the synthetic fixture's USD unit; identify the source as
-`synthetic/c`. Keep supplied evidence references in `based_on`.
+Inspect `inputs.observations.c`. Use [[k|volume evidence]] to corroborate capacity
+for this specific question, explicitly passing the question in the child's task.
+Read the returned observation, preserve uncertainty, and distinguish evidence
+from inference. Do not reuse another call just because its node is named c or k.
 
-Write whatever PTC is useful after inspecting the input. This node supplies prose,
-not an authored execution program or a predetermined next branch.
+Return `text`, `unit`, `source`, `scope` (your task), and `subchecks` containing the
+volume observation. Use `inputs.units.c` or USD and source `synthetic/c`.
+Declare supplied and child refs in `based_on`.

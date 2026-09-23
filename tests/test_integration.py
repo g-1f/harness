@@ -1,4 +1,5 @@
 """Offline integration: actual Deep Agents and QuickJS, scripted model, no API calls."""
+
 import json
 import unittest
 from typing import Any
@@ -7,9 +8,11 @@ from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.messages import AIMessage
 from langchain_core.outputs import ChatGeneration, ChatResult
 
-from deepagents_adapter import DeepAgentRunner, metered_model
-from code_runner import CodeRunner
-from runtime import NodeRequest, Runtime, Ledger, Registry, Review, Node, Store
+from harness import Ledger, NodeRequest, Registry, ReviewPolicy, Runtime, Store
+from harness.runners.agent import DeepAgentRunner
+from harness.runners.code import CodeRunner
+from harness.runners.metering import metered_model
+from tests.support import code_skill, skill
 
 
 class ScriptedModel(BaseChatModel):
@@ -30,14 +33,15 @@ class ScriptedModel(BaseChatModel):
 
 
 def eval_response(code):
-    return AIMessage(content="", tool_calls=[{"name": "eval", "args": {"code": code}, "id": "eval-1"}])
+    return AIMessage(
+        content="", tool_calls=[{"name": "eval", "args": {"code": code}, "id": "eval-1"}]
+    )
 
 
 class IntegrationTests(unittest.IsolatedAsyncioTestCase):
     async def test_real_interpreter_review_repair_loop(self):
-        registry = Registry([Node("work", "# Work", "v1", review=Review(("critic",), 1)),
-                             Node("critic", "# Critic", "v1", critic=True)])
-        kernel = Runtime(registry, Store())
+        registry = Registry([skill("work"), skill("critic")])
+        kernel = Runtime(registry, Store(), reviews={"work": ReviewPolicy(("critic",), 1)})
         attempts = []
 
         def factory(frame):
@@ -56,9 +60,12 @@ await tools.submitCandidate({summary: 'Checked', content: {
                 value = len(attempts)
                 attempts.append(value)
                 code = f"await tools.submitCandidate({{summary:'Draft',content:{{value:{value}}},based_on:[]}});"
-            return metered_model(ScriptedModel(responses=[eval_response(code), AIMessage(content="Staged")]), kernel.ledger)
+            return metered_model(
+                ScriptedModel(responses=[eval_response(code), AIMessage(content="Staged")]),
+                kernel.ledger,
+            )
 
-        kernel.agent_runner = DeepAgentRunner(kernel, factory, interpreter_timeout=30)
+        kernel.register_executor("agent", DeepAgentRunner(kernel, factory, interpreter_timeout=30))
         result = await kernel.run_node(NodeRequest("work", "produce", {}, "root"))
         self.assertEqual(result["status"], "accepted")
         self.assertEqual(attempts, [0, 1])
@@ -66,14 +73,20 @@ await tools.submitCandidate({summary: 'Checked', content: {
         self.assertEqual(kernel.store.get(result["ref"])["content"]["value"], 1)
 
     async def test_real_interpreter_recursive_dispatch_and_submission(self):
-        registry = Registry([Node("work", "# Work\nProduce a result", "v1")])
+        registry = Registry([skill("work")])
         kernel = Runtime(registry, Store(), ledger=Ledger(model_parallelism=1))
 
         def factory(frame):
             depth = frame.request.inputs["n"]
             if depth:
-                child_request = json.dumps({"node": "work", "task": f"depth {depth - 1}",
-                                            "inputs": {"n": depth - 1}, "key": "child"})
+                child_request = json.dumps(
+                    {
+                        "node": "work",
+                        "task": f"depth {depth - 1}",
+                        "inputs": {"n": depth - 1},
+                        "key": "child",
+                    }
+                )
                 code = """
 const receipt = await tools.runNode({request: REQUEST});
 if (receipt.status !== "accepted") throw new Error("Child did not pass");
@@ -81,9 +94,12 @@ await tools.submitCandidate({summary: "Joined child", content: {depth: DEPTH}, b
 """.replace("REQUEST", child_request).replace("DEPTH", str(depth))
             else:
                 code = "await tools.submitCandidate({summary: 'Leaf', content: {depth: 0}, based_on: []});"
-            return metered_model(ScriptedModel(responses=[eval_response(code), AIMessage(content="Staged")]), kernel.ledger)
+            return metered_model(
+                ScriptedModel(responses=[eval_response(code), AIMessage(content="Staged")]),
+                kernel.ledger,
+            )
 
-        kernel.agent_runner = DeepAgentRunner(kernel, factory, interpreter_timeout=30)
+        kernel.register_executor("agent", DeepAgentRunner(kernel, factory, interpreter_timeout=30))
         result = await kernel.run_node(NodeRequest("work", "depth 2", {"n": 2}, "root"))
         self.assertEqual(result["status"], "accepted")
         self.assertEqual(kernel.ledger.frames, 3)
@@ -95,60 +111,99 @@ await tools.submitCandidate({summary: "Joined child", content: {depth: DEPTH}, b
         self.assertNotEqual(child["frame"], record["frame"])
 
     async def test_native_run_node_uses_same_supervisor(self):
-        kernel = Runtime(Registry([Node("work", "# Work", "v1")]), Store())
+        kernel = Runtime(Registry([skill("work")]), Store())
 
         def factory(frame):
             responses = []
             if not frame.parent:
                 request = {"node": "work", "task": "child", "inputs": {}, "key": "child"}
-                responses.append(AIMessage(content="", tool_calls=[{
-                    "name": "run_node", "id": "native-1", "args": {
-                        "request": request}}]))
-            responses += [eval_response("await tools.submitCandidate({summary:'Result',content:{ok:true},based_on:[]});"),
-                          AIMessage(content="Staged")]
+                responses.append(
+                    AIMessage(
+                        content="",
+                        tool_calls=[
+                            {"name": "run_node", "id": "native-1", "args": {"request": request}}
+                        ],
+                    )
+                )
+            responses += [
+                eval_response(
+                    "await tools.submitCandidate({summary:'Result',content:{ok:true},based_on:[]});"
+                ),
+                AIMessage(content="Staged"),
+            ]
             return metered_model(ScriptedModel(responses=responses), kernel.ledger)
 
-        kernel.agent_runner = DeepAgentRunner(kernel, factory, interpreter_timeout=30)
+        kernel.register_executor("agent", DeepAgentRunner(kernel, factory, interpreter_timeout=30))
         result = await kernel.run_node(NodeRequest("work", "root", {}, "root"))
         self.assertEqual(result["status"], "accepted")
         self.assertEqual(kernel.ledger.frames, 2)
         self.assertEqual(kernel.ledger.model_calls, 5)
 
     async def test_code_node_can_invoke_fresh_agent(self):
-        parent = Node('program', '# Program', 'v1', kind='code', code="""
+        parent = code_skill(
+            "program",
+            """
 globalThis.parentSecret = 'private';
 const child = await tools.runNode({request:{node:'worker',task:'fresh worker',inputs:{},key:'child',refs:[]}});
 await tools.submitCandidate({summary:'Program joined agent',content:{ok:true},based_on:[child.ref]});
-""")
-        runtime = Runtime(Registry([parent, Node('worker','# Worker','v1')]), Store())
-        runtime.code_runner = CodeRunner(runtime)
+""",
+        )
+        runtime = Runtime(
+            Registry([parent, skill("worker")]), Store(), bindings={"program": "code"}
+        )
+        runtime.register_executor("code", CodeRunner(runtime, "run.js"))
+
         def factory(frame):
             code = """
 if (typeof parentSecret !== 'undefined') throw new Error('Context inherited');
 await tools.submitCandidate({summary:'Fresh worker',content:{ok:true},based_on:[]});
 """
-            return metered_model(ScriptedModel(responses=[eval_response(code),AIMessage(content='Staged')]),runtime.ledger)
-        runtime.agent_runner = DeepAgentRunner(runtime,factory)
-        result = await runtime.run_node(NodeRequest('program','compose',{},'root'))
-        self.assertEqual(result['status'],'accepted')
-        self.assertEqual(runtime.ledger.frames,2)
-        self.assertEqual(runtime.ledger.model_calls,2)
+            return metered_model(
+                ScriptedModel(responses=[eval_response(code), AIMessage(content="Staged")]),
+                runtime.ledger,
+            )
+
+        runtime.register_executor("agent", DeepAgentRunner(runtime, factory))
+        result = await runtime.run_node(NodeRequest("program", "compose", {}, "root"))
+        self.assertEqual(result["status"], "accepted")
+        self.assertEqual(runtime.ledger.frames, 2)
+        self.assertEqual(runtime.ledger.model_calls, 2)
 
     async def test_legacy_native_task_still_enters_runtime(self):
-        runtime = Runtime(Registry([Node('work','# Work','v1')]),Store())
+        runtime = Runtime(Registry([skill("work")]), Store())
+
         def factory(frame):
-            responses=[]
+            responses = []
             if frame.parent is None:
-                request={'node':'work','task':'child','inputs':{},'key':'child'}
-                responses.append(AIMessage(content='',tool_calls=[{'name':'task','id':'legacy','args':{
-                    'description':json.dumps(request),'subagent_type':'general-purpose'}}]))
-            responses += [eval_response("await tools.submitCandidate({summary:'Result',content:{ok:true},based_on:[]});"),AIMessage(content='Staged')]
-            return metered_model(ScriptedModel(responses=responses),runtime.ledger)
-        runtime.agent_runner=DeepAgentRunner(runtime,factory)
-        await runtime.run_node(NodeRequest('work','root',{},'root'))
-        admitted=[e for e in runtime.store.events() if e['type']=='admitted']
-        self.assertEqual(len(admitted),2)
-        self.assertEqual(admitted[1]['parent'],admitted[0]['frame'])
+                request = {"node": "work", "task": "child", "inputs": {}, "key": "child"}
+                responses.append(
+                    AIMessage(
+                        content="",
+                        tool_calls=[
+                            {
+                                "name": "task",
+                                "id": "legacy",
+                                "args": {
+                                    "description": json.dumps(request),
+                                    "subagent_type": "general-purpose",
+                                },
+                            }
+                        ],
+                    )
+                )
+            responses += [
+                eval_response(
+                    "await tools.submitCandidate({summary:'Result',content:{ok:true},based_on:[]});"
+                ),
+                AIMessage(content="Staged"),
+            ]
+            return metered_model(ScriptedModel(responses=responses), runtime.ledger)
+
+        runtime.register_executor("agent", DeepAgentRunner(runtime, factory))
+        await runtime.run_node(NodeRequest("work", "root", {}, "root"))
+        admitted = [e for e in runtime.store.events() if e["type"] == "admitted"]
+        self.assertEqual(len(admitted), 2)
+        self.assertEqual(admitted[1]["parent"], admitted[0]["frame"])
 
 
 if __name__ == "__main__":

@@ -1,11 +1,6 @@
 ---
 name: thesis
 description: Demo thesis node
-library:
-  kind: agent
-  review:
-    critics: [red_team]
-    max_revisions: 0
 ---
 # thesis
 

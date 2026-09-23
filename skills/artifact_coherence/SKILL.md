@@ -1,9 +1,6 @@
 ---
 name: artifact_coherence
 description: Demo artifact_coherence node
-library:
-  kind: agent
-  profile: critic
 ---
 # artifact_coherence
 

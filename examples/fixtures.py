@@ -1,8 +1,11 @@
 """Synthetic inputs, deliberately separate from the runtime."""
+
 from copy import deepcopy
 
 BASE = {
-    "current": 105, "previous": 100, "units": {},
+    "current": 105,
+    "previous": 100,
+    "units": {},
     "observations": {
         "a": "Source evidence supports the baseline claim.",
         "b": "Demand is accelerating while supply remains constrained.",
