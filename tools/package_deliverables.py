@@ -1,15 +1,28 @@
+"""Package the current code, skill graph, and docs; never include local credentials."""
+import argparse
 from pathlib import Path
-import zipfile
+from zipfile import ZipFile, ZIP_DEFLATED
 
-root = Path(__file__).resolve().parent.parent
-output = root / 'outputs'
-target = output / 'library-harness-design-and-code.zip'
-paths = [output / 'library-harness-design.md', output / 'architecture.mmd']
-paths += [p for p in (output / 'library_harness').rglob('*')
-          if p.is_file() and '__pycache__' not in p.parts and p.suffix != '.pyc']
-with zipfile.ZipFile(target, 'w', compression=zipfile.ZIP_DEFLATED) as archive:
-    for path in sorted(paths):
-        archive.write(path, path.relative_to(output).as_posix())
-with zipfile.ZipFile(target) as archive:
-    assert archive.testzip() is None
-    print(f'{len(archive.namelist())} files in {target}')
+ROOT = Path(__file__).resolve().parent.parent
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--output', type=Path, default=ROOT/'outputs'/'node-harness.zip')
+    args = parser.parse_args()
+    paths = [p for p in ROOT.glob('*.py')]
+    paths += [ROOT/name for name in ('README.md','requirements.txt','requirements-lock.txt')]
+    for folder in ('skills','examples','docs','tools'):
+        paths += [p for p in (ROOT/folder).rglob('*') if p.is_file()
+                  and p.suffix in ('.py','.md','.mmd') and '__pycache__' not in p.parts]
+    args.output.parent.mkdir(parents=True,exist_ok=True)
+    with ZipFile(args.output,'w',compression=ZIP_DEFLATED) as archive:
+        for path in sorted(set(paths)):
+            archive.write(path,path.relative_to(ROOT).as_posix())
+    with ZipFile(args.output) as archive:
+        assert archive.testzip() is None
+        print(f'{len(archive.namelist())} files in {args.output}')
+
+
+if __name__=='__main__':
+    main()

@@ -1,5 +1,8 @@
 # Callable skill nodes: red-team assessment and implementation plan
 
+> Historical design at the baseline described below. The node-runtime refactor supersedes its API and implementation-status claims. See [current execution contract](dynamic-skill-ptc-design.md) and [runnable example](../README.md). The runtime now supports agent and code nodes through run_node; critic visibility, inconclusive review handling, and the branching demo are implemented. Real-model quality evaluation remains outstanding.
+
+
 Date: 2026-09-23. Status: design decision and proposed work; no runtime changes in this document commit.
 
 Repository baseline: `10ca4a56990b6bd47fa341d6a9134321feb833a1`. This review qualifies the [dynamic PTC design](dynamic-skill-ptc-design.md), especially its claims about fresh context, artifact lineage, and a dedicated script primitive.

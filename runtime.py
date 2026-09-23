@@ -1,4 +1,4 @@
-"""Reference Library supervisor. Single process, one event loop, no model credentials.
+"""Node execution supervisor. Single process, one event loop, no model credentials.
 
 The adapter supplies inference. SQLite stores immutable results; this module does
 not execute generated Python or shell code. See README for production boundaries.
@@ -30,20 +30,20 @@ class Rejected(ValueError):
 
 
 @dataclass(frozen=True)
-class Call:
-    skill: str
+class NodeRequest:
+    node: str
     task: str
     inputs: dict[str, Any]
     key: str
     refs: tuple[str, ...] = ()
 
     @classmethod
-    def parse(cls, value: dict[str, Any]) -> "Call":
-        if not isinstance(value, dict) or set(value) - {"skill", "task", "inputs", "key", "refs"}:
+    def parse(cls, value: dict[str, Any]) -> "NodeRequest":
+        if not isinstance(value, dict) or set(value) - {"node", "task", "inputs", "key", "refs"}:
             raise Rejected("Invalid call fields")
         if any(not isinstance(value.get(k), str) or not value[k].strip()
-               for k in ("skill", "task", "key")):
-            raise Rejected("skill, task and key must be nonempty strings")
+               for k in ("node", "task", "key")):
+            raise Rejected("node, task and key must be nonempty strings")
         refs = value.get("refs", [])
         if not isinstance(value.get("inputs"), dict) or not isinstance(refs, (list, tuple)):
             raise Rejected("inputs must be an object; refs must be an array")
@@ -59,7 +59,7 @@ class Review:
 
 
 @dataclass(frozen=True)
-class Skill:
+class Node:
     name: str
     text: str
     revision: str
@@ -68,27 +68,31 @@ class Skill:
     review: Review = Review()
     critic: bool = False
     ttl_seconds: int = 3600
+    kind: str = "agent"
+    code: str | None = None
 
 
 class Registry:
-    def __init__(self, skills: list[Skill], notes: dict[str, str] | None = None):
-        self.skills = {s.name: s for s in skills}
+    def __init__(self, skills: list[Node], notes: dict[str, str] | None = None):
+        self.nodes = {s.name: s for s in skills}
         self.notes = dict(notes or {})
-        if len(self.skills) != len(skills):
+        if len(self.nodes) != len(skills):
             raise Rejected("Duplicate skill ID")
         for s in skills:
             if not re.fullmatch(r"[a-z0-9_-]+(?:/[a-z0-9_-]+)*", s.name):
                 raise Rejected("Invalid canonical skill ID")
             if len(s.text.encode()) > 24000:
                 raise Rejected("Split skills exceeding the entry size budget")
+            if s.kind not in ("agent", "code") or (s.kind == "code") != bool(s.code):
+                raise Rejected("Node kind must be agent, or code with one JavaScript body")
             if not 0 <= s.review.max_revisions <= 3 or s.ttl_seconds <= 0:
                 raise Rejected("Invalid review or freshness bound")
             for linked in (*s.links, *s.review.critics):
-                if linked not in self.skills:
+                if linked not in self.nodes:
                     raise Rejected(f"Broken link: {s.name} -> {linked}")
             if s.critic and s.review.critics:
                 raise Rejected("Critic skills cannot recursively require reviews")
-            if any(not self.skills[c].critic for c in s.review.critics):
+            if any(not self.nodes[c].critic for c in s.review.critics):
                 raise Rejected("Review policies must reference critic skills")
         self.snapshot = digest({s.name: s.revision for s in skills})
 
@@ -99,20 +103,29 @@ class Registry:
         for path in sorted((root / "skills").rglob("SKILL.md")):
             text = path.read_text(encoding="utf-8")
             match = re.match(r"\A---\s*\n(.*?)\n---\s*\n", text, re.S)
-            meta = yaml.safe_load(match[1]) if match else {}
+            meta = (yaml.safe_load(match[1]) or {}) if match else {}
+            if not isinstance(meta, dict):
+                raise Rejected("Node frontmatter must be an object")
             name = path.parent.relative_to(root / "skills").as_posix()
             body = text[match.end():] if match else text
             prose = re.sub(r"```.*?```", "", body, flags=re.S)
             links = tuple(dict.fromkeys(x.split("|", 1)[0].split("#", 1)[0]
                                         for x in re.findall(r"\[\[([^\]]+)\]\]", prose)))
             policy = meta.get("library", {})
+            if not isinstance(policy, dict):
+                raise Rejected("library metadata must be an object")
             review = policy.get("review", {})
-            skills.append(Skill(
+            blocks = re.findall(r"^```node-js\s*\n(.*?)^```\s*$", body, re.M | re.S)
+            kind = policy.get("kind", "agent")
+            if len(blocks) > 1 or (kind == "code" and len(blocks) != 1):
+                raise Rejected("Code nodes require exactly one node-js block")
+            skills.append(Node(
                 name, text, hashlib.sha256(text.encode()).hexdigest(),
                 tuple(x for x in links if not x.startswith("memory/")),
                 tuple(x for x in links if x.startswith("memory/")),
                 Review(tuple(review.get("critics", [])), review.get("max_revisions", 0)),
                 policy.get("profile") == "critic", policy.get("ttl_seconds", 3600),
+                kind, blocks[0] if blocks else None,
             ))
         notes = {p.relative_to(root).as_posix(): p.read_text(encoding="utf-8")
                  for p in (root / "memory").rglob("*.md")
@@ -152,17 +165,22 @@ class Store:
         with self.db:
             self.db.execute("INSERT INTO events(body) VALUES (?)", (encode(value),))
 
+    def events(self):
+        return [json.loads(body) for (body,) in self.db.execute("SELECT body FROM events ORDER BY seq")]
+
 
 @dataclass
 class Frame:
     id: str
     parent: "Frame | None"
-    call: Call
+    request: NodeRequest
     lineage: tuple[str, ...]
     active: set[str] = field(default_factory=set)
     grants: set[str] = field(default_factory=set)
     children: set[asyncio.Task] = field(default_factory=set)
     closed: bool = False
+    restricted: bool = False
+    observed: set[str] = field(default_factory=set)
 
 
 class Ledger:
@@ -193,13 +211,14 @@ class Ledger:
 Runner = Callable[[Frame, dict[str, Any]], Awaitable[dict[str, Any]]]
 
 
-class Kernel:
-    def __init__(self, registry: Registry, store: Store, runner: Runner | None = None,
+class Runtime:
+    def __init__(self, registry: Registry, store: Store, agent_runner: Runner | None = None,
                  ledger: Ledger | None = None, *, max_depth=5, deadline_seconds=180,
-                 max_revisions=2):
+                 max_revisions=2, code_runner: Runner | None = None):
         if max_depth < 0 or max_revisions < 0 or deadline_seconds <= 0:
             raise Rejected("Invalid supervisor limits")
-        self.registry, self.store, self.runner = registry, store, runner
+        self.registry, self.store, self.agent_runner = registry, store, agent_runner
+        self.code_runner = code_runner
         self.ledger = ledger or Ledger()
         self.session = uuid.uuid4().hex
         self.max_depth, self.max_revisions = max_depth, max_revisions
@@ -210,13 +229,19 @@ class Kernel:
         if frame.closed or time.monotonic() >= self.deadline:
             raise Rejected("Frame closed or session deadline exceeded")
 
-    def read(self, frame: Frame, ref: str) -> dict[str, Any]:
+    def _authorized_record(self, frame: Frame, ref: str) -> dict[str, Any]:
         self._live(frame)
         value = self.store.get(ref)
         if value["session"] != self.session:
             raise Rejected("Cross-session access denied")
-        if value["status"] != "accepted" and value["frame"] != frame.id and ref not in frame.grants:
-            raise Rejected("Draft is not visible to this frame")
+        if (frame.restricted or value["status"] != "accepted") and value["frame"] != frame.id and ref not in frame.grants:
+            raise Rejected("Artifact is not visible to this frame")
+        return value
+
+    def read(self, frame: Frame, ref: str) -> dict[str, Any]:
+        value = self._authorized_record(frame, ref)
+        frame.observed.add(ref)
+        self.store.event(type="artifact_read", session=self.session, frame=frame.id, ref=ref)
         return value
 
     def slice(self, frame: Frame, ref: str, offset=0, limit=4000):
@@ -226,21 +251,22 @@ class Kernel:
         return {"ref": ref, "text": text[offset:offset + limit],
                 "next_offset": min(len(text), offset + limit), "total_chars": len(text)}
 
-    def open(self, frame: Frame, skill_name: str, *, limit=16000):
+    def read_node(self, frame: Frame, node: str, *, enter=False, limit=16000):
         self._live(frame)
-        if not 512 <= limit <= 32000 or skill_name not in self.registry.skills:
+        skill_name = node
+        if not 512 <= limit <= 32000 or skill_name not in self.registry.nodes:
             raise Rejected("Unknown skill or invalid entry budget")
-        skill = self.registry.skills[skill_name]
-        if self.registry.skills[frame.call.skill].critic and skill.review.critics:
+        skill = self.registry.nodes[skill_name]
+        if enter and frame.restricted and skill.review.critics:
             raise Rejected("Critics read candidate evidence; they cannot activate producer reviews")
-        packet = {"skill": skill.name, "revision": skill.revision, "text": skill.text,
+        packet = {"node": skill.name, "kind": skill.kind, "revision": skill.revision, "text": skill.text,
                   "notes": [], "candidates": [], "links": list(skill.links),
                   "missing": list(skill.links), "omitted": 0}
         if len(encode(packet)) > limit - 64:
             raise Rejected("Entry exceeds budget; split the skill or request a larger bounded packet")
         note_ids = (f"memory/notes/skills/{skill_name}.md", *skill.notes)
         for name in dict.fromkeys(note_ids):
-            if name not in self.registry.notes:
+            if frame.restricted or name not in self.registry.notes:
                 continue
             note = {"ref": name, "authority": "evidence", "text": self.registry.notes[name]}
             packet["notes"].append(note)
@@ -248,33 +274,36 @@ class Kernel:
                 packet["notes"].pop()
                 packet["omitted"] += 1
         for ref, value in self.store.all():
-            linked = self.registry.skills.get(value["skill"])
+            linked = self.registry.nodes.get(value["node"])
             if (value["status"] != "accepted" or value["session"] != self.session
-                    or value["skill"] not in skill.links or not linked
+                    or value["node"] not in skill.links or not linked
                     or value["snapshot"] != self.registry.snapshot
-                    or value["inputs"] != frame.call.inputs
+                    or value["inputs"] != frame.request.inputs
                     or time.time() - value["created_at"] > linked.ttl_seconds):
                 continue
-            item = {"ref": ref, "skill": value["skill"], "inputs": value["inputs"],
+            if frame.restricted and ref not in frame.grants and value["frame"] != frame.id:
+                continue
+            item = {"ref": ref, "node": value["node"], "inputs": value["inputs"],
                     "created_at": value["created_at"], "summary": value["summary"]}
             packet["candidates"].append(item)
             if len(encode(packet)) > limit - 64:
                 packet["candidates"].pop()
                 packet["omitted"] += 1
-            elif value["skill"] in packet["missing"]:
-                packet["missing"].remove(value["skill"])
-        frame.active.add(skill_name)
-        self.store.event(type="skill_enter", session=self.session, frame=frame.id,
-                         skill=skill_name, revision=skill.revision)
+            elif value["node"] in packet["missing"]:
+                packet["missing"].remove(value["node"])
+        if enter:
+            frame.active.add(skill_name)
+        self.store.event(type="node_enter" if enter else "node_read", session=self.session, frame=frame.id,
+                         node=skill_name, revision=skill.revision)
         return packet
 
-    async def call(self, request: Call, parent: Frame | None = None) -> dict[str, Any]:
-        request = Call.parse(asdict(request))
+    async def run_node(self, request: NodeRequest, parent: Frame | None = None) -> dict[str, Any]:
+        request = NodeRequest.parse(asdict(request))
         if parent:
             self._live(parent)
-        if request.skill not in self.registry.skills:
+        if request.node not in self.registry.nodes:
             raise Rejected("Unknown skill")
-        signature = digest({"skill": request.skill, "inputs": request.inputs,
+        signature = digest({"node": request.node, "inputs": request.inputs,
                             "task": request.task, "refs": request.refs})
         lineage = parent.lineage if parent else ()
         if signature in lineage:
@@ -293,10 +322,15 @@ class Kernel:
         for ref in request.refs:
             if parent is None:
                 raise Rejected("Root artifact grants must come from an authenticated launcher")
-            self.read(parent, ref)
+            self._authorized_record(parent, ref)
         self.ledger.admit_frame()
         frame = Frame(uuid.uuid4().hex, parent, request, (*lineage, signature),
-                      grants=set(request.refs))
+                      grants=set(request.refs), restricted=self.registry.nodes[request.node].critic
+                      or bool(parent and parent.restricted))
+        self.store.event(type="admitted", session=self.session, frame=frame.id,
+                         parent=parent.id if parent else None, node=request.node,
+                         kind=self.registry.nodes[request.node].kind, key=request.key,
+                         refs=list(request.refs), restricted=frame.restricted)
         job = asyncio.create_task(self._run(frame))
         self.jobs[job_key] = (signature, job)
         if parent:
@@ -313,14 +347,16 @@ class Kernel:
 
     def _record(self, frame, draft, status, reviews=()):
         for ref in draft.get("based_on", []):
-            value = self.read(frame, ref)
+            value = self._authorized_record(frame, ref)
             if status == "accepted" and value["status"] != "accepted":
                 raise Rejected("Accepted results cannot depend on unaccepted artifacts")
         return self.store.put({
             "session": self.session, "frame": frame.id,
             "parent": frame.parent.id if frame.parent else None,
-            "skill": frame.call.skill, "snapshot": self.registry.snapshot,
-            "consulted": sorted(frame.active), "inputs": frame.call.inputs,
+            "node": frame.request.node, "snapshot": self.registry.snapshot,
+            "consulted": sorted(frame.active), "inputs": frame.request.inputs,
+            "node_revision": self.registry.nodes[frame.request.node].revision,
+            "input_refs": list(frame.request.refs), "observed_refs": sorted(frame.observed),
             "status": status, "created_at": time.time(), "summary": draft["summary"],
             "content": draft["content"], "based_on": draft.get("based_on", []),
             "reviews": list(reviews),
@@ -330,11 +366,13 @@ class Kernel:
         self.store.event(type="started", session=self.session, frame=frame.id)
         try:
             async with asyncio.timeout(max(0, self.deadline - time.monotonic())):
-                packet = self.open(frame, frame.call.skill)
+                packet = self.read_node(frame, frame.request.node, enter=True)
                 feedback, previous = [], None
                 for attempt in range(self.max_revisions + 1):
-                    assert self.runner is not None
-                    draft = await self.runner(frame, {"entry": packet, "attempt": attempt,
+                    runner = self.code_runner if self.registry.nodes[frame.request.node].kind == "code" else self.agent_runner
+                    if runner is None:
+                        raise Rejected(f"No runner configured for node kind {packet['kind']}")
+                    draft = await runner(frame, {"entry": packet, "attempt": attempt,
                                                       "feedback": feedback, "previous": previous})
                     if (not isinstance(draft, dict) or not isinstance(draft.get("summary"), str)
                             or not draft["summary"].strip() or len(draft["summary"]) > 600
@@ -344,17 +382,19 @@ class Kernel:
                     if unfinished:
                         raise Rejected("Join children before returning a draft")
                     draft_ref = self._record(frame, draft, "draft")
-                    policies = [self.registry.skills[s].review for s in sorted(frame.active)
-                                if self.registry.skills[s].review.critics]
+                    policies = [self.registry.nodes[s].review for s in sorted(frame.active)
+                                if self.registry.nodes[s].review.critics]
                     critics = tuple(dict.fromkeys(c for p in policies for c in p.critics))
                     round_limit = min([self.max_revisions, *(p.max_revisions for p in policies)])
                     reviews, feedback = [], []
 
                     async def review_one(critic):
-                        return await self.call(Call(
+                        # The host grants the exact draft and its declared evidence.
+                        return await self.run_node(NodeRequest(
                             critic, f"Review candidate {draft_ref}; independently test claims. "
-                            "Return content with candidate_ref, verdict pass or fail, and findings array.",
-                            frame.call.inputs, f"review:{attempt}:{critic}", (draft_ref,)), frame)
+                            "Return content with candidate_ref, verdict pass/fail/inconclusive, and findings array.",
+                            frame.request.inputs, f"review:{attempt}:{critic}",
+                            tuple(dict.fromkeys([draft_ref, *draft.get('based_on', [])]))), frame)
 
                     # Keep candidate reviews separate; a new revision invalidates all prior verdicts.
                     results = await asyncio.gather(*(review_one(c) for c in critics), return_exceptions=True)
@@ -363,9 +403,9 @@ class Kernel:
                             feedback.append({"critic": critic, "error": type(result).__name__})
                             continue
                         reviews.append(result["ref"])
-                        verdict = self.read(frame, result["ref"])["content"]
+                        verdict = self._authorized_record(frame, result["ref"])["content"]
                         valid = (isinstance(verdict, dict) and verdict.get("candidate_ref") == draft_ref
-                                 and verdict.get("verdict") in ("pass", "fail")
+                                 and verdict.get("verdict") in ("pass", "fail", "inconclusive")
                                  and isinstance(verdict.get("findings"), list))
                         if result["status"] != "accepted" or not valid or verdict["verdict"] != "pass" or verdict["findings"]:
                             feedback.append({"critic": critic, "ref": result["ref"], "verdict": verdict})

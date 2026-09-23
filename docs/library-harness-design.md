@@ -1,5 +1,8 @@
 # The Library Harness Design
 
+> Historical design at the baseline described below. The node-runtime refactor supersedes its API and implementation-status claims. See [current execution contract](dynamic-skill-ptc-design.md) and [runnable example](../README.md). The runtime now supports agent and code nodes through run_node; critic visibility, inconclusive review handling, and the branching demo are implemented. Real-model quality evaluation remains outstanding.
+
+
 Skill graphs with programmable recursive execution
 
 Architecture and reference implementation for the Library team
