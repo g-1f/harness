@@ -6,7 +6,8 @@ library:
 ---
 # b
 
-First run [[delta_check]]: its embedded script computes a factual change.
+Use the optional bundled [[delta_check]] utility to compute a factual change.
+Write the PTC that invokes it; the utility itself contains no orchestration logic.
 Observe the output. If unchanged, return the supplied narrative and the delta
 without further work. Otherwise run [[k]] and [[l]] concurrently and combine their
 observations with the supplied narrative. Return evidence refs. The host does not

@@ -14,7 +14,7 @@ def main():
     paths += [ROOT/name for name in ('README.md','requirements.txt','requirements-lock.txt')]
     for folder in ('skills','examples','docs','tools'):
         paths += [p for p in (ROOT/folder).rglob('*') if p.is_file()
-                  and p.suffix in ('.py','.md','.mmd') and '__pycache__' not in p.parts]
+                  and p.suffix in ('.py','.js','.md','.mmd') and '__pycache__' not in p.parts]
     args.output.parent.mkdir(parents=True,exist_ok=True)
     with ZipFile(args.output,'w',compression=ZIP_DEFLATED) as archive:
         for path in sorted(set(paths)):

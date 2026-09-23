@@ -117,15 +117,32 @@ class Registry:
             review = policy.get("review", {})
             blocks = re.findall(r"^```node-js\s*\n(.*?)^```\s*$", body, re.M | re.S)
             kind = policy.get("kind", "agent")
-            if len(blocks) > 1 or (kind == "code" and len(blocks) != 1):
-                raise Rejected("Code nodes require exactly one node-js block")
+            script = policy.get("script")
+            if len(blocks) > 1 or (kind == "code" and len(blocks) + (script is not None) != 1):
+                raise Rejected("Code nodes require exactly one node-js block or bundled script")
+            code = blocks[0] if blocks else None
+            revision = hashlib.sha256(text.encode()).hexdigest()
+            if script is not None:
+                if kind != "code" or not isinstance(script, str) or not script:
+                    raise Rejected("A bundled script requires a code node and relative JavaScript path")
+                script_path = (path.parent / script).resolve()
+                if (Path(script).is_absolute() or not script_path.is_relative_to(path.parent.resolve())
+                        or script_path.suffix != ".js"):
+                    raise Rejected("Bundled script must be a JavaScript file inside its node directory")
+                try:
+                    code = script_path.read_text(encoding="utf-8")
+                except (OSError, UnicodeError) as error:
+                    raise Rejected("Cannot read bundled script") from error
+                if len(code.encode()) > 24000:
+                    raise Rejected("Bundled script exceeds the source size budget")
+                revision = digest({"text": text, "script": code})
             skills.append(Node(
-                name, text, hashlib.sha256(text.encode()).hexdigest(),
+                name, text, revision,
                 tuple(x for x in links if not x.startswith("memory/")),
                 tuple(x for x in links if x.startswith("memory/")),
                 Review(tuple(review.get("critics", [])), review.get("max_revisions", 0)),
                 policy.get("profile") == "critic", policy.get("ttl_seconds", 3600),
-                kind, blocks[0] if blocks else None,
+                kind, code,
             ))
         notes = {p.relative_to(root).as_posix(): p.read_text(encoding="utf-8")
                  for p in (root / "memory").rglob("*.md")

@@ -14,4 +14,4 @@ jobs:
       - run: python -m pip install -r requirements-lock.txt
       - run: python -m pip check
       - run: python -m unittest -v test_runtime test_integration test_demo
-      - run: python demo.py --case a --trace outputs/trace.json
+      - run: python demo.py --offline --case a --trace outputs/trace.json

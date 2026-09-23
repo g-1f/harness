@@ -1,19 +1,17 @@
 ---
 name: delta_check
-description: Demo delta_check node
+description: Optional deterministic snapshot-delta utility
 library:
   kind: code
+  script: scripts/observe_delta.js
 ---
-# delta_check
+# Delta check utility
 
-Compute the change in the two bound numeric snapshots. This node makes no model calls.
+Compute the difference between the two bound numeric snapshots using the bundled
+[observe_delta.js](scripts/observe_delta.js) utility. Return the value and source
+metadata without making a model call. This authored utility is the only code node
+in this example graph; it does not decide whether to investigate or which nodes
+to invoke. The calling agent observes its result and makes those decisions.
 
-```node-js
-if (!Number.isFinite(input.current) || !Number.isFinite(input.previous)) {
-  throw new Error('Numeric snapshots required');
-}
-await tools.submitCandidate({summary: 'Computed snapshot delta', content: {
-  delta: input.current - input.previous, unit: 'USD',
-  source: 'synthetic snapshot pair', text: 'Computed delta observation'
-}, based_on: refs});
-```
+A skill author may bundle a utility like this when a stable calculation is useful.
+Other skills need only prose and links; bundling code is optional.

@@ -1,8 +1,10 @@
 # Node execution and artifact composition
 
-Status: implemented reference, 2026-09-23. This document supersedes the earlier
-RLM-oriented API and the initial proposed runtime-PTC surface. The code under test
-is the authority for current behavior; this is a single-process implementation.
+Status: implemented reference, clarified 2026-09-23. Skills normally contain prose
+and links; the agent writes PTC at runtime after observations. An optional bundled
+utility script is authored separately. Offline tests select prewritten fragments
+and are explicitly distinguished from actual LLM code generation. This is a
+single-process implementation.
 
 ## 1. Execution contract
 
@@ -11,6 +13,12 @@ runtime admits an invocation; its implementation produces a candidate; the host
 validates and publishes a receipt. Agent execution is one implementation of a node.
 Code execution is another and makes no model calls. A fresh agent context is a
 property of agent-node invocation, not the definition of all node execution.
+
+The primary path is a prose-driven agent node: read the procedure, observe inputs,
+generate PTC, execute it, observe the result, and generate the next fragment. The
+host executes and supervises this loop; it does not generate or compile the
+domain's branch logic. All research, review, and synthesis skills in the example
+use this path. A skill does not need an authored execution program to be callable.
 
 ```python
 from runtime import NodeRequest, Registry, Runtime, Store
@@ -48,36 +56,52 @@ for compatibility; it cannot create an ungoverned worker.
 Node discovery starts with canonical links. The host does not interpret wikilinks
 as executable dependencies or compile prose into a branch table. `Promise.all`,
 `allSettled`, loops, and data transformations come from JavaScript. A model receives
-an observation, reasons with it, then writes its next program fragment. If a node's
-local script already defines deterministic control flow, that script executes it.
+an observation, reasons with it, then writes its next program fragment. An optional
+authored utility can perform a stable computation, but the example's conditional
+investigation logic belongs to the agent's generated PTC.
 
-## 3. Code versus agent nodes
+## 3. Prose-driven skills and optional utilities
+
+An agent node has `library.kind: agent` (the default), prose, and wikilinks. All
+example nodes except `delta_check` have this form. There is no JavaScript body to
+execute from their skill files. `DeepAgentRunner` creates a fresh agent and mutable
+interpreter state for every invocation/repair attempt. The model receives its
+objective, inputs, selected refs, entry packet, and repair feedback and writes PTC.
+It does not inherit the parent's conversation or JavaScript globals. `StateBackend`
+provides private scratch, not shared POSIX files or a real shell.
+
+A skill author may optionally bundle a stable utility. The example's delta check
+is packaged as a separate code node so it can use the existing `run_node` operation:
 
 ```yaml
 ---
 name: delta_check
 library:
   kind: code
+  script: scripts/observe_delta.js
 ---
 ```
 
-A code node must contain exactly one `node-js` block. `Registry.load` pins the full
-skill text, including code, into its revision. `CodeRunner` starts a new QuickJS
-runtime with `input`, `refs`, and invocation `context` bound as data, plus the four
-host capabilities. It provides no OS, Python evaluation, network, or filesystem
-access. Memory and execution-time limits apply; the session deadline also bounds
-host-call waits. The runner closes the interpreter when the invocation ends.
+The script contains only input validation, numeric subtraction, and output
+submission. It contains no fan-out, scenario selection, or decision to investigate.
+The agent in `b` writes the invocation code and observes the result before deciding
+whether to call `k` and `l`. Packaging a utility this way is optional; it is not a
+requirement for writing skills or invoking agent nodes.
 
-An agent node has `library.kind: agent` (the default). `DeepAgentRunner` creates a
-fresh agent and mutable interpreter state for every invocation/repair attempt.
-The model sees its own objective, inputs, selected refs, entry packet, and repair
-feedback. It does not inherit the parent's conversation or JavaScript globals.
-`StateBackend` provides private scratch, not shared POSIX files or a real shell.
+`Registry.load` pins both prose and script bytes. A bundled script must be a
+JavaScript file within the node's directory; escaping paths and symlinks are
+rejected. A code node may alternatively use one inline `node-js` body for backward
+compatibility, but cannot declare both sources. No example SKILL.md embeds code.
 
-`read_node(..., enter=True)` lets the current agent use a linked procedure inline.
-That does not start another agent. The current frame accumulates the entered
-procedure's obligations; opening a code node does not run its body automatically.
-Separate execution uses `run_node`.
+`CodeRunner` executes the pinned utility with `input`, `refs`, and invocation
+`context` bound as data plus the four host capabilities. It provides no OS,
+Python evaluation, network, or filesystem access. Memory and execution-time limits
+apply, and the session deadline bounds host-call waits. Reading a skill does not
+execute its script automatically.
+
+`read_node(..., enter=True)` lets the current agent adopt a linked procedure
+inline and accumulate its obligations. It does not start another agent. Separate
+execution uses `run_node`.
 
 ## 4. Reviews are nodes
 
@@ -139,10 +163,17 @@ snapshot and rerun. There is no automatic invalidation engine in this reference.
 
 ## 6. Reproducible graph
 
-The executable example is `python demo.py --case a`. Its skills express the graph
-in prose; the fixture model selects PTC fragments based on actual observations.
-It is a model double, not runtime branching logic. `--model provider:model-name`
-replaces that double with a real model, subject to provider setup.
+Choose an execution mode explicitly:
+
+- `python demo.py --model provider:model-name --case a`: the real model reads
+  prose and observations and generates PTC for all agent nodes. The scripted
+  fixture module is not imported. Provider setup is required.
+- `python demo.py --offline --case a`: an offline model double selects prewritten
+  PTC fragments after actual observations. This checks mechanics; it does not
+  demonstrate new code being generated by an LLM.
+
+Both paths use the same prose skill graph and optional delta utility. Reports
+record `execution_mode` and `ptc_origin`; the CLI has no implicit scripted fallback.
 
 | Observation | Example next work |
 | --- | --- |
@@ -162,6 +193,13 @@ critic isolation, inherited restrictions, code-only composition, limits,
 cancellation, idempotent retries, and source revision changes.
 
 ## 7. Migration
+
+From the first node-runtime demo: research leaves are now agent nodes with prose,
+not authored code bodies. The only bundled code example is the delta utility,
+whose source moved to `skills/delta_check/scripts/observe_delta.js`. The test double
+moved to `examples/scripted_model.py`. Add `--offline` to offline demo commands or
+choose `--model`; Python callers similarly pass `offline=True` or `model=...`.
+
 
 | Previous API | Current API |
 | --- | --- |

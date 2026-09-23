@@ -1,17 +1,18 @@
 ---
 name: f
-description: Demo f node
+description: Inspect the evidence assigned to f
 library:
-  kind: code
+  kind: agent
 ---
 # f
 
-Return this bound synthetic observation. A code node performs the transformation directly.
+Inspect `inputs.observations.f` and any supplied evidence references. Produce
+an observation that preserves the source's claim and uncertainty. Distinguish
+what the evidence says from your inference; do not invent supporting facts.
 
-```node-js
-const evidence = input.observations['f'];
-if (typeof evidence !== 'string') throw new Error('Missing observation');
-await tools.submitCandidate({summary: 'Observation f', content: {
-  text: evidence, unit: input.units?.['f'] || 'USD', source: 'synthetic/f'
-}, based_on: refs});
-```
+Return content with `text`, `unit`, and `source`. Use `inputs.units.f` if
+provided, otherwise the synthetic fixture's USD unit; identify the source as
+`synthetic/f`. Keep supplied evidence references in `based_on`.
+
+Write whatever PTC is useful after inspecting the input. This node supplies prose,
+not an authored execution program or a predetermined next branch.

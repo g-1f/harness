@@ -1,8 +1,9 @@
-"""An observation-driven model double, not domain logic in the runtime.
+"""OFFLINE TEST FIXTURE: selects prewritten PTC; it does not generate new code.
 
-This makes the integration reproducible without credentials. It inspects actual
-PTC tool observations and chooses a subsequent fragment. Replace the factory with
-a live chat model to test semantic decisions; these fixture rules prove mechanics.
+Only --offline imports this model double. It reads real interpreter observations
+and selects authored fragments so tests can reproduce every path without API
+credentials. In --model mode, a real model receives skill prose and observations
+and writes the PTC itself. No production harness branch logic lives here.
 """
 import json
 import re
@@ -51,14 +52,14 @@ observe('audits', auditBodies);
 """
 
 
-class DemoModel(BaseChatModel):
+class ScriptedFixtureModel(BaseChatModel):
     node: str
     request_inputs: dict[str, Any]
     refs: list[str]
 
     @property
     def _llm_type(self):
-        return "node-demo-model-double"
+        return "offline-scripted-fixture"
 
     def bind_tools(self, tools, **kwargs):
         return self
@@ -82,6 +83,12 @@ class DemoModel(BaseChatModel):
         return ChatResult(generations=[ChatGeneration(message=value)])
 
     def first(self):
+        if self.node in ('a','c','d','f','g','h','i','k','l'):
+            return """
+const evidence = input.observations[NODE];
+if (typeof evidence !== 'string') throw new Error('Missing observation');
+observe('evidence', {text:evidence,unit:input.units?.[NODE] || 'USD',source:'synthetic/'+NODE});
+""".replace('NODE',json.dumps(self.node))
         if self.node == 'root':
             return """
 var rootPrivate = 'not inherited by reviewers';
@@ -109,6 +116,8 @@ observe('synthesis', sources);
         raise RuntimeError('No demo agent for ' + self.node)
 
     def next(self, stage, value):
+        if stage == 'evidence' and self.node in ('a','c','d','f','g','h','i','k','l'):
+            return "await tools.submitCandidate({summary:'Evidence observation',content:"+json.dumps(value)+",based_on:suppliedRefs});"
         if self.node == 'b' and stage == 'delta':
             if value['delta'] == 0:
                 return """

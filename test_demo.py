@@ -2,11 +2,13 @@
 import asyncio
 import tempfile
 import unittest
+from contextlib import redirect_stderr
+from io import StringIO
 from pathlib import Path
 from quickjs_rs import TimeoutError as JSTimeoutError
 
 from code_runner import CodeRunner
-from demo import run_demo
+from demo import parse_args, run_demo
 from runtime import Node, NodeRequest, Registry, Rejected, Runtime, Store
 
 
@@ -21,7 +23,7 @@ class DemoTests(unittest.IsolatedAsyncioTestCase):
         }
         for case, names in expected.items():
             with self.subTest(case=case):
-                runtime,receipt=await run_demo(case)
+                runtime,receipt=await run_demo(case,offline=True)
                 report=runtime.store.get(receipt['ref'])['content']
                 events=runtime.store.events()
                 admitted=[x for x in events if x['type']=='admitted']
@@ -35,7 +37,10 @@ class DemoTests(unittest.IsolatedAsyncioTestCase):
                     if entry['node'] in ('red_team','artifact_coherence'):
                         self.assertTrue(entry['restricted'])
                     if entry['kind']=='code':
+                        self.assertEqual(entry['node'],'delta_check')
                         self.assertFalse(any(x['type']=='agent_actions' and x['frame']==entry['frame'] for x in events))
+                    else:
+                        self.assertTrue(any(x['type']=='agent_actions' and x['frame']==entry['frame'] for x in events))
                 thesis=runtime.store.get(report['thesis'])
                 self.assertEqual(len(thesis['reviews']),1)
                 review=runtime.store.get(thesis['reviews'][0])['content']
@@ -46,7 +51,7 @@ class DemoTests(unittest.IsolatedAsyncioTestCase):
     async def test_failed_optional_audit_reports_blocked_without_thesis(self):
         for case in ('incoherent','unsupported'):
             with self.subTest(case=case):
-                runtime,result=await run_demo(case)
+                runtime,result=await run_demo(case,offline=True)
                 report=runtime.store.get(result['ref'])['content']
                 self.assertEqual(report['outcome'],'blocked')
                 self.assertFalse(any(e['type']=='admitted' and e['node']=='thesis' for e in runtime.store.events()))
@@ -91,6 +96,44 @@ await tools.submitCandidate({summary:'Sum',content:{value:values.reduce((n,v)=>n
             p.write_text(p.read_text().replace('```node-js','```js'))
             with self.assertRaisesRegex(Rejected,'exactly one'):
                 Registry.load(Path(d))
+
+    def test_graph_uses_prose_except_optional_delta_utility(self):
+        root=Path(__file__).parent
+        registry=Registry.load(root)
+        self.assertEqual({n.name for n in registry.nodes.values() if n.kind=='code'}, {'delta_check'})
+        for node in registry.nodes.values():
+            self.assertNotIn('```node-js',node.text)
+            if node.kind=='agent':
+                self.assertIsNone(node.code)
+        self.assertTrue((root/'skills/delta_check/scripts/observe_delta.js').is_file())
+
+    def test_bundled_utility_is_pinned_and_cannot_escape_node(self):
+        with tempfile.TemporaryDirectory() as d:
+            base=Path(d)/'skills'/'calc';base.mkdir(parents=True)
+            prose=base/'SKILL.md'
+            prose.write_text('---\nlibrary:\n  kind: code\n  script: delta.js\n---\n# Calc\n')
+            script=base/'delta.js';script.write_text('1+1')
+            first=Registry.load(Path(d)).snapshot
+            script.write_text('1+2')
+            self.assertNotEqual(Registry.load(Path(d)).snapshot,first)
+            outside=Path(d)/'outside.js';outside.write_text('1+3')
+            script.unlink();script.symlink_to(outside)
+            with self.assertRaisesRegex(Rejected,'inside its node directory'):
+                Registry.load(Path(d))
+            script.unlink()
+            with self.assertRaisesRegex(Rejected,'Cannot read bundled script'):
+                Registry.load(Path(d))
+
+    async def test_execution_mode_must_be_explicit(self):
+        for argv in ([],['--offline','--model','provider:model']):
+            with redirect_stderr(StringIO()), self.assertRaises(SystemExit):
+                parse_args(argv)
+        self.assertTrue(parse_args(['--offline']).offline)
+        self.assertEqual(parse_args(['--model','provider:model']).model,'provider:model')
+        with self.assertRaisesRegex(ValueError,'Choose exactly one'):
+            await run_demo()
+        with self.assertRaisesRegex(ValueError,'Choose exactly one'):
+            await run_demo(model='provider:model',offline=True)
 
 
 if __name__=='__main__':
