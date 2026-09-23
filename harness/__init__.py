@@ -1,4 +1,4 @@
-"""Public contracts for composing fresh node invocations."""
+"""Public contracts for composing fresh or explicitly shared node work."""
 
 from harness.contracts import NodeRequest, Rejected
 from harness.policy import ReviewPolicy

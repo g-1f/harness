@@ -1,17 +1,19 @@
 ---
 name: root
-description: Demo root node
+description: Coordinate independent views over a shared evidence graph
 ---
-# root
+# Investigation
 
-Read linked procedures as needed. Run [[a]] for baseline assumptions and [[b]]
-for snapshot change concurrently. They own their nested investigations. Observe b.
-If its narrative describes accelerating demand, investigate [[c]] for capacity under accelerating demand and [[d]] for supplier exposure;
-otherwise investigate [[h]]. Observe d: concentrated supplier exposure warrants
-[[f]] and [[g]] in parallel. Observe h: a pending regulatory change warrants [[i]].
-Use fresh [[artifact_coherence]] calls on a, b, and c when produced, plus a joint
-coherence check. Audit direct outputs for the current branch; a nested c
-inside a does not stand in for the root’s acceleration-specific c. Apply [[red_team]] to a with its evidence. Read actual verdicts.
-If any audit fails or is inconclusive, return a blocked report without producing
-a thesis. Otherwise run [[thesis]] with all supporting artifacts and review refs.
-Record why each conditional investigation was used or omitted. All data is synthetic.
+Use [[a]] to interpret the baseline and [[c]] to interpret capacity and the policy
+outlook. If `inputs.sequence_baseline` is false, start them concurrently; if true,
+finish a before starting c. Respect the evidence requirements in the supplied input.
+Both procedures can request the same [[b]] snapshot without asking you to relay it.
+They interpret that common artifact for different questions.
+
+After both views complete, use [[d]] to cross-check supply with their explicit refs.
+D revisits the same b and may compose further shared procedures. Inspect the views.
+Apply fresh [[artifact_coherence]] calls individually to a, c and d, plus a joint
+check, and a fresh [[red_team]] call to a. Read verdicts, not just receipt status.
+Return a blocked report if a check fails or is inconclusive. Otherwise pass the
+accepted views and audit refs to [[thesis]]. Keep evidence refs and explain which
+conditional investigations ran. This is a synthetic example.

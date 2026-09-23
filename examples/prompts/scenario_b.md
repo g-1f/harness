@@ -1,8 +1,8 @@
-Use the root skill to investigate the supplied synthetic snapshot, paying attention
-to the policy outlook if the demand narrative is stable. Establish the baseline
-through a and let b inspect the change before deciding what to investigate next.
-Nested calls belong to their caller's question: a capacity check inside a is not
-a root-level acceleration investigation. Reuse linked skills with explicit tasks
-and evidence, inspect each result, and run fresh coherence and red-team checks.
-Produce a reviewed thesis only when the checks pass, recording why other branches
-were omitted. Generate your PTC incrementally from the prose and observations.
+Investigate the synthetic snapshot using the root skill. Complete baseline view a
+before starting capacity view c, as requested by sequence_baseline in the input.
+If c needs the same neutral b snapshot, reuse its accepted artifact through the
+same explicit request. Investigate the policy outlook when observations warrant
+it; shared mix evidence may already exist. After both views, run d's cross-check.
+Keep caller interpretations separate from shared evidence, inspect the outputs,
+and use fresh independent audits before synthesis. Write PTC incrementally from
+the skill prose and observations; respect any flags that omit a dependency.

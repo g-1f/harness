@@ -1,10 +1,18 @@
 flowchart TD
     R[Root] --> A[Baseline a]
-    R --> B[Snapshot b]
-    R -->|Acceleration question| C[Capacity c]
-    A -->|Baseline assumptions| C
-    A -->|Baseline comparison| L[Mix l]
-    C -->|Caller-specific corroboration| K[Volume k]
-    B -->|Explain measured change| K
-    B -->|Explain measured change| L
-    B --> D[Delta utility]
+    R --> C[Capacity c]
+    R --> D[Supply d]
+    A --> B[Snapshot b]
+    C --> B
+    C --> H[Policy h]
+    D --> B
+    D --> F[Alternatives f]
+    D --> G[Inventory g]
+    G --> F
+    B --> K[Volume k]
+    B --> L[Mix l]
+    F --> K
+    F --> L
+    G --> L
+    H --> L
+    H --> I[Timeline i]

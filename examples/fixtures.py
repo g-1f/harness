@@ -3,6 +3,9 @@
 from copy import deepcopy
 
 BASE = {
+    "sequence_baseline": False,
+    "baseline_requires_snapshot": True,
+    "capacity_requires_snapshot": True,
     "current": 105,
     "previous": 100,
     "units": {},
@@ -19,23 +22,38 @@ BASE = {
         "l": "Mix is stable in the supplied snapshot.",
     },
 }
-CASES = ("a", "a-no-e", "b", "b-no-j", "unchanged", "incoherent", "unsupported")
+CASES = (
+    "a",
+    "a-diversified",
+    "b",
+    "b-no-proposal",
+    "unchanged",
+    "incoherent",
+    "unsupported",
+    "deferred",
+    "skip-c",
+)
 
 
 def fixture(case):
     if case not in CASES:
         raise ValueError(case)
     data = deepcopy(BASE)
-    if case in ("b", "b-no-j", "unchanged"):
+    if case in ("b", "b-no-proposal", "unchanged"):
+        data["sequence_baseline"] = True
         data["observations"]["b"] = "Demand is stable; investigate the policy outlook."
     if case == "unchanged":
         data["current"] = data["previous"]
-    if case == "a-no-e":
+    if case == "a-diversified":
         data["observations"]["d"] = "Suppliers are diversified; no concentration concern."
-    if case == "b-no-j":
+    if case == "b-no-proposal":
         data["observations"]["h"] = "No regulatory proposal is pending."
     if case == "incoherent":
         data["units"]["c"] = "JPY"
     if case == "unsupported":
         data["observations"]["a"] = "UNSUPPORTED claim in the supplied evidence."
+    if case == "deferred":
+        data["baseline_requires_snapshot"] = False
+    if case == "skip-c":
+        data["capacity_requires_snapshot"] = False
     return data

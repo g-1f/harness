@@ -45,7 +45,7 @@ class DeepAgentRunner:
 
         @tool
         async def run_node(request: dict) -> dict:
-            """Run a node (code or fresh agent) through the host execution contract."""
+            """Run, join or reuse node work through the supervised execution contract."""
             return await api.run_node(request)
 
         @tool

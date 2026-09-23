@@ -12,9 +12,16 @@ from harness import Registry, Rejected, Resource, Skill
 class SkillTests(unittest.TestCase):
     def test_graph_frontmatter_has_no_execution_configuration(self):
         registry = Registry.load(ROOT / "skills")
-        self.assertEqual(registry.nodes["a"].links, ("c", "l"))
-        self.assertEqual(registry.nodes["c"].links, ("k",))
+        self.assertEqual(registry.nodes["a"].links, ("b",))
+        self.assertEqual(registry.nodes["c"].links, ("b", "h"))
         self.assertEqual(registry.nodes["b"].links, ("delta_check", "k", "l"))
+        self.assertEqual(registry.nodes["d"].links, ("b", "f", "g"))
+        self.assertEqual(registry.nodes["g"].links, ("delta_check", "l", "f"))
+        incoming = {
+            name: sum(name in node.links for node in registry.nodes.values())
+            for name in ("b", "f", "k", "l")
+        }
+        self.assertTrue(all(count > 1 for count in incoming.values()))
         authored = {f.name for f in fields(Skill) if f.init}
         self.assertEqual(authored, {"name", "description", "instructions", "resources"})
         for node in registry.nodes.values():

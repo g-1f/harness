@@ -1,4 +1,4 @@
-"""One-process supervisor for fresh calls, explicit artifact grants and reviews."""
+"""One-process supervisor for node work, explicit artifact grants and reviews."""
 
 from __future__ import annotations
 
@@ -20,6 +20,7 @@ from harness.contracts import (
     digest,
     encode,
 )
+from harness.operations import OperationPool
 from harness.policy import ReviewPolicy, validate_policies
 from harness.skills import Registry
 from harness.storage import Store
@@ -27,12 +28,11 @@ from harness.storage import Store
 
 @dataclass(slots=True)
 class Frame:
-    """Invocation state owned by the supervisor, never authored skill attributes."""
+    """One execution context; origin records creation, not cancellation ownership."""
 
     id: str
-    parent: Frame | None
+    origin: str | None
     request: NodeRequest
-    lineage: tuple[str, ...]
     executor: str = "agent"
     active: set[str] = field(default_factory=set)
     grants: set[str] = field(default_factory=set)
@@ -49,17 +49,29 @@ class Ledger:
     """Call-count admission; inference permits are released before child joins."""
 
     def __init__(
-        self, max_frames: int = 64, max_model_calls: int = 256, model_parallelism: int = 8
+        self,
+        max_frames: int = 64,
+        max_model_calls: int = 256,
+        model_parallelism: int = 8,
+        max_calls: int = 512,
     ):
         if any(
-            type(n) is not int or n < 1 for n in (max_frames, max_model_calls, model_parallelism)
+            type(n) is not int or n < 1
+            for n in (max_frames, max_model_calls, model_parallelism, max_calls)
         ):
             raise Rejected("Ledger limits must be positive integers")
         self.max_frames = max_frames
         self.max_model_calls = max_model_calls
+        self.max_calls = max_calls
+        self.calls = 0
         self.frames = 0
         self.model_calls = 0
         self.slots = asyncio.Semaphore(model_parallelism)
+
+    def admit_call(self) -> None:
+        if self.calls >= self.max_calls:
+            raise Rejected("Session call budget exhausted")
+        self.calls += 1
 
     def admit_frame(self) -> None:
         if self.frames >= self.max_frames:
@@ -113,7 +125,18 @@ class Runtime:
         self.session = uuid.uuid4().hex
         self.max_depth, self.max_revisions = max_depth, max_revisions
         self.deadline = time.monotonic() + deadline_seconds
-        self.jobs: dict[tuple[str, str], tuple[str, asyncio.Task[Receipt]]] = {}
+        self.operations = OperationPool(max_depth=max_depth, emit=self._operation_event)
+        self._call_tasks: set[asyncio.Task[Receipt]] = set()
+        self._closed = False
+        self._execution_identity = digest(
+            {
+                "snapshot": registry.snapshot,
+                "bindings": dict(self.bindings),
+                "default_executor": default_executor,
+                "reviews": {name: asdict(policy) for name, policy in self.reviews.items()},
+                "max_revisions": max_revisions,
+            }
+        )
 
     def register_executor(self, name: str, runner: Runner) -> None:
         """Configure trusted adapters before the first invocation seals the session."""
@@ -129,9 +152,15 @@ class Runtime:
             raise Rejected(f"Unregistered executors: {sorted(needed - self._executors.keys())}")
         self._sealed = True
 
+    def _operation_event(self, **event: Any) -> None:
+        self.store.event(session=self.session, **event)
+
     def check_live(self, frame: Frame) -> None:
-        if frame.closed or time.monotonic() >= self.deadline:
+        if self._closed or frame.closed or time.monotonic() >= self.deadline:
             raise Rejected("Frame closed or session deadline exceeded")
+        operation = self.operations.operations.get(frame.id)
+        if operation is not None and operation.stopping:
+            raise Rejected("Frame is stopping; new work and artifact access are closed")
 
     def _authorized_record(self, frame: Frame, ref: str) -> dict[str, Any]:
         self.check_live(frame)
@@ -196,45 +225,47 @@ class Runtime:
         )
         return packet
 
-    async def run_node(self, request: NodeRequest, parent: Frame | None = None) -> Receipt:
+    async def run_node(self, request: NodeRequest, caller: Frame | None = None) -> Receipt:
         request = NodeRequest.parse(asdict(request))
-        self._seal()
-        if parent:
-            self.check_live(parent)
         if request.node not in self.registry.nodes:
             raise Rejected("Unknown skill")
-        signature = digest(
+        self._seal()
+        self._validate_call(request, caller)
+        self.ledger.admit_call()
+        identity = digest(
             {
+                "execution": self._execution_identity,
                 "node": request.node,
-                "inputs": request.inputs,
                 "task": request.task,
+                "inputs": request.inputs,
                 "refs": request.refs,
             }
         )
-        lineage = parent.lineage if parent else ()
-        if signature in lineage:
-            raise Rejected("Repeated active subproblem; refine the task or inputs")
-        if len(lineage) > self.max_depth:
-            raise Rejected("Maximum child depth exceeded")
-        job_key = (parent.id if parent else "root", request.key)
-        if job_key in self.jobs:
-            old_signature, job = self.jobs[job_key]
-            if old_signature != signature:
-                raise Rejected("Idempotency key reused for a different request")
-            result = await asyncio.shield(job)
-            if parent:
-                parent.grants.add(result["ref"])
-            return result
+        # The caller owns this wait, not the producer it may share with others.
+        waiting = asyncio.create_task(self._call(request, caller, identity))
+        self._call_tasks.add(waiting)
+        waiting.add_done_callback(self._call_tasks.discard)
+        if caller:
+            caller.children.add(waiting)
+            waiting.add_done_callback(caller.children.discard)
+        return await waiting
+
+    def _validate_call(self, request: NodeRequest, caller: Frame | None) -> None:
+        if self._closed or time.monotonic() >= self.deadline:
+            raise Rejected("Session closed or deadline exceeded")
+        if caller:
+            self.check_live(caller)
         for ref in request.refs:
-            if parent is None:
+            if caller is None:
                 raise Rejected("Root artifact grants need an authenticated launcher")
-            self._authorized_record(parent, ref)
+            self._authorized_record(caller, ref)
+
+    def _start(self, operation_id: str, request: NodeRequest, caller: Frame | None):
         self.ledger.admit_frame()
         frame = Frame(
-            uuid.uuid4().hex,
-            parent,
+            operation_id,
+            caller.id if caller else None,
             request,
-            (*lineage, signature),
             executor=self.bindings.get(request.node, self.default_executor),
             grants=set(request.refs),
         )
@@ -242,30 +273,49 @@ class Runtime:
             type="admitted",
             session=self.session,
             frame=frame.id,
-            parent=parent.id if parent else None,
+            origin=caller.id if caller else None,
             node=request.node,
             executor=frame.executor,
             task=request.task,
             key=request.key,
             refs=list(request.refs),
+            reuse=request.reuse,
         )
-        job = asyncio.create_task(self._run(frame))
-        self.jobs[job_key] = (signature, job)
-        if parent:
-            parent.children.add(job)
+        return self._run(frame)
+
+    async def _call(self, request: NodeRequest, caller: Frame | None, identity: str) -> Receipt:
+        lease = await self.operations.acquire(
+            caller=caller.id if caller else None,
+            key=request.key,
+            identity=identity,
+            reuse=request.reuse,
+            start=lambda operation_id: self._start(operation_id, request, caller),
+            validate=lambda: self._validate_call(request, caller),
+        )
         try:
-            result = await asyncio.shield(job)
-            if parent:
-                parent.grants.add(result["ref"])
-            return result
-        except asyncio.CancelledError:
-            job.cancel()
-            await asyncio.gather(job, return_exceptions=True)
-            raise
+            result = await asyncio.shield(lease.operation.task)
+            if caller:
+                self.check_live(caller)
+                caller.grants.add(result["ref"])
+            return dict(result)
+        finally:
+            draining = self.operations.release(lease)
+            if draining is not None:
+                await asyncio.gather(asyncio.shield(draining), return_exceptions=True)
+
+    async def aclose(self) -> None:
+        """End the session, cancelling all caller waits and outstanding producers."""
+        self._closed = True
+        waiting = list(self._call_tasks)
+        for task in waiting:
+            task.cancel()
+        await self.operations.close()
+        await asyncio.gather(*waiting, return_exceptions=True)
 
     def _record(
         self, frame: Frame, draft: Candidate, status: str, reviews: tuple | list = ()
     ) -> str:
+        self.check_live(frame)
         for ref in draft["based_on"]:
             value = self._authorized_record(frame, ref)
             if status == "accepted" and value["status"] != "accepted":
@@ -274,7 +324,7 @@ class Runtime:
             {
                 "session": self.session,
                 "frame": frame.id,
-                "parent": frame.parent.id if frame.parent else None,
+                "origin": frame.origin,
                 "node": frame.request.node,
                 "task": frame.request.task,
                 "executor": frame.executor,
@@ -343,13 +393,18 @@ class Runtime:
                         "feedback": feedback,
                         "previous": previous,
                     }
-                    draft = candidate(await self._executors[frame.executor](frame, context))
+                    output = await self._executors[frame.executor](frame, context)
+                    if (task := asyncio.current_task()) is not None and task.cancelling():
+                        raise asyncio.CancelledError
+                    draft = candidate(output)
                     if any(not task.done() for task in frame.children):
                         raise Rejected("Join children before returning a draft")
                     draft_ref = self._record(frame, draft, "draft")
                     reviews, feedback, round_limit = await self._review(
                         frame, draft, draft_ref, attempt
                     )
+                    if (task := asyncio.current_task()) is not None and task.cancelling():
+                        raise asyncio.CancelledError
                     if not feedback or attempt >= round_limit:
                         status = "needs_review" if feedback else "accepted"
                         ref = self._record(frame, draft, status, reviews)

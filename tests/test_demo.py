@@ -14,64 +14,57 @@ from tests.support import code_skill
 
 
 class DemoTests(unittest.IsolatedAsyncioTestCase):
-    async def test_example_paths_and_contextual_reuse(self):
-        branches = {
-            "a": {"a", "b", "c", "d", "f", "g"},
-            "a-no-e": {"a", "b", "c", "d"},
-            "b": {"a", "b", "h", "i"},
-            "b-no-j": {"a", "b", "h"},
-            "unchanged": {"a", "b", "h", "i"},
+    async def test_example_is_a_converging_execution_graph(self):
+        cases = {
+            "a": {"f", "g"},
+            "a-diversified": set(),
+            "b": {"h", "i"},
+            "b-no-proposal": {"h"},
+            "unchanged": {"h", "i"},
+            "deferred": {"f", "g"},
+            "skip-c": {"f", "g"},
         }
-        for case, names in branches.items():
+        for case, followups in cases.items():
             with self.subTest(case=case):
                 runtime, receipt = await run_demo(case, offline=True)
                 self.addCleanup(runtime.store.close)
                 report = runtime.store.get(receipt["ref"])["content"]
                 events = runtime.store.events()
-                admitted = [e for e in events if e["type"] == "admitted"]
-                root = admitted[0]["frame"]
-                research = [e for e in admitted if e["node"] in set("abcdefghijkl")]
-                direct = {e["node"] for e in research if e["parent"] == root}
-                self.assertEqual(direct, names)
+                admissions = [e for e in events if e["type"] == "admitted"]
+                nodes = {e["frame"]: e["node"] for e in admissions}
+                calls = [e for e in events if e["type"] == "call_acquired"]
                 self.assertEqual(report["outcome"], "complete")
-                self.assertEqual(report["omitted_c_audit"], "c" not in names)
-                self.assertEqual(len(report["audited"]), 3 if "c" in names else 2)
-                self.assertEqual(len({e["frame"] for e in admitted}), len(admitted))
-                by_node = {
-                    name: [e for e in admitted if e["node"] == name]
-                    for name in ("a", "b", "c", "k", "l")
-                }
-                a, b = by_node["a"][0], by_node["b"][0]
-                nested_c = next(e for e in by_node["c"] if e["parent"] == a["frame"])
-                self.assertTrue(any(e["parent"] == nested_c["frame"] for e in by_node["k"]))
-                self.assertTrue(any(e["parent"] == a["frame"] for e in by_node["l"]))
-                self.assertEqual(
-                    any(e["parent"] == b["frame"] for e in by_node["k"]), case != "unchanged"
+                self.assertEqual(set(nodes.values()) & {"f", "g", "h", "i"}, followups)
+                for name in ("b", "l", "delta_check"):
+                    self.assertEqual(list(nodes.values()).count(name), 1)
+                self.assertEqual(list(nodes.values()).count("k"), 0 if case == "unchanged" else 1)
+                b_calls = [e for e in calls if nodes[e["operation"]] == "b"]
+                expected = {"a", "c", "d"} - (
+                    {"a"} if case == "deferred" else {"c"} if case == "skip-c" else set()
                 )
-                self.assertEqual(len({e["task"] for e in by_node["k"]}), len(by_node["k"]))
-                if "c" in names:
-                    self.assertEqual(len(by_node["c"]), 2)
-                    self.assertNotEqual(by_node["c"][0]["task"], by_node["c"][1]["task"])
-                    c_refs = [
-                        e["ref"]
-                        for e in events
-                        if e["type"] == "accepted"
-                        and e["frame"] in {c["frame"] for c in by_node["c"]}
-                    ]
-                    c_results = [runtime.store.get(ref) for ref in c_refs]
-                    self.assertEqual(len({r["content"]["scope"] for r in c_results}), 2)
-                    self.assertEqual(len({r["node_revision"] for r in c_results}), 1)
-                for entry in admitted:
+                self.assertEqual({nodes[e["caller"]] for e in b_calls}, expected)
+                self.assertEqual(b_calls[0]["disposition"], "started")
+                d_call = next(e for e in b_calls if nodes[e["caller"]] == "d")
+                self.assertEqual(d_call["disposition"], "reused")
+                if case in ("b", "b-no-proposal", "unchanged"):
+                    c_call = next(e for e in b_calls if nodes[e["caller"]] == "c")
+                    self.assertEqual(c_call["disposition"], "reused")
+                self.assertEqual(len(set(report["snapshot_refs"])), 1)
+                if "f" in followups:
+                    f_calls = [e for e in calls if nodes[e["operation"]] == "f"]
+                    self.assertEqual({nodes[e["caller"]] for e in f_calls}, {"d", "g"})
+                    self.assertEqual(list(nodes.values()).count("f"), 1)
+                    l_calls = [e for e in calls if nodes[e["operation"]] == "l"]
+                    self.assertEqual({nodes[e["caller"]] for e in l_calls}, {"b", "f", "g"})
+                for entry in admissions:
                     actions = [
                         e
                         for e in events
                         if e["type"] == "agent_actions" and e["frame"] == entry["frame"]
                     ]
-                    if entry["executor"] == "snapshot_math":
-                        self.assertEqual(entry["node"], "delta_check")
-                        self.assertEqual(actions, [])
-                    else:
-                        self.assertTrue(actions)
+                    self.assertEqual(bool(actions), entry["executor"] != "snapshot_math")
+                    if entry["node"] in ("red_team", "artifact_coherence"):
+                        self.assertEqual(entry["reuse"], "fresh")
                 thesis = runtime.store.get(report["thesis"])
                 self.assertEqual(len(thesis["reviews"]), 1)
                 review = runtime.store.get(thesis["reviews"][0])["content"]
@@ -79,6 +72,10 @@ class DemoTests(unittest.IsolatedAsyncioTestCase):
                     runtime.store.get(review["candidate_ref"])["content"], thesis["content"]
                 )
                 self.assertEqual(review["verdict"], "pass")
+                self.assertEqual(runtime.operations.waits, {})
+                self.assertTrue(
+                    all(not op.waiters for op in runtime.operations.operations.values())
+                )
 
     async def test_failed_optional_audit_blocks_thesis(self):
         for case in ("incoherent", "unsupported"):

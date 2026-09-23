@@ -1,16 +1,19 @@
 ---
 name: d
-description: Inspect the evidence assigned to d
+description: Cross-check supply and compose supplier and inventory analyses
 ---
-# d
+# Supply cross-check
 
-Inspect `inputs.observations.d` and any supplied evidence references. Produce
-an observation that preserves the source's claim and uncertainty. Distinguish
-what the evidence says from your inference; do not invent supporting facts.
+Read the explicitly supplied baseline and capacity views. Request [[b|common
+snapshot evidence]] using its standard neutral task, projected inputs, empty refs
+and session reuse. This later call can reuse b's accepted result.
 
-Return content with `text`, `unit`, and `source`. Use `inputs.units.d` if
-provided, otherwise the synthetic fixture's USD unit; identify the source as
-`synthetic/d`. Keep supplied evidence references in `based_on`.
+If b indicates accelerating demand and `inputs.observations.d` identifies
+concentrated supplier exposure, run [[f|supplier alternatives]] and [[g|inventory
+protection]] concurrently. Request f's standard task with session reuse and the
+b ref; ask g to interpret inventory protection with supplier alternatives and
+pass that same b ref. G can independently request the very same f operation.
 
-Write whatever PTC is useful after inspecting the input. This node supplies prose,
-not an authored execution program or a predetermined next branch.
+Otherwise omit those follow-ups. Return the supplied d observation, `snapshot`,
+`investigated`, and the follow-up `subchecks`, with unit/source/scope. Declare the
+caller views, b ref and any follow-up refs in `based_on`.

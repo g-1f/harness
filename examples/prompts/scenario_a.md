@@ -1,8 +1,8 @@
-Use the root skill to investigate the supplied synthetic snapshot. Establish the
-baseline through a while b interprets the change. Let each skill follow its own
-linked procedures and pass a specific question to each child. If the observations
-warrant an acceleration investigation, revisit c for that question even if a
-already used c to test the baseline. Track those calls separately. Inspect the
-relevant artifacts, run fresh coherence and red-team checks, and produce a reviewed
-thesis only when the checks pass. Explain the branches taken and preserve evidence
-references. Generate your PTC incrementally from the prose and tool observations.
+Investigate the synthetic snapshot using the root skill. Run the baseline view a
+and capacity view c concurrently, respecting their evidence-requirement flags.
+Both may need b's neutral snapshot evidence: use the same explicit producer task,
+projected inputs and session reuse, while keeping their interpretations distinct.
+After they finish, run d's supply cross-check. Follow its links into supplier and
+inventory analyses when warranted, including shared f, k and l work. Inspect actual
+results, run fresh independent audits, and synthesize only if the checks pass.
+Write PTC incrementally from the skill prose and observations.

@@ -47,7 +47,7 @@ def build_runtime(
 
 
 def prompt_for(case: str) -> str:
-    scenario = "b" if case in ("b", "b-no-j", "unchanged") else "a"
+    scenario = "b" if case in ("b", "b-no-proposal", "unchanged") else "a"
     return (
         (ROOT / "examples" / "prompts" / f"scenario_{scenario}.md")
         .read_text(encoding="utf-8")

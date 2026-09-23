@@ -107,7 +107,7 @@ await tools.submitCandidate({summary: "Joined child", content: {depth: DEPTH}, b
         record = kernel.store.get(result["ref"])
         self.assertEqual(len(record["based_on"]), 1)
         child = kernel.store.get(record["based_on"][0])
-        self.assertEqual(child["parent"], record["frame"])
+        self.assertEqual(child["origin"], record["frame"])
         self.assertNotEqual(child["frame"], record["frame"])
 
     async def test_native_run_node_uses_same_supervisor(self):
@@ -115,7 +115,7 @@ await tools.submitCandidate({summary: "Joined child", content: {depth: DEPTH}, b
 
         def factory(frame):
             responses = []
-            if not frame.parent:
+            if not frame.origin:
                 request = {"node": "work", "task": "child", "inputs": {}, "key": "child"}
                 responses.append(
                     AIMessage(
@@ -174,7 +174,7 @@ await tools.submitCandidate({summary:'Fresh worker',content:{ok:true},based_on:[
 
         def factory(frame):
             responses = []
-            if frame.parent is None:
+            if frame.origin is None:
                 request = {"node": "work", "task": "child", "inputs": {}, "key": "child"}
                 responses.append(
                     AIMessage(
@@ -203,7 +203,7 @@ await tools.submitCandidate({summary:'Fresh worker',content:{ok:true},based_on:[
         await runtime.run_node(NodeRequest("work", "root", {}, "root"))
         admitted = [e for e in runtime.store.events() if e["type"] == "admitted"]
         self.assertEqual(len(admitted), 2)
-        self.assertEqual(admitted[1]["parent"], admitted[0]["frame"])
+        self.assertEqual(admitted[1]["origin"], admitted[0]["frame"])
 
 
 if __name__ == "__main__":

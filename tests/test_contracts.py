@@ -19,6 +19,7 @@ class ContractTests(unittest.TestCase):
             {"task": " "},
             {"inputs": {"value": float("nan")}},
             {"refs": [None]},
+            {"reuse": "automatic"},
         ):
             with self.subTest(extra=extra), self.assertRaises(Rejected):
                 NodeRequest.parse({**base, **extra})

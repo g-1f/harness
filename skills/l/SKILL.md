@@ -1,19 +1,13 @@
 ---
 name: l
-description: Inspect the evidence assigned to l
+description: Report mix evidence for reuse across several investigations
 ---
-# l
+# Mix evidence
 
-Read the caller’s task: baseline corroboration and explaining a measured delta
-are different uses of this same procedure. Preserve that task as `scope`.
+Standard task: **Report mix evidence**. Standard inputs contain `current`,
+`previous`, `observations`, `units`; the ordered refs list contains the delta ref.
+Identical requests can use session reuse from b, f, g or h.
 
-Inspect `inputs.observations.l` and any supplied evidence references. Produce
-an observation that preserves the source's claim and uncertainty. Distinguish
-what the evidence says from your inference; do not invent supporting facts.
-
-Return content with `text`, `unit`, and `source`. Use `inputs.units.l` if
-provided, otherwise the synthetic fixture's USD unit; identify the source as
-`synthetic/l`. Keep supplied evidence references in `based_on`.
-
-Write whatever PTC is useful after inspecting the input. This node supplies prose,
-not an authored execution program or a predetermined next branch.
+Read the supplied evidence and report `inputs.observations.l` without interpreting
+it for a particular consumer. Return text/unit/source/scope and evidence count;
+use `inputs.units.l` or USD and source `synthetic/l`. Declare supplied refs.

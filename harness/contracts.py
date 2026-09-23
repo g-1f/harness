@@ -30,10 +30,18 @@ class NodeRequest:
     inputs: dict[str, Any]
     key: str
     refs: tuple[str, ...] = ()
+    reuse: Literal["fresh", "session"] = "fresh"
 
     @classmethod
     def parse(cls, value: dict[str, Any]) -> NodeRequest:
-        if not isinstance(value, dict) or set(value) - {"node", "task", "inputs", "key", "refs"}:
+        if not isinstance(value, dict) or set(value) - {
+            "node",
+            "task",
+            "inputs",
+            "key",
+            "refs",
+            "reuse",
+        }:
             raise Rejected("Invalid call fields")
         if any(
             not isinstance(value.get(k), str) or not value[k].strip()
@@ -45,6 +53,8 @@ class NodeRequest:
             raise Rejected("inputs must be an object; refs must be an array")
         if any(not isinstance(ref, str) or not ref for ref in refs):
             raise Rejected("Artifact refs must be nonempty strings")
+        if value.get("reuse", "fresh") not in ("fresh", "session"):
+            raise Rejected("reuse must be fresh or session")
         body = encode(value)
         if len(body.encode()) > 32_000:
             raise Rejected("Request exceeds 32 KB")

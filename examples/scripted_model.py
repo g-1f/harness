@@ -1,9 +1,7 @@
-"""OFFLINE TEST FIXTURE: selects prewritten PTC; it does not generate new code.
+"""Explicit OFFLINE fixture: selects authored PTC from actual tool observations.
 
-Only --offline imports this model double. It reads real interpreter observations
-and selects authored fragments so tests can reproduce every path without API
-credentials. In --model mode, a real model receives skill prose and observations
-and writes the PTC itself. No production harness branch logic lives here.
+No live-model trajectory is claimed. The examples exercise the real interpreter,
+node API and operation coordinator. No semantic branch logic lives in the harness.
 """
 
 import json
@@ -15,6 +13,9 @@ from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.messages import AIMessage
 from langchain_core.outputs import ChatGeneration, ChatResult
 
+HELPERS = Path(__file__).with_name("ptc_helpers.js").read_text(encoding="utf-8")
+AUDIT = Path(__file__).with_name("ptc_audits.js").read_text(encoding="utf-8")
+
 
 def action(code):
     return AIMessage(
@@ -22,8 +23,16 @@ def action(code):
     )
 
 
-HELPERS = Path(__file__).with_name("ptc_helpers.js").read_text(encoding="utf-8")
-AUDIT = Path(__file__).with_name("ptc_audits.js").read_text(encoding="utf-8")
+def submit(summary, content, refs="suppliedRefs"):
+    return (
+        "await tools.submitCandidate({\n  summary: "
+        + json.dumps(summary)
+        + ",\n  content: "
+        + json.dumps(content, indent=2)
+        + ",\n  based_on: "
+        + refs
+        + "\n});"
+    )
 
 
 class ScriptedFixtureModel(BaseChatModel):
@@ -40,80 +49,105 @@ class ScriptedFixtureModel(BaseChatModel):
         return self
 
     def _generate(self, messages, stop=None, run_manager=None, **kwargs):
-        tool_messages = [m for m in messages if m.type == "tool"]
+        tool_messages = [message for message in messages if message.type == "tool"]
         if not tool_messages:
-            code = "var input = " + json.dumps(self.request_inputs) + ";\n" + HELPERS
-            code += "var suppliedRefs = " + json.dumps(self.refs) + ";\n"
-            code += "var assignedTask = " + json.dumps(self.task) + ";\n"
-            value = action(code + self.first())
+            prelude = "var input = " + json.dumps(self.request_inputs) + ";\n" + HELPERS
+            prelude += "var suppliedRefs = " + json.dumps(self.refs) + ";\n"
+            prelude += "var assignedTask = " + json.dumps(self.task) + ";\n"
+            message = action(prelude + self.first())
         else:
             output = str(tool_messages[-1].content)
             match = re.search(r"OBS:(\{[^\n]+\})", output)
             if match:
                 observation = json.loads(match[1])
-                value = action(self.next(observation["stage"], observation["value"]))
+                message = action(self.next(observation["stage"], observation["value"]))
             elif "Error" in output or "error" in output:
                 raise RuntimeError("Demo PTC failed: " + output[:1000])
             else:
-                value = AIMessage(content="Candidate staged")
-        return ChatResult(generations=[ChatGeneration(message=value)])
+                message = AIMessage(content="Candidate staged")
+        return ChatResult(generations=[ChatGeneration(message=message)])
 
     def first(self):
+        if self.node == "root":
+            calls = (
+                """
+const [a, c] = await Promise.all([
+  run('a', [], 'Interpret baseline assumptions'),
+  run('c', [], 'Interpret capacity and the policy outlook')
+]);
+"""
+                if not self.request_inputs["sequence_baseline"]
+                else """
+const a = await run('a', [], 'Interpret baseline assumptions');
+const c = await run('c', [], 'Interpret capacity after the baseline is complete');
+"""
+            )
+            return (
+                "var rootPrivate = 'not inherited by reviewers';\n"
+                + calls
+                + """
+var state = {a, c, artifacts: [{name: 'a', receipt: a}, {name: 'c', receipt: c}]};
+observe('views', await Promise.all([read(a.ref), read(c.ref)]));
+"""
+            )
         if self.node == "a":
             return """
-const procedure = await tools.readNode({node: 'a'});
-var parts = await Promise.all([
-  run('c', suppliedRefs, 'Test capacity assumptions for the baseline claim; do not assume acceleration'),
-  run('l', suppliedRefs, 'Check whether mix stability supports the baseline comparison')
-]);
-var observation = {
-  text: input.observations.a, unit: input.units?.a || 'USD',
-  source: 'synthetic/a', scope: assignedTask,
-  subchecks: await Promise.all(parts.map(part => read(part.ref)))
-};
-observe('composed_evidence', observation);
+const b = input.baseline_requires_snapshot ? await share('b') : null;
+var evidenceRefs = [...suppliedRefs, ...(b ? [b.ref] : [])];
+var observation = evidence('a', {
+  snapshot: b?.ref || null, subchecks: b ? [await read(b.ref)] : []
+});
+observe('evidence', observation);
 """
         if self.node == "c":
-            return """
-const procedure = await tools.readNode({node: 'c'});
-var parts = [await run(
-  'k', suppliedRefs, 'Corroborate volume for this capacity question: ' + assignedTask
-)];
-var observation = {
-  text: input.observations.c, unit: input.units?.c || 'USD',
-  source: 'synthetic/c', scope: assignedTask,
-  subchecks: await Promise.all(parts.map(part => read(part.ref)))
-};
-observe('composed_evidence', observation);
-"""
-        if self.node in ("d", "f", "g", "h", "i", "k", "l"):
-            return """
-const evidence = input.observations[NODE];
-if (typeof evidence !== 'string') throw new Error('Missing observation');
-var observation = {
-  text: evidence, unit: input.units?.[NODE] || 'USD',
-  source: 'synthetic/' + NODE, scope: assignedTask
-};
+            if not self.request_inputs["capacity_requires_snapshot"]:
+                return """
+var evidenceRefs = suppliedRefs;
+var observation = evidence('c', {snapshot: null, policy: null});
 observe('evidence', observation);
-""".replace("NODE", json.dumps(self.node))
-        if self.node == "root":
+"""
             return """
-var rootPrivate = 'not inherited by reviewers';
-const linked = await tools.readNode({node: 'root'});
-const [a, b] = await Promise.all([
-  run('a', [], 'Establish the baseline claim and test its assumptions'),
-  run('b', [], 'Assess the snapshot change before choosing follow-up work')
-]);
-var state = {
-  a, b, artifacts: [{name: 'a', receipt: a}, {name: 'b', receipt: b}], decisions: []
-};
-observe('b', await read(b.ref));
+var snapshot = await share('b');
+observe('capacity_snapshot', await read(snapshot.ref));
 """
         if self.node == "b":
             return """
-var delta = await run('delta_check', suppliedRefs, 'Compute the observed snapshot difference');
+var delta = await share('delta_check');
 observe('delta', await read(delta.ref));
 """
+        if self.node == "d":
+            return """
+var views = await Promise.all(suppliedRefs.map(read));
+var snapshot = await share('b');
+observe('supplier_snapshot', await read(snapshot.ref));
+"""
+        if self.node == "f":
+            return """
+var suppliedEvidence = await Promise.all(suppliedRefs.map(read));
+var delta = await share('delta_check');
+var parts = await Promise.all([share('k', [delta.ref]), share('l', [delta.ref])]);
+var evidenceRefs = [...suppliedRefs, delta.ref, ...parts.map(part => part.ref)];
+var observation = evidence('f', {subchecks: await Promise.all(parts.map(part => read(part.ref)))});
+observe('evidence', observation);
+"""
+        if self.node == "g":
+            return """
+var suppliedEvidence = await Promise.all(suppliedRefs.map(read));
+var delta = await share('delta_check');
+var parts = await Promise.all([share('l', [delta.ref]), share('f', suppliedRefs)]);
+var evidenceRefs = [...suppliedRefs, delta.ref, ...parts.map(part => part.ref)];
+var observation = evidence('g', {subchecks: await Promise.all(parts.map(part => read(part.ref)))});
+observe('evidence', observation);
+"""
+        if self.node == "h":
+            return "observe('policy', input.observations.h);"
+        if self.node in ("i", "k", "l"):
+            return """
+var suppliedEvidence = await Promise.all(suppliedRefs.map(read));
+var evidenceRefs = suppliedRefs;
+var observation = evidence(NODE, {evidence_count: suppliedEvidence.length});
+observe('evidence', observation);
+""".replace("NODE", json.dumps(self.node))
         if self.node in ("red_team", "artifact_coherence"):
             return """
 if (typeof rootPrivate !== 'undefined') throw new Error('Inherited parent globals');
@@ -121,166 +155,188 @@ var targets = await Promise.all(suppliedRefs.map(read));
 observe('review', targets);
 """
         if self.node == "thesis":
-            return """
-var sources = await Promise.all(suppliedRefs.map(read));
-observe('synthesis', sources);
-"""
-        raise RuntimeError("No demo agent for " + self.node)
+            return "observe('synthesis', await Promise.all(suppliedRefs.map(read)));"
+        raise RuntimeError("No fixture for " + self.node)
 
     def next(self, stage, value):
-        if stage == "composed_evidence" and self.node in ("a", "c"):
+        if stage == "evidence":
             return """
 await tools.submitCandidate({
-  summary: 'Contextual evidence', content: observation,
-  based_on: [...suppliedRefs, ...parts.map(part => part.ref)]
+  summary: 'Evidence interpreted for this question', content: observation, based_on: evidenceRefs
 });
 """
-        if stage == "evidence" and self.node in ("d", "f", "g", "h", "i", "k", "l"):
+        handlers = {
+            ("root", "views"): self.root_views,
+            ("root", "audits"): self.root_audits,
+            ("b", "delta"): self.snapshot,
+            ("c", "capacity_snapshot"): self.capacity,
+            ("d", "supplier_snapshot"): self.supplier,
+            ("h", "policy"): self.policy,
+            ("red_team", "review"): self.red_team,
+            ("artifact_coherence", "review"): self.coherence,
+            ("thesis", "synthesis"): self.synthesis,
+        }
+        handler = handlers.get((self.node, stage))
+        if handler is None:
+            raise RuntimeError(f"Unexpected observation {self.node}/{stage}")
+        return handler(value)
+
+    def root_views(self, value):
+        return (
+            """
+const d = await run('d', [state.a.ref, state.c.ref], 'Cross-check supply against the completed views');
+state.artifacts.push({name: 'd', receipt: d});
+var completedViews = await Promise.all(state.artifacts.map(item => read(item.receipt.ref)));
+state.snapshots = completedViews.map(view => view.snapshot).filter(Boolean);
+"""
+            + AUDIT
+        )
+
+    def root_audits(self, value):
+        if any(result.get("verdict") != "pass" for result in value):
             return """
-await tools.submitCandidate({
-  summary: 'Evidence observation', content: observation, based_on: suppliedRefs
-});
-"""
-        if self.node == "b" and stage == "delta":
-            if value["delta"] == 0:
-                return """
-await tools.submitCandidate({
-  summary: 'No snapshot change; b returns early',
-  content: {text: input.observations.b, unit: 'USD', changed: false, internal: []},
-  based_on: [delta.ref]
-});
-"""
-            return """
-const parts = await Promise.all([
-  run('k', [delta.ref], 'Explain volume against the measured snapshot delta'),
-  run('l', [delta.ref], 'Explain mix against the measured snapshot delta')
-]);
-const observations = await Promise.all(parts.map(part => read(part.ref)));
-await tools.submitCandidate({
-  summary: 'B investigated changed snapshot',
-  content: {
-    text: input.observations.b, unit: 'USD', changed: true,
-    internal: ['k', 'l'], observations
-  },
-  based_on: [delta.ref, ...parts.map(part => part.ref)]
-});
-"""
-        if self.node == "root" and stage == "b":
-            scenario_a = "accelerating" in value["text"].lower()
-            nodes = ["c", "d"] if scenario_a else ["h"]
-            return """
-const branch = NODES;
-state.decisions.push({after: 'b', run: branch, reason: REASON});
-const questions = {
-  c: 'Assess whether capacity can meet accelerating demand',
-  d: 'Investigate supplier concentration after the demand observation',
-  h: 'Investigate the policy outlook after the stable-demand observation'
-};
-const branchResults = await Promise.all(branch.map(n => run(n, [state.b.ref], questions[n])));
-state.artifacts.push(...branchResults.map((receipt, i) => ({name: branch[i], receipt})));
-observe('investigation', {
-  node: branch[branch.length - 1],
-  body: await read(branchResults[branchResults.length - 1].ref)
-});
-""".replace("NODES", json.dumps(nodes)).replace("REASON", json.dumps(value["text"]))
-        if self.node == "root" and stage == "investigation":
-            narrative = value["body"]["text"].lower()
-            if value["node"] == "d":
-                extra = ["f", "g"] if "concentrated supplier" in narrative else []
-            else:
-                extra = ["i"] if "pending regulatory change" in narrative else []
-            return (
-                """
-const extra = EXTRA;
-state.decisions.push({after: AFTER, run: extra, reason: REASON});
-const source = state.artifacts[state.artifacts.length - 1].receipt.ref;
-const questions = {
-  f: 'Assess supplier alternatives for the identified concentration',
-  g: 'Assess inventory protection against the identified concentration',
-  i: 'Check the timeline of the identified regulatory proposal'
-};
-const investigations = await Promise.all(extra.map(n => run(n, [source], questions[n])));
-state.artifacts.push(...investigations.map((receipt, i) => ({name: extra[i], receipt})));
-""".replace("EXTRA", json.dumps(extra))
-                .replace("AFTER", json.dumps(value["node"]))
-                .replace("REASON", json.dumps(narrative))
-                + AUDIT
-            )
-        if self.node == "root" and stage == "audits":
-            if any(x.get("verdict") != "pass" for x in value):
-                return """
 await tools.submitCandidate({
   summary: 'Investigation blocked by failed audit',
-  content: {
-    outcome: 'blocked', executed: state.artifacts.map(item => item.name),
-    decisions: state.decisions, audits: state.audits.map(audit => audit.ref),
-    limitations: ['No thesis produced after failed audit']
-  },
-  based_on: [
-    ...state.artifacts.map(item => item.receipt.ref),
-    ...state.audits.map(audit => audit.ref)
-  ]
+  content: {outcome: 'blocked', audits: state.audits.map(audit => audit.ref)},
+  based_on: [...state.artifacts.map(item => item.receipt.ref), ...state.audits.map(audit => audit.ref)]
 });
 """
-            return """
-const evidence = [
-  ...state.artifacts.map(item => item.receipt.ref),
-  ...state.audits.map(audit => audit.ref)
-];
-const thesis = await run('thesis', evidence, 'Synthesize the investigated evidence and audit findings');
+        return """
+const evidence = [...state.artifacts.map(item => item.receipt.ref), ...state.audits.map(audit => audit.ref)];
+const thesis = await run('thesis', evidence, 'Synthesize the independently interpreted views and audit findings');
 await tools.submitCandidate({
-  summary: 'Completed investigated and reviewed thesis',
+  summary: 'Completed graph investigation with a reviewed thesis',
   content: {
     outcome: 'complete', thesis: thesis.ref,
-    executed: state.artifacts.map(item => item.name),
-    decisions: state.decisions, audited: state.auditTargets.map(target => target.ref),
-    omitted_c_audit: !state.artifacts.some(item => item.name === 'c')
+    views: state.artifacts.map(item => ({node: item.name, ref: item.receipt.ref})),
+    snapshot_refs: state.snapshots, audited: state.artifacts.map(item => item.receipt.ref)
   },
   based_on: [thesis.ref, ...evidence]
 });
 """
-        if stage == "review" and self.node == "red_team":
-            target = value[0]
-            invalid = "UNSUPPORTED" in target.get("text", "")
-            findings = ["Unsupported assertion in candidate"] if invalid else []
-            assessment = {
+
+    def snapshot(self, value):
+        if value["delta"] == 0:
+            return """
+await tools.submitCandidate({
+  summary: 'Snapshot unchanged', content: evidence('b', {changed: false, internal: []}),
+  based_on: [delta.ref]
+});
+"""
+        return """
+const parts = await Promise.all([share('k', [delta.ref]), share('l', [delta.ref])]);
+await tools.submitCandidate({
+  summary: 'Shared snapshot evidence',
+  content: evidence('b', {changed: true, internal: ['k', 'l'],
+    subchecks: await Promise.all(parts.map(part => read(part.ref)))}),
+  based_on: [delta.ref, ...parts.map(part => part.ref)]
+});
+"""
+
+    def capacity(self, value):
+        inspect_policy = "accelerating" not in value["text"].lower()
+        code = (
+            "const policy = await run('h', [snapshot.ref], 'Investigate the policy outlook');"
+            if inspect_policy
+            else "const policy = null;"
+        )
+        return (
+            code
+            + """
+var evidenceRefs = [...suppliedRefs, snapshot.ref, ...(policy ? [policy.ref] : [])];
+var observation = evidence('c', {
+  snapshot: snapshot.ref, policy: policy?.ref || null,
+  subchecks: [await read(snapshot.ref), ...(policy ? [await read(policy.ref)] : [])]
+});
+observe('evidence', observation);
+"""
+        )
+
+    def supplier(self, value):
+        investigate = (
+            "accelerating" in value["text"].lower()
+            and "concentrated supplier" in self.request_inputs["observations"]["d"].lower()
+        )
+        code = (
+            """
+var parts = await Promise.all([
+  share('f', [snapshot.ref]),
+  run('g', [snapshot.ref], 'Interpret inventory protection with supplier alternatives')
+]);
+"""
+            if investigate
+            else "var parts = [];\n"
+        )
+        return (
+            code
+            + """
+var evidenceRefs = [...suppliedRefs, snapshot.ref, ...parts.map(part => part.ref)];
+var observation = evidence('d', {
+  snapshot: snapshot.ref, investigated: parts.length > 0,
+  subchecks: await Promise.all(parts.map(part => read(part.ref)))
+});
+observe('evidence', observation);
+"""
+        )
+
+    def policy(self, value):
+        pending = "pending regulatory change" in value.lower()
+        code = """
+var delta = await share('delta_check');
+var mix = await share('l', [delta.ref]);
+"""
+        code += (
+            "var timeline = await run('i', suppliedRefs, 'Inspect the proposal timeline');"
+            if pending
+            else "var timeline = null;"
+        )
+        return (
+            code
+            + """
+var evidenceRefs = [...suppliedRefs, delta.ref, mix.ref, ...(timeline ? [timeline.ref] : [])];
+var observation = evidence('h', {
+  subchecks: [await read(mix.ref), ...(timeline ? [await read(timeline.ref)] : [])]
+});
+observe('evidence', observation);
+"""
+        )
+
+    def red_team(self, value):
+        unsupported = "UNSUPPORTED" in value[0].get("text", "")
+        return submit(
+            "Red-team assessment",
+            {
                 "candidate_ref": self.refs[0],
-                "verdict": "fail" if invalid else "pass",
-                "findings": findings,
-            }
-            return (
-                "await tools.submitCandidate({summary:'Red-team assessment',content:"
-                + json.dumps(assessment)
-                + ",based_on:[]});"
-            )
-        if stage == "review" and self.node == "artifact_coherence":
-            units = {x.get("unit") for x in value if x.get("unit")}
-            findings = []
-            if len(units) > 1:
-                findings.append("Conflicting currency units across target artifacts")
-            if any("INCONSISTENT" in x.get("text", "") for x in value):
-                findings.append("Internal inconsistency")
-            assessment = {
+                "verdict": "fail" if unsupported else "pass",
+                "findings": ["Unsupported assertion in candidate"] if unsupported else [],
+            },
+            refs="[]",
+        )
+
+    def coherence(self, value):
+        units = {result["unit"] for result in value if result.get("unit")}
+        findings = []
+        if len(units) > 1:
+            findings.append("Conflicting currency units across target artifacts")
+        if any("INCONSISTENT" in result.get("text", "") for result in value):
+            findings.append("Internal inconsistency")
+        return submit(
+            "Coherence assessment",
+            {
                 "targets": self.refs,
                 "verdict": "fail" if findings else "pass",
                 "findings": findings,
                 "coverage": len(value),
-            }
-            return (
-                "await tools.submitCandidate({summary:'Coherence assessment',content:"
-                + json.dumps(assessment)
-                + ",based_on:suppliedRefs});"
-            )
-        if self.node == "thesis" and stage == "synthesis":
-            texts = [x["text"] for x in value if "text" in x]
-            content = {
+            },
+        )
+
+    def synthesis(self, value):
+        texts = [result["text"] for result in value if "text" in result]
+        return submit(
+            "Synthetic thesis candidate",
+            {
                 "text": "Synthetic thesis: " + " ".join(texts),
                 "evidence_count": len(texts),
                 "limitations": ["Synthetic observations; not an investment recommendation"],
-            }
-            return (
-                "await tools.submitCandidate({summary:'Synthetic thesis candidate',content:"
-                + json.dumps(content)
-                + ",based_on:suppliedRefs});"
-            )
-        raise RuntimeError(f"Unexpected observation {self.node}/{stage}")
+            },
+        )

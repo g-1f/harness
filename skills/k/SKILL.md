@@ -1,19 +1,13 @@
 ---
 name: k
-description: Inspect the evidence assigned to k
+description: Report volume evidence for reuse by other procedures
 ---
-# k
+# Volume evidence
 
-Read the caller’s task: baseline corroboration and explaining a measured delta
-are different uses of this same procedure. Preserve that task as `scope`.
+Standard task: **Report volume evidence**. Standard inputs contain `current`,
+`previous`, `observations`, `units`; the ordered refs list contains the delta ref.
+Identical requests can use session reuse from b or f.
 
-Inspect `inputs.observations.k` and any supplied evidence references. Produce
-an observation that preserves the source's claim and uncertainty. Distinguish
-what the evidence says from your inference; do not invent supporting facts.
-
-Return content with `text`, `unit`, and `source`. Use `inputs.units.k` if
-provided, otherwise the synthetic fixture's USD unit; identify the source as
-`synthetic/k`. Keep supplied evidence references in `based_on`.
-
-Write whatever PTC is useful after inspecting the input. This node supplies prose,
-not an authored execution program or a predetermined next branch.
+Read the supplied evidence and report `inputs.observations.k` without interpreting
+it for a particular consumer. Return text/unit/source/scope and evidence count;
+use `inputs.units.k` or USD and source `synthetic/k`. Declare supplied refs.

@@ -136,7 +136,7 @@ class RuntimeTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_reading_a_link_does_not_grant_ambient_artifacts(self):
         kernel = Runtime(Registry([skill("work", links=("evidence",)), skill("evidence")]), Store())
-        frame = Frame("parent", None, call(), ())
+        frame = Frame("parent", None, call())
         ref = kernel.store.put(
             {"session": kernel.session, "frame": "sibling", "status": "accepted"}
         )
@@ -150,7 +150,7 @@ class RuntimeTests(unittest.IsolatedAsyncioTestCase):
     async def test_context_packet_is_bounded_and_prose_preserved(self):
         node = skill("work", instructions="é" * 600)
         kernel = Runtime(Registry([node]), Store())
-        frame = Frame("f", None, call(), ())
+        frame = Frame("f", None, call())
         with self.assertRaisesRegex(Rejected, "Entry exceeds"):
             kernel.read_node(frame, "work", limit=512)
         packet = kernel.read_node(frame, "work")
@@ -171,11 +171,11 @@ class RuntimeTests(unittest.IsolatedAsyncioTestCase):
         with self.assertRaisesRegex(Rejected, "Idempotency"):
             await kernel.run_node(call(task="different"))
 
-    async def test_cycle_and_depth_limits(self):
+    async def test_fresh_recursion_is_bounded_by_dependency_depth(self):
         kernel = Runtime(Registry([skill("work")]), Store(), max_depth=0)
 
         async def run(frame, context):
-            with self.assertRaisesRegex(Rejected, "Repeated active"):
+            with self.assertRaisesRegex(Rejected, "depth"):
                 await kernel.run_node(call(key="cycle"), frame)
             with self.assertRaisesRegex(Rejected, "depth"):
                 await kernel.run_node(call(task="narrower", key="depth"), frame)
@@ -198,7 +198,7 @@ class RuntimeTests(unittest.IsolatedAsyncioTestCase):
         cancelled = asyncio.Event()
 
         async def run(frame, context):
-            if frame.parent:
+            if frame.origin:
                 child_started.set()
                 try:
                     await asyncio.sleep(10)
@@ -213,7 +213,7 @@ class RuntimeTests(unittest.IsolatedAsyncioTestCase):
         with self.assertRaises(asyncio.CancelledError):
             await root
         self.assertTrue(cancelled.is_set())
-        self.assertTrue(all(job.done() for _, job in kernel.jobs.values()))
+        self.assertTrue(all(op.task.done() for op in kernel.operations.operations.values()))
 
     async def test_session_deadline(self):
         kernel = Runtime(Registry([skill("work")]), Store(), deadline_seconds=0.02)
@@ -227,7 +227,7 @@ class RuntimeTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_draft_visibility_and_cross_session_denial(self):
         kernel = Runtime(Registry([skill("work")]), Store())
-        parent = Frame("parent", None, call(), ())
+        parent = Frame("parent", None, call())
         ref = kernel.store.put({"session": kernel.session, "frame": "child", "status": "draft"})
         with self.assertRaises(Rejected):
             kernel.read(parent, ref)
@@ -251,7 +251,7 @@ class RuntimeTests(unittest.IsolatedAsyncioTestCase):
             Store(),
             reviews={"checked": ReviewPolicy(("critic",))},
         )
-        frame = Frame("f", None, call(), ())
+        frame = Frame("f", None, call())
         runtime.read_node(frame, "checked")
         self.assertEqual(frame.active, set())
         runtime.read_node(frame, "checked", enter=True)
@@ -278,7 +278,7 @@ class RuntimeTests(unittest.IsolatedAsyncioTestCase):
         seen = []
 
         async def run(frame, context):
-            if frame.request.node == "work" and frame.parent is None:
+            if frame.request.node == "work" and frame.origin is None:
                 return await root(frame)
             seen.append(frame.request.node)
             with self.assertRaisesRegex(Rejected, "not visible"):

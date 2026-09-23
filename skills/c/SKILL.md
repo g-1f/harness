@@ -1,18 +1,20 @@
 ---
 name: c
-description: Interpret capacity evidence for the caller's specific question
+description: Interpret capacity and conditionally investigate policy
 ---
-# Capacity evidence
+# Capacity interpretation
 
-Read your task first. A baseline check asks whether the starting assumptions are
-supported; an acceleration investigation asks whether capacity can meet growing
-demand. These are different questions even with identical supplied observations.
+Read your caller's question and `inputs.observations.c`. If
+`inputs.capacity_requires_snapshot` is false, return the supplied observation and
+no snapshot ref. Otherwise request [[b|common snapshot evidence]] with b's standard
+neutral task, projected inputs, no refs, and session reuse. B might be absent,
+running under a, or already accepted. The runtime resolves those states atomically.
 
-Inspect `inputs.observations.c`. Use [[k|volume evidence]] to corroborate capacity
-for this specific question, explicitly passing the question in the child's task.
-Read the returned observation, preserve uncertainty, and distinguish evidence
-from inference. Do not reuse another call just because its node is named c or k.
+Interpret the common snapshot for the capacity question here. If the snapshot's
+narrative indicates stable rather than accelerating demand, investigate [[h|policy
+outlook]] with the b ref. Read the result before forming your view.
 
-Return `text`, `unit`, `source`, `scope` (your task), and `subchecks` containing the
-volume observation. Use `inputs.units.c` or USD and source `synthetic/c`.
-Declare supplied and child refs in `based_on`.
+Return `text`, `unit`, `source`, `scope`, `snapshot`, `policy` and `subchecks`.
+Use the supplied c observation and `inputs.units.c` or USD; source `synthetic/c`.
+Declare the snapshot and policy evidence refs. Your view remains a distinct output
+from a even when both consume the same b artifact.

@@ -1,17 +1,16 @@
 ---
 name: a
-description: Establish the baseline claim using capacity and mix evidence
+description: Interpret baseline assumptions using the common snapshot
 ---
-# Baseline evidence
+# Baseline interpretation
 
-Inspect `inputs.observations.a` and the refs explicitly supplied by your caller.
-Use [[c|capacity analysis]] to test the baseline's capacity assumptions, without
-presuming demand is accelerating. In parallel, use [[l|mix analysis]] to check
-whether a stable mix makes that baseline comparison meaningful. Give each child
-that purpose in its task. Read their results before forming your observation.
+Inspect the supplied baseline claim. If `inputs.baseline_requires_snapshot` is true,
+request [[b|common snapshot evidence]] with its standard neutral task, projected
+inputs and session reuse. Read b's procedure to preserve its exact request contract.
+A parallel capacity investigation may already be using that same execution.
 
-Preserve the source claim and its uncertainty. Return `text`, `unit`, `source`,
-`scope` (the task you were asked), and `subchecks` containing the child observations.
-Use `inputs.units.a` or the fixture's USD default, and source `synthetic/a`.
-Declare supplied and child refs in `based_on`. This is a baseline interpretation;
-the root may later invoke the same capacity skill for a different question.
+Interpret the returned snapshot for baseline assumptions; that interpretation
+belongs here in a, not in b's shared task. If the flag is false, report the supplied
+baseline observation without calling b. Return `text`, `unit`, `source`, `scope`,
+`snapshot` (the b ref or null), and `subchecks`. Use `inputs.observations.a`,
+`inputs.units.a` or USD, and `synthetic/a`. Declare the received refs in `based_on`.

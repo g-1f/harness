@@ -1,16 +1,15 @@
 ---
 name: f
-description: Inspect the evidence assigned to f
+description: Assess supplier alternatives using shared volume and mix evidence
 ---
-# f
+# Supplier alternatives
 
-Inspect `inputs.observations.f` and any supplied evidence references. Produce
-an observation that preserves the source's claim and uncertainty. Distinguish
-what the evidence says from your inference; do not invent supporting facts.
+Standard task: **Assess supplier alternatives**. Use the standard snapshot inputs
+(`current`, `previous`, `observations`, `units`) and the b snapshot ref supplied by
+the caller. D and g may request this exact task with session reuse.
 
-Return content with `text`, `unit`, and `source`. Use `inputs.units.f` if
-provided, otherwise the synthetic fixture's USD unit; identify the source as
-`synthetic/f`. Keep supplied evidence references in `based_on`.
-
-Write whatever PTC is useful after inspecting the input. This node supplies prose,
-not an authored execution program or a predetermined next branch.
+Obtain [[delta_check]] using its standard request, then use its ref to request
+[[k|volume evidence]] and [[l|mix evidence]] with their standard tasks and session
+reuse. B may already have produced both artifacts. Read them and interpret
+`inputs.observations.f` for supplier alternatives. Return text/unit/source/scope
+and `subchecks`. Declare the snapshot, delta and child refs.

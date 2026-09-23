@@ -1,16 +1,15 @@
 ---
 name: h
-description: Inspect the evidence assigned to h
+description: Investigate policy timing and economic context
 ---
-# h
+# Policy outlook
 
-Inspect `inputs.observations.h` and any supplied evidence references. Produce
-an observation that preserves the source's claim and uncertainty. Distinguish
-what the evidence says from your inference; do not invent supporting facts.
+Inspect `inputs.observations.h` and the supplied snapshot evidence. Obtain
+[[delta_check]] and then [[l|mix evidence]] using their standard requests and session
+reuse. L may have been produced inside b, or this may be its first invocation if
+b returned early for an unchanged snapshot.
 
-Return content with `text`, `unit`, and `source`. Use `inputs.units.h` if
-provided, otherwise the synthetic fixture's USD unit; identify the source as
-`synthetic/h`. Keep supplied evidence references in `based_on`.
-
-Write whatever PTC is useful after inspecting the input. This node supplies prose,
-not an authored execution program or a predetermined next branch.
+If a pending regulatory change warrants investigation, also invoke [[i|proposal
+timeline]] with the supplied snapshot ref. Otherwise omit i. Read the results and
+return the h observation with text/unit/source/scope and `subchecks`. Declare all
+consumed refs. Stable demand does not by itself establish a pending regulation.

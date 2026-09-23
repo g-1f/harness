@@ -3,6 +3,7 @@
 import argparse
 import asyncio
 import json
+from collections import Counter
 from pathlib import Path
 
 from examples.application import build_runtime, prompt_for
@@ -12,8 +13,13 @@ from harness import NodeRequest, Store
 
 async def run_demo(case="a", *, model=None, offline=False, store: Store | None = None):
     runtime = build_runtime(model=model, offline=offline, store=store)
-    result = await runtime.run_node(NodeRequest("root", prompt_for(case), fixture(case), "root"))
-    return runtime, result
+    try:
+        result = await runtime.run_node(
+            NodeRequest("root", prompt_for(case), fixture(case), "root")
+        )
+        return runtime, result
+    finally:
+        await runtime.aclose()
 
 
 def parse_args(argv=None):
@@ -42,7 +48,11 @@ def main():
         "result": runtime.store.get(result["ref"])["content"],
         "nodes": [e["node"] for e in events if e["type"] == "admitted"],
         "model_calls": runtime.ledger.model_calls,
-        "invocations": runtime.ledger.frames,
+        "calls": runtime.ledger.calls,
+        "executions": runtime.ledger.frames,
+        "dispatch_counts": dict(
+            Counter(e["disposition"] for e in events if e["type"] == "call_acquired")
+        ),
     }
     if args.trace:
         args.trace.parent.mkdir(parents=True, exist_ok=True)

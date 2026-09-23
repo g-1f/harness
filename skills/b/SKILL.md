@@ -1,15 +1,20 @@
 ---
 name: b
-description: Interpret a snapshot change and investigate its drivers
+description: Produce neutral snapshot evidence for several consuming procedures
 ---
-# Snapshot investigation
+# Shared snapshot evidence
 
-Use [[delta_check]] to compute the numeric change. Read its result. If unchanged,
-return the supplied b narrative and delta evidence without further investigation.
-Otherwise run [[k|volume evidence]] and [[l|mix evidence]] concurrently. Ask k to
-explain volume against the measured delta, and l to explain mix against that delta.
-Pass the delta reference explicitly and read their observations.
+Standard task: **Produce snapshot evidence**. Standard inputs are the JSON object
+with `current`, `previous`, `observations` and `units`; omit consumer-specific flags.
+This task needs no input artifact refs. Callers may use session reuse for this
+identical request. No caller-specific interpretation is part of the artifact.
 
-These are the same k and l procedures used in baseline analysis, with different
-questions and evidence. Combine their observations with `inputs.observations.b`.
-Return `text`, `unit`, `changed`, and `internal` child names; declare evidence refs.
+Use [[delta_check]] with its standard task and the same projected inputs. Read the
+numeric difference. If zero, return the supplied b narrative with `changed: false`
+and no further investigation. Otherwise call [[k|volume evidence]] and [[l|mix
+evidence]] in parallel, using their standard tasks and the delta ref as evidence.
+They also support identical session requests by other consumers.
+
+Combine the observations with `inputs.observations.b`. Return `text`, `unit`,
+`source`, `scope`, `changed`, `internal` child names and `subchecks`. Declare the
+delta and child refs. Calls from a, c and d can await this single operation.

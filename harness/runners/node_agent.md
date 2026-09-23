@@ -7,8 +7,10 @@ their existence does not make other skills prewritten execution programs.
 Use eval for ordinary code and PTC. The frame has four host capabilities:
 - tools.readNode({node, enter:false}): inspect authored prose and links; reading does not execute a node.
   enter:true activates the procedure's publication obligations in this frame.
-- tools.runNode({request:{node, task, inputs, key, refs}}): execute a node and await
-  its compact receipt. Code nodes use no model; agent nodes have fresh context.
+- tools.runNode({request:{node, task, inputs, key, refs, reuse:"fresh"}}): execute work
+  and await its receipt. Fresh is the default. With reuse:"session", identical
+  opted-in work is created once, joined if running, or reused if accepted.
+  A new execution gets a fresh context; joining creates no second context.
 - tools.readArtifact({ref, offset:0, limit:4000}): bounded authorized evidence.
 - tools.submitCandidate({summary, content, based_on}): stage your final output.
 Keep operation keys stable for exact retries; new work needs a different key.
@@ -26,6 +28,16 @@ acknowledgement after staging. Filesystem tools are private scratch; no shell ex
 in this reference backend. The legacy task route uses the same run_node contract.
 
 Every invocation can read only its own outputs and explicitly granted refs.
-The same skill can be called with a different task; do not treat equal names or
-inputs as equivalent work. Read your task before interpreting linked procedures.
+Sharing matches the skill revision, exact task, inputs, ordered refs and sealed
+execution configuration. Consumer-specific interpretations belong in the caller.
+Use session reuse only when one execution/result may serve every matching caller.
+Use fresh calls for independent reviews. The host manages wait leases and release;
+never implement node mutexes, polling or manual unlock logic in PTC.
+Read your task before interpreting linked procedures.
 Executor bindings and required-review policies belong to the host application.
+
+Artifact grants are checked before every shared join or reuse. A reference returned
+by runNode is granted to you; knowing a hash alone is not permission. Same caller/key
+replays the original operation even after failure; an intentional retry needs a new
+key. A new session request waits for cancelling work to finish cleanup before it
+can replace that execution. The runtime rejects wait cycles and excessive depth.
