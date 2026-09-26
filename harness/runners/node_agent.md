@@ -48,6 +48,9 @@ need different tasks with relevant explicit refs. For an intentional new executi
 of the same request, choose a new key and reuse fresh. Same caller/key always
 replays its original operation, including failure; conflicting reuse is rejected.
 The host manages leases, cancellation, cleanup, cycles, depth and shared budgets.
+An open handle to unfinished work is a dependency even before you read its events.
+Expected host contract failures throw a JS Error named Rejected with a reason.
+Replaying a cancelled producer is Rejected; use a new key for a new attempt.
 
 You can read your own outputs and explicitly granted refs only. Grants are checked
 before joins and cache hits too. Hashes mentioned inside content or based_on do not

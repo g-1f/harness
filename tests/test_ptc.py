@@ -139,7 +139,16 @@ await tools.submitCandidate({summary:'Done',content:{ok:true},based_on:[]});
         def factory(frame):
             return ScriptedModel(
                 responses=[
-                    eval_response("var operation = await nodes.open(" + REQUEST + ");"),
+                    eval_response(
+                        """
+try { await tools.readNode({node:'missing'}); throw new Error('Expected rejection'); }
+catch (error) {
+  if (error.name !== 'Rejected' || !error.message.includes('Unknown skill')) throw error;
+}
+var operation = await nodes.open("""
+                        + REQUEST
+                        + ");"
+                    ),
                     eval_response("var progress = await operation.next();"),
                     eval_response("""
 const final = await operation.result();

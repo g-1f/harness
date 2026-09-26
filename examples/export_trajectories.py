@@ -57,7 +57,7 @@ def render(case: str, runtime: Runtime, receipt: dict) -> str:
         f"{runtime.ledger.frames} executions**, {counts['joined']} in-flight joins, "
         f"{counts['reused']} completed-result reuses. "
         f"{runtime.ledger.model_calls} scripted model operations; zero model API calls. "
-        "All acquired leases were released; no active wait edges remain.",
+        "All acquired leases were released; no live dependency edges remain.",
         "",
         "## Prompt",
         "",
@@ -124,7 +124,7 @@ def render(case: str, runtime: Runtime, receipt: dict) -> str:
         "## Calls and ownership",
         "",
         "Every successful acquisition has its own lease. Multiple rows can target "
-        "the same execution. A pending observation adds a temporary wait edge. The "
+        "the same execution. Every unfinished lease contributes a dependency edge. The "
         "runtime releases each lease on completion, close, error or cancellation; "
         "callers never lock/unlock a skill themselves.",
         "",
@@ -179,7 +179,7 @@ def render(case: str, runtime: Runtime, receipt: dict) -> str:
         "",
         "The harness installs the [shared nodes wrapper](../../harness/runners/ptc.js) "
         "before eval. Its injected source is omitted from these model-authored cells. "
-        "[Wrapper contract](../../docs/ptc-wrapper.md) covers scopes and cross-cell state.",
+        "[Wrapper contract](../../docs/runtime.md) covers scopes and cross-cell state.",
         "",
         "The shared-request fixture helper is shown once. It encodes the standard "
         "producer tasks described in skill prose. Consumer interpretations are separate "

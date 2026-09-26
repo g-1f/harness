@@ -220,7 +220,7 @@ class OperationTests(unittest.IsolatedAsyncioTestCase):
             await old
         receipt = await replacement
         self.assertEqual(runtime.store.get(receipt["ref"])["content"]["value"], 2)
-        with self.assertRaises(asyncio.CancelledError):
+        with self.assertRaisesRegex(Rejected, "cancelled"):
             await runtime.run_node(shared(key="old"))
         self.assertEqual((await runtime.run_node(shared(key="later")))["ref"], receipt["ref"])
         self.assertEqual(runs, 2)

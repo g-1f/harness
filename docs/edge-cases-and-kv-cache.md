@@ -11,9 +11,9 @@ These cases require no additional host primitives or skill attributes.
 | a/c request identical b concurrently; d requests it later | One producer, separate leases, then completed-result reuse | `tests/test_operations.py`, both graph trajectories |
 | Session expires with an open handle | Ownership still controls release; cleanup does not require liveness | `test_expired_session_still_allows_owner_to_release` |
 | Two readers use one handle concurrently | Reject the second pending read; separate consumers use separate handles | `test_one_pending_read_per_handle_and_cancelled_read_can_retry` |
-| Event read is cancelled | Remove its temporary wait edge, retain its handle for retry or close | Same test, observation-cycle test |
+| Event read is cancelled | Retain its lease and dependency edge for retry or explicit close | Same test, observation-cycle test |
 | Producer fails after useful progress | Previous checkpoints remain replayable on the original caller/key; terminal read raises and releases | `test_failed_producer_preserves_checkpoint_and_retry_generation` |
-| x/y subscribe to each other | Handles alone do not create wait cycles; mutual blocking reads are rejected | `test_observation_cycle_across_existing_branches` |
+| x/y subscribe to each other | Unfinished handles are dependencies; the second cyclic acquisition is rejected | `test_observation_cycle_across_existing_branches` |
 | Concurrent work finishes in another order | Cursors follow publication order, not semantic/source freshness | `test_concurrent_checkpoint_cursors_follow_publication_order` |
 | Close races with a waiting read; another consumer remains | Wake/reject the closed read; preserve the other consumer's producer | `test_early_close_wakes_pending_observer_without_stopping_other_caller` |
 | Final-only caller sees checkpoint hashes inside the result | It receives only the final ref grant; nested hashes confer no authority | `test_final_only_call_does_not_grant_unobserved_checkpoints` |

@@ -50,9 +50,9 @@ class ProgressTests(unittest.IsolatedAsyncioTestCase):
                 )
 
             opened = await runtime.open_node(request(key="shared-b"), frame)
-            self.assertNotIn(frame.id, runtime.operations.waits)
+            self.assertIn(frame.id, runtime.operations.waits)
             event = await runtime.next_node_event(opened["handle"], 0, frame)
-            self.assertNotIn(frame.id, runtime.operations.waits)
+            self.assertIn(frame.id, runtime.operations.waits)
             self.assertEqual(event["kind"], "checkpoint")
             self.assertEqual(runtime.read(frame, event["receipt"]["ref"])["content"]["value"], 42)
             focus = await runtime.run_node(
@@ -342,17 +342,9 @@ class ProgressTests(unittest.IsolatedAsyncioTestCase):
         roots = [await runtime.open_node(request(name, key=name)) for name in ("x", "y")]
         await asyncio.wait_for(ready.wait(), 2)
         xy = await runtime.open_node(request("y", key="xy"), frames["x"])
-        yx = await runtime.open_node(request("x", key="yx"), frames["y"])
-        self.assertEqual(runtime.operations.waits, {})
-        pending = asyncio.create_task(runtime.next_node_event(xy["handle"], 0, frames["x"]))
-        await asyncio.sleep(0)
         with self.assertRaisesRegex(Rejected, "Wait cycle"):
-            await runtime.next_node_event(yx["handle"], 0, frames["y"])
-        pending.cancel()
-        with self.assertRaises(asyncio.CancelledError):
-            await pending
+            await runtime.open_node(request("x", key="yx"), frames["y"])
         await runtime.close_node(xy["handle"], frames["x"])
-        await runtime.close_node(yx["handle"], frames["y"])
         self.assertEqual(runtime.operations.waits, {})
         finish.set()
         for opened in roots:

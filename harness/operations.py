@@ -1,4 +1,4 @@
-"""One-event-loop ownership of shared work and the graph of active waits.
+"""One-event-loop ownership of shared work and the graph of live dependencies.
 
 Acquisition and release mutate bookkeeping without awaiting: these are the atomic
 critical sections. No lock is held while an executor runs, a caller waits, or a
@@ -26,9 +26,19 @@ class Operation:
     identity: str
     task: asyncio.Task[Receipt]
     stopping: bool = False
-    waiters: set[str] = field(default_factory=set)
+    waiters: dict[str, Lease] = field(default_factory=dict)
     checkpoints: list[Receipt] = field(default_factory=list)
     changed: asyncio.Event = field(default_factory=asyncio.Event)
+
+    async def settled(self) -> Receipt:
+        """Shield shared work; distinguish producer cancellation from caller cancellation."""
+        try:
+            return await asyncio.shield(self.task)
+        except asyncio.CancelledError:
+            caller = asyncio.current_task()
+            if caller is not None and caller.cancelling():
+                raise
+            raise Rejected("Node operation cancelled; use a new key for a new attempt") from None
 
     @property
     def state(self) -> str:
@@ -55,7 +65,7 @@ class Lease:
     id: str
     caller: str | None
     operation: Operation
-    waiting: bool
+    linked: bool
     released: bool = False
     observing: bool = False
 
@@ -79,7 +89,6 @@ class OperationPool:
         reuse: Literal["fresh", "session"],
         start: Start,
         validate: Callable[[], None],
-        block_until_complete: bool = True,
     ) -> Lease:
         """Acquire a waiter or wait for a cancelled generation's cleanup first."""
         while True:
@@ -122,8 +131,8 @@ class OperationPool:
             target = operation.id if operation else uuid.uuid4().hex
             if caller == target:
                 raise Rejected("An operation cannot attach to itself")
-            waiting = block_until_complete and (operation is None or not operation.task.done())
-            if caller is not None and waiting:
+            linked = caller is not None and (operation is None or not operation.task.done())
+            if caller is not None and linked:
                 self._add_wait(caller, target)
             try:
                 if operation is None:
@@ -136,10 +145,10 @@ class OperationPool:
                     task.add_done_callback(lambda task, op=operation: self._finished(op))
                 if call.operation is None:
                     self.calls[call_key] = Call(identity, reuse, operation)
-                lease = Lease(uuid.uuid4().hex, caller, operation, waiting)
-                operation.waiters.add(lease.id)
+                lease = Lease(uuid.uuid4().hex, caller, operation, linked)
+                operation.waiters[lease.id] = lease
             except BaseException:
-                if caller is not None and waiting:
+                if caller is not None and linked:
                     self._remove_wait(caller, target)
                 raise
             self.emit(
@@ -186,13 +195,7 @@ class OperationPool:
             if operation.task.done():
                 return {"kind": "terminal", "cursor": after}
             changed = operation.changed
-            if lease.caller is not None:
-                self._add_wait(lease.caller, operation.id)
-            try:
-                await changed.wait()
-            finally:
-                if lease.caller is not None:
-                    self._remove_wait(lease.caller, operation.id)
+            await changed.wait()
 
     @staticmethod
     def _signal(operation: Operation) -> None:
@@ -205,10 +208,9 @@ class OperationPool:
             return None
         lease.released = True
         operation = lease.operation
-        operation.waiters.remove(lease.id)
+        del operation.waiters[lease.id]
         self._signal(operation)
-        if lease.caller is not None and lease.waiting:
-            self._remove_wait(lease.caller, operation.id)
+        self._unlink(lease)
         self.emit(
             type="call_released",
             caller=lease.caller,
@@ -255,7 +257,15 @@ class OperationPool:
         if not edges:
             del self.waits[caller]
 
+    def _unlink(self, lease: Lease) -> None:
+        if lease.linked:
+            assert lease.caller is not None
+            self._remove_wait(lease.caller, lease.operation.id)
+            lease.linked = False
+
     def _finished(self, operation: Operation) -> None:
+        for lease in operation.waiters.values():
+            self._unlink(lease)
         # Reading state also consumes exceptions from abandoned task results.
         self.emit(type="operation_finished", operation=operation.id, state=operation.state)
         self._signal(operation)

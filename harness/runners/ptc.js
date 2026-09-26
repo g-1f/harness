@@ -1,3 +1,20 @@
+// Host Rejected values become catchable JS errors. Native Python calls still raise.
+// Only the response envelope is inspected; artifact content stays opaque.
+for (const [name, method] of Object.entries(tools)) {
+  if (typeof method !== 'function' || method.__harness_checked__) continue;
+  const checked = async args => {
+    const result = await method(args);
+    if (result && typeof result.__harness_rejection__ === 'string') {
+      const error = new Error(result.__harness_rejection__);
+      error.name = 'Rejected';
+      throw error;
+    }
+    return result;
+  };
+  checked.__harness_checked__ = true;
+  tools[name] = checked;
+}
+
 // Installed by the harness before each eval; existing operation objects survive cells.
 if (typeof globalThis.nodes === 'undefined') {
   async function open(request) {

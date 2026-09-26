@@ -6,7 +6,7 @@ Reproduce: `python demo.py --offline --case b --trace outputs/scenario_b.json`.
 
 Regenerate both documents: `python -m examples.export_trajectories`.
 
-Outcome: `complete`. **23 calls, 19 executions**, 0 in-flight joins, 4 completed-result reuses. 55 scripted model operations; zero model API calls. All acquired leases were released; no active wait edges remain.
+Outcome: `complete`. **23 calls, 19 executions**, 0 in-flight joins, 4 completed-result reuses. 55 scripted model operations; zero model API calls. All acquired leases were released; no live dependency edges remain.
 
 ## Prompt
 
@@ -113,7 +113,7 @@ Each row has one context and one produced result. `origin` in the raw trace reco
 
 ## Calls and ownership
 
-Every successful acquisition has its own lease. Multiple rows can target the same execution. A pending observation adds a temporary wait edge. The runtime releases each lease on completion, close, error or cancellation; callers never lock/unlock a skill themselves.
+Every successful acquisition has its own lease. Multiple rows can target the same execution. Every unfinished lease contributes a dependency edge. The runtime releases each lease on completion, close, error or cancellation; callers never lock/unlock a skill themselves.
 
 | Caller | Target execution | Caller key | Dispatch | Reuse policy |
 | --- | --- | --- | --- | --- |
@@ -151,7 +151,7 @@ Each row is a published, immutable checkpoint from a producer. The reads are obs
 
 ## Captured PTC and observations
 
-The harness installs the [shared nodes wrapper](../../harness/runners/ptc.js) before eval. Its injected source is omitted from these model-authored cells. [Wrapper contract](../../docs/ptc-wrapper.md) covers scopes and cross-cell state.
+The harness installs the [shared nodes wrapper](../../harness/runners/ptc.js) before eval. Its injected source is omitted from these model-authored cells. [Wrapper contract](../../docs/runtime.md) covers scopes and cross-cell state.
 
 The shared-request fixture helper is shown once. It encodes the standard producer tasks described in skill prose. Consumer interpretations are separate a/c/d/f/g outputs. Live agents write their own equivalent requests.
 

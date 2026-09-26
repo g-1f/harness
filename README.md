@@ -10,6 +10,11 @@ A completed review can publish a failing verdict. Approval and bounded repair ar
 ordinary compositions, demonstrated in [examples/review.py](examples/review.py).
 There are no review policies, reviewer roles or repair fields in the core contract.
 
+The maintained guide is [docs/README.md](docs/README.md): architecture, runtime,
+composition patterns, skill authoring, future memory and the
+[adversarial review](docs/review-findings.md). All examples distinguish implemented
+APIs from proposed extensions.
+
 ## Native primitives that earn their keep
 
 | Host endpoint | Why the host owns it |
@@ -25,10 +30,10 @@ There are no review policies, reviewer roles or repair fields in the core contra
 
 Seven essential host operations plus one deliberate fast path. All are defined
 once in [NodeAPI](harness/api.py) and exposed by both adapters. See the
-[native PTC audit](docs/native-ptc-primitives.md) for the justification, derivable
+[native PTC audit](docs/runtime.md) for the justification, derivable
 operations, actual composition test and removed APIs.
 
-Generated code normally uses the [shared wrapper](docs/ptc-wrapper.md):
+Generated code normally uses the [shared wrapper](docs/runtime.md):
 `nodes.run(request)` for a final receipt, `nodes.with(request, callback)` for scoped
 progress, and `nodes.open(request)` for work spanning eval cells. Functions,
 `Promise.all`, branching, review and retries stay in ordinary code. No model-managed
@@ -86,8 +91,8 @@ or changes the task/inputs/evidence to describe the different work.
 The same caller/key always replays the original execution, including its error.
 Conflicting use of a key is rejected. A new session request waits for cancelling
 work to drain before replacement. Cancelling a does not cancel shared b while c
-still holds a lease. The host checks active wait cycles and depth across branches.
-See [shared operations](docs/shared-operations.md).
+still holds a lease. The host checks live dependency cycles and depth, including unobserved handles across branches.
+See [shared operations](docs/runtime.md).
 
 `publishCheckpoint` makes immutable progress available to current and late
 subscribers. Publication does not approve its content. Callers inspect usefulness
@@ -110,7 +115,7 @@ The two frontmatter fields are a deliberately small local convention. Adding an
 expertise or custom executor does not add attributes to all nodes. `[[b|text]]`
 means a prose link to b with the label text; it does not specify a call or arguments.
 Reading a skill records consultation and has no implicit publication obligations.
-The [end-to-end design](docs/dynamic-skill-ptc-design.md) defines every layer.
+The [end-to-end design](docs/design.md) defines every layer.
 
 The example thesis composition calls thesis_draft, runs a fresh red_team of the
 exact candidate and can request one revision. It publishes an `approved` or
@@ -164,7 +169,7 @@ from serving work that still needs measurement.
 | Location | Responsibility |
 | --- | --- |
 | `harness/contracts.py`, `skills.py` | Small request/output contracts and immutable prose packages |
-| `harness/operations.py` | Atomic sharing, leases, cancellation draining and active wait graph |
+| `harness/operations.py` | Atomic sharing, leases, cancellation draining and live dependency graph |
 | `harness/runtime.py`, `storage.py` | Contexts, access, budgets, publication and immutable records |
 | `harness/api.py`, `runners/` | One capability definition, execution adapters and JS convenience wrapper |
 | `examples/review.py` | Application approval schema and bounded composition |

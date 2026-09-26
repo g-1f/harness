@@ -22,7 +22,7 @@ from langchain_quickjs import CodeInterpreterMiddleware
 
 from harness.api import NodeAPI
 from harness.contracts import Candidate, Rejected, RunContext, encode
-from harness.runners.ptc import PTC_PRELUDE
+from harness.runners.ptc import PTC_PRELUDE, bridge_method
 from harness.runtime import Frame, Runtime
 
 RUNTIME_PROMPT = Path(__file__).with_name("node_agent.md").read_text(encoding="utf-8")
@@ -81,7 +81,7 @@ class DeepAgentRunner:
             "description": "Compatibility dispatch. description is a JSON run_node request.",
             "runnable": RunnableLambda(dispatch),
         }
-        functions = [tool(method) for method in api.capabilities().values()]
+        functions = [tool(bridge_method(method)) for method in api.capabilities().values()]
         interpreter = CodeInterpreterMiddleware(
             ptc=functions,
             mode="thread",

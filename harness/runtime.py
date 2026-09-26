@@ -266,7 +266,6 @@ class Runtime:
             reuse=request.reuse,
             start=lambda operation_id: self._start(operation_id, request, caller),
             validate=lambda: self._validate_call(request, caller),
-            block_until_complete=False,
         )
         self._handles[lease.id] = (caller, lease)
         if caller:
@@ -323,7 +322,7 @@ class Runtime:
                 return event
             try:
                 self._owned_handle(handle, caller)
-                receipt = await asyncio.shield(lease.operation.task)
+                receipt = await lease.operation.settled()
                 if caller:
                     caller.grants.add(receipt["ref"])
                 return {"kind": "complete", "cursor": event["cursor"], "receipt": dict(receipt)}
@@ -385,7 +384,7 @@ class Runtime:
             validate=lambda: self._validate_call(request, caller),
         )
         try:
-            result = await asyncio.shield(lease.operation.task)
+            result = await lease.operation.settled()
             if caller:
                 self.check_live(caller)
                 caller.grants.add(result["ref"])

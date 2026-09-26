@@ -6,7 +6,7 @@ from quickjs_rs import Runtime as JSRuntime
 
 from harness.api import NodeAPI
 from harness.contracts import Candidate, Rejected, RunContext, encode
-from harness.runners.ptc import PTC_PRELUDE
+from harness.runners.ptc import PTC_PRELUDE, bridge_method
 from harness.runtime import Frame, Runtime
 
 
@@ -32,7 +32,7 @@ class CodeRunner:
 
                 capabilities = api.capabilities()
                 for name, method in capabilities.items():
-                    ctx.register(name, bind(method))
+                    ctx.register(name, bind(bridge_method(method)))
                 prelude = "const tools = {" + ", ".join(capabilities) + "};\n"
                 prelude += PTC_PRELUDE + "\n"
                 prelude += "const input = " + encode(frame.request.inputs) + ";\n"
