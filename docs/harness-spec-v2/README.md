@@ -1,5 +1,7 @@
 # Investment research harness: specification v2
 
+> **Superseded** by [v3](../harness-spec-v3/README.md), which drops the new calls in favor of `main`'s primitives and animates every behavior on [the patterns page](../skill-graph-patterns.html).
+
 Atomic dynamic workflows: async subagents that split the *what*, share work as a graph, and keep a trail of decisions.
 
 Status: design, 2026-11-04. Supersedes the v1 spec in [`../kernel-spec-v1/`](../kernel-spec-v1/harness-kernel-spec.md).
