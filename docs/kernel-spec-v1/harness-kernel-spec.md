@@ -1,3 +1,5 @@
+> **Superseded** by [harness spec v2](../harness-spec-v2/README.md) (2026-11-04). Kept for history; the reference kernel here implements v1.
+
 # Investment research harness: kernel specification v1
 
 Status: draft for build, 2026-11-02.
