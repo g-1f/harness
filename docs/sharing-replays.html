@@ -1,0 +1,886 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>[hidden]{display:none!important}</style>
+<title>Sharing in real runs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Recursive:slnt,wght,CASL,CRSV,MONO@-15..0,300..1000,0..1,0..1,0..1&display=swap" rel="stylesheet">
+<style>
+:root {
+  --paper: #EDF0EE; --surface: #F8F9F7; --ink: #1D2733; --muted: #5E6A74;
+  --rule: #CBD3D1; --rule-soft: #DDE3E1; --edge: #6F7B84;
+  --cobalt: #2F5BC4; --cobalt-soft: #DCE5F8;
+  --pine: #2E6A4F; --pine-soft: #D9EAE1;
+  --ochre: #9A6212; --ochre-soft: #F3E6CC;
+  --brick: #B0392E; --brick-soft: #F5DCD8;
+  --graphite: #80878D;
+  --plum: #7A3E9D; --plum-soft: #EFE4F6;
+  --code-bg: #F3F5F3;
+  --tok-kw: #7A3E9D; --tok-str: #2E6A4F; --tok-num: #9A6212; --tok-com: #7C868D;
+  --on-fill: #FFFFFF;
+  --sans: "Recursive", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --mono: "Recursive", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #182029; --surface: #1F2833; --ink: #DCE3E1; --muted: #97A3AB;
+    --rule: #354252; --rule-soft: #28323E; --edge: #8E9AA3;
+    --cobalt: #88A7F2; --cobalt-soft: #263452;
+    --pine: #74BE99; --pine-soft: #1E3A30;
+    --ochre: #E2AA50; --ochre-soft: #3E3220;
+    --brick: #EC8176; --brick-soft: #47262A;
+    --graphite: #8C949A; --code-bg: #1A222C;
+    --plum: #C9A0E8; --plum-soft: #382A47;
+    --tok-kw: #C9A0E8; --tok-str: #8FCBAA; --tok-num: #E2AA50; --tok-com: #7F8B94;
+    --on-fill: #10161D;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #182029; --surface: #1F2833; --ink: #DCE3E1; --muted: #97A3AB;
+  --rule: #354252; --rule-soft: #28323E; --edge: #8E9AA3;
+  --cobalt: #88A7F2; --cobalt-soft: #263452;
+  --pine: #74BE99; --pine-soft: #1E3A30;
+  --ochre: #E2AA50; --ochre-soft: #3E3220;
+  --brick: #EC8176; --brick-soft: #47262A;
+  --graphite: #8C949A; --code-bg: #1A222C;
+  --plum: #C9A0E8; --plum-soft: #382A47;
+  --tok-kw: #C9A0E8; --tok-str: #8FCBAA; --tok-num: #E2AA50; --tok-com: #7F8B94;
+  --on-fill: #10161D;
+  color-scheme: dark;
+}
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-padding-top: 16px; }
+body {
+  margin: 0; background: var(--paper); color: var(--ink);
+  font-family: var(--sans); font-size: 15px; line-height: 1.55;
+  font-variation-settings: "CASL" 0, "MONO" 0;
+  -webkit-text-size-adjust: 100%;
+}
+.wrap { max-width: 1240px; margin: 0 auto; padding-inline: clamp(16px, 4vw, 40px); padding-block: 28px 64px; }
+a { color: var(--cobalt); }
+:focus-visible { outline: 2px solid var(--cobalt); outline-offset: 2px; border-radius: 3px; }
+code, .mono { font-family: var(--mono); font-variation-settings: "MONO" 1, "CASL" 0; }
+h1, h2, h3 { text-wrap: balance; margin: 0; }
+p { margin: 0; }
+
+/* Header */
+.masthead { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; padding-block: 10px 26px; border-bottom: 1px solid var(--rule); }
+.masthead h1 { font-size: clamp(30px, 5vw, 50px); line-height: 1.04; font-weight: 820; letter-spacing: -0.025em; font-variation-settings: "CASL" 0.35, "MONO" 0; }
+.lede { font-size: 17px; max-width: 70ch; color: var(--ink); }
+.lede-sub { max-width: 70ch; color: var(--muted); }
+.jump { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 14px; }
+.jump a { text-decoration: none; font-weight: 600; }
+.jump a:hover { text-decoration: underline; }
+
+/* Section heads */
+section.block { padding-block: 44px 8px; }
+.sec-head { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; margin-bottom: 22px; max-width: 76ch; }
+.sec-head h2 { font-size: 28px; font-weight: 780; letter-spacing: -0.015em; font-variation-settings: "CASL" 0.3, "MONO" 0; }
+.sec-head p { color: var(--muted); }
+
+/* Primitives */
+.prims { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.prim-group { background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; padding: 16px 18px 6px; }
+.prim-group h3 { font-size: 13px; font-weight: 650; color: var(--muted); letter-spacing: 0.02em; margin-bottom: 6px; }
+.prim { padding: 10px 0 12px; border-top: 1px solid var(--rule-soft); display: grid; grid-template-columns: minmax(0, 1fr); gap: 3px; }
+.prim:first-of-type { border-top: 0; }
+.prim code { font-size: 13.5px; font-weight: 650; color: var(--ink); overflow-wrap: anywhere; }
+.prim code .args { color: var(--muted); font-weight: 400; }
+.prim p { font-size: 13.5px; color: var(--muted); }
+.two { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr); gap: 20px; margin-top: 20px; align-items: start; }
+.panel-title { font-size: 13px; font-weight: 650; color: var(--muted); margin-bottom: 8px; }
+table.reuse { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+table.reuse th, table.reuse td { text-align: left; padding: 7px 10px 7px 0; border-bottom: 1px solid var(--rule-soft); vertical-align: top; }
+table.reuse th { font-weight: 600; color: var(--muted); font-size: 12.5px; }
+table.reuse td:first-child { font-weight: 600; white-space: nowrap; }
+.derived { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.derived span { font-size: 13px; padding: 3px 10px; border: 1px dashed var(--rule); border-radius: 999px; color: var(--muted); }
+.note { font-size: 13.5px; color: var(--muted); margin-top: 10px; max-width: 70ch; }
+
+/* Code */
+.code { background: var(--code-bg); border: 1px solid var(--rule-soft); border-radius: 8px; overflow-x: auto; }
+.code pre { margin: 0; padding: 12px 14px 14px; font-family: var(--mono); font-variation-settings: "MONO" 1, "CASL" 0; font-size: 12.5px; line-height: 1.6; tab-size: 2; color: var(--ink); }
+.tok-kw { color: var(--tok-kw); }
+.tok-str { color: var(--tok-str); }
+.tok-num { color: var(--tok-num); }
+.tok-com { color: var(--tok-com); font-style: italic; font-variation-settings: "MONO" 1, "CASL" 0, "slnt" -8; }
+.tok-host { color: var(--cobalt); font-weight: 600; border-radius: 3px; transition: background-color 120ms; }
+.code[data-hl] .tok-host { opacity: 0.45; }
+.code[data-hl="readNode"] .tok-host[data-prim~="readNode"],
+.code[data-hl="openNode"] .tok-host[data-prim~="openNode"],
+.code[data-hl="nextNodeEvent"] .tok-host[data-prim~="nextNodeEvent"],
+.code[data-hl="closeNode"] .tok-host[data-prim~="closeNode"],
+.code[data-hl="readArtifact"] .tok-host[data-prim~="readArtifact"],
+.code[data-hl="publishCheckpoint"] .tok-host[data-prim~="publishCheckpoint"] { opacity: 1; background: var(--cobalt-soft); outline: 1px solid var(--cobalt); }
+.tabs { display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none; margin-bottom: -1px; position: relative; z-index: 1; }
+.tabs::-webkit-scrollbar { display: none; }
+.tabs button { font: inherit; font-size: 12.5px; font-family: var(--mono); font-variation-settings: "MONO" 1; background: none; border: 1px solid transparent; border-bottom: 0; border-radius: 7px 7px 0 0; padding: 5px 10px; color: var(--muted); cursor: pointer; white-space: nowrap; }
+.tabs button[aria-selected="true"] { background: var(--code-bg); border-color: var(--rule-soft); color: var(--ink); font-weight: 650; }
+.filelabel { font-size: 12px; color: var(--muted); font-family: var(--mono); font-variation-settings: "MONO" 1; margin-bottom: 6px; }
+
+/* Legend */
+.legend-block { margin-top: 22px; background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; padding: 14px 18px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; }
+.legend-row { display: flex; flex-wrap: wrap; gap: 8px 20px; align-items: center; font-size: 13px; color: var(--muted); }
+.legend-row b { color: var(--ink); font-weight: 650; min-width: 118px; }
+.lg { display: inline-flex; align-items: center; gap: 7px; }
+.lg svg { flex: none; overflow: visible; }
+
+/* Pattern rows */
+.pattern { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.08fr); grid-template-areas: "text stage"; gap: 22px 34px; padding-block: 34px; border-top: 1px solid var(--rule); align-items: start; }
+.pattern.big { grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.25fr); }
+.p-text { grid-area: text; display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; min-width: 0; }
+.p-stage { grid-area: stage; position: sticky; top: calc(env(safe-area-inset-top, 0px) + 14px); min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; }
+.p-text h3 { font-size: 22px; font-weight: 760; letter-spacing: -0.01em; font-variation-settings: "CASL" 0.25, "MONO" 0; }
+.p-text .summary { max-width: 62ch; }
+.p-task { font-size: 13.5px; color: var(--muted); }
+.p-task q { color: var(--ink); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.chips .lab { font-size: 12.5px; color: var(--muted); margin-right: 2px; }
+.chip { font: inherit; font-size: 12.5px; padding: 2px 9px; border-radius: 999px; border: 1px solid var(--rule); background: var(--surface); color: var(--ink); cursor: pointer; }
+.chip.prim-chip { font-family: var(--mono); font-variation-settings: "MONO" 1; font-size: 12px; }
+.chip:hover, .chip[aria-pressed="true"] { border-color: var(--cobalt); background: var(--cobalt-soft); }
+.stage-card { background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; padding: 10px 10px 8px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; }
+.graph { overflow-x: auto; }
+.graph svg { width: 100%; height: auto; display: block; margin-inline: auto; }
+.transport { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 2px 4px 0; }
+.transport button.play { font: inherit; font-size: 13px; font-weight: 650; background: var(--ink); color: var(--paper); border: 0; border-radius: 7px; padding: 5px 11px; cursor: pointer; min-width: 78px; }
+.transport input[type="range"] { width: 100%; accent-color: var(--cobalt); margin: 0; }
+.clock { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.narration { font-size: 13.5px; min-height: 2.9em; padding: 0 4px; color: var(--ink); }
+.counts { font-size: 12.5px; color: var(--muted); padding: 0 4px 2px; }
+.details { background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; padding: 12px 14px; font-size: 13.5px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; }
+.details .hint { color: var(--muted); }
+.details h4 { margin: 0; font-size: 15px; font-weight: 700; display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+.details h4 small { font-weight: 500; color: var(--muted); font-size: 12.5px; }
+.details dl { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 3px 12px; margin: 0; }
+.details dt { color: var(--muted); }
+.details dd { margin: 0; overflow-wrap: anywhere; }
+.details pre { margin: 0; background: var(--code-bg); border-radius: 6px; padding: 8px 10px; font-size: 11.5px; line-height: 1.5; overflow-x: auto; font-family: var(--mono); font-variation-settings: "MONO" 1; max-height: 220px; }
+.pill { display: inline-block; font-size: 11.5px; font-weight: 650; padding: 1px 8px; border-radius: 999px; }
+.pill.good { background: var(--pine-soft); color: var(--pine); }
+.pill.bad { background: var(--brick-soft); color: var(--brick); }
+.pill.warn { background: var(--ochre-soft); color: var(--ochre); }
+.pill.run { background: var(--cobalt-soft); color: var(--cobalt); }
+
+/* SVG graph styling */
+.g-edge { fill: none; stroke-linecap: round; }
+.g-edge.started { stroke: var(--edge); }
+.g-edge.joined { stroke: var(--cobalt); stroke-dasharray: 7 5; }
+.g-edge.reused { stroke: var(--pine); stroke-dasharray: 1.5 5; }
+.g-edge.evid { stroke: var(--ochre); }
+.g-edge.read { stroke: var(--muted); stroke-dasharray: 4 4; }
+.g-edge.link { stroke: var(--rule); stroke-dasharray: 2 4; }
+.g-dot { stroke: none; }
+.g-node .core { stroke-width: 2; fill: var(--surface); stroke: var(--rule); }
+.g-node.running .core { fill: var(--cobalt); stroke: var(--cobalt); }
+.g-node.waiting .core { fill: var(--cobalt-soft); stroke: var(--cobalt); }
+.g-node.completed .core { fill: var(--pine); stroke: var(--pine); }
+.g-node.failed .core { fill: var(--brick); stroke: var(--brick); }
+.g-node.cancelled .core { fill: var(--surface); stroke: var(--graphite); stroke-dasharray: 3 3; }
+.g-node .ring { fill: none; stroke: var(--cobalt); stroke-width: 2; stroke-dasharray: 5 6; opacity: 0; }
+.g-node.running .ring, .g-node.waiting .ring { opacity: 1; animation: spin 1.1s linear infinite; }
+.g-node.waiting .ring { stroke-dasharray: 2 6; animation-duration: 2.4s; }
+@keyframes spin { to { stroke-dashoffset: -22; } }
+.g-node .glyph { fill: none; stroke: var(--on-fill); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; opacity: 0; }
+.g-node.completed .glyph.ok, .g-node.failed .glyph.x { opacity: 1; }
+.g-node.cancelled .glyph.slash { opacity: 1; stroke: var(--graphite); }
+.g-node .name { font-family: var(--sans); font-size: 12.5px; font-weight: 650; fill: var(--ink); }
+.g-node .sub { font-family: var(--mono); font-variation-settings: "MONO" 1; font-size: 10.5px; fill: var(--muted); }
+.g-node .hit { fill: transparent; cursor: pointer; }
+.g-node:focus-visible { outline: none; }
+.g-node:focus-visible .core { stroke: var(--ink); stroke-width: 3; }
+.g-node.selected .core { stroke: var(--ink); stroke-width: 3; }
+.g-ghost .core { fill: var(--surface); stroke: var(--muted); stroke-dasharray: 3 3; stroke-width: 1.5; }
+.g-ghost.link .core { stroke: var(--rule); }
+.g-ghost .name { font-family: var(--sans); font-size: 12px; fill: var(--muted); }
+.g-ghost .sub { font-family: var(--sans); font-size: 10.5px; fill: var(--muted); font-style: italic; }
+.g-badge rect { stroke: none; }
+.g-badge text { font-family: var(--sans); font-size: 10.5px; font-weight: 700; }
+.g-badge.good rect { fill: var(--pine-soft); } .g-badge.good text { fill: var(--pine); }
+.g-badge.bad rect { fill: var(--brick-soft); } .g-badge.bad text { fill: var(--brick); }
+.g-badge.warn rect { fill: var(--ochre-soft); } .g-badge.warn text { fill: var(--ochre); }
+.g-cp { fill: var(--ochre); stroke: var(--surface); stroke-width: 1.5; }
+.dimmed { opacity: 0.16; transition: opacity 160ms; }
+
+footer.made { margin-top: 48px; padding-top: 22px; border-top: 1px solid var(--rule); display: grid; gap: 10px; color: var(--muted); font-size: 14px; max-width: 80ch; }
+footer.made h2 { font-size: 17px; color: var(--ink); font-weight: 700; }
+
+@media (max-width: 920px) {
+  .prims { grid-template-columns: minmax(0, 1fr); }
+  .two { grid-template-columns: minmax(0, 1fr); }
+  .pattern, .pattern.big { grid-template-columns: minmax(0, 1fr); grid-template-areas: "text" "stage"; }
+  .p-stage { position: static; }
+  .p-text .code-wrap { order: 5; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .g-node.running .ring, .g-node.waiting .ring { animation: none; }
+  .tok-host, .dimmed { transition: none; }
+}
+
+/* v3 additions */
+.prims { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.prim.result code { color: var(--pine); }
+.prim.result { border-top-style: dashed; }
+.g-edge.fork { stroke: var(--edge); stroke-dasharray: 9 3 2 3; }
+.g-edge.cite { stroke: var(--ochre); }
+.g-edge.msg { stroke: var(--plum); }
+.g-edge.readx { stroke: var(--muted); stroke-dasharray: 3 4; }
+.g-ripple { fill: none; stroke: var(--cobalt); stroke-width: 1.5; opacity: 0; }
+.g-user .core { fill: var(--plum-soft); stroke: var(--plum); stroke-width: 2; }
+.g-user .name { font-family: var(--sans); font-size: 12.5px; font-weight: 650; fill: var(--ink); }
+.g-user .hit { fill: transparent; cursor: pointer; }
+.g-user.selected .core { stroke: var(--ink); stroke-width: 3; }
+.g-user:focus-visible { outline: none; }
+.g-user:focus-visible .core { stroke: var(--ink); stroke-width: 3; }
+.transport { grid-template-columns: auto auto auto minmax(0, 1fr) auto; }
+.transport button.stepbtn { font: inherit; font-size: 16px; line-height: 1; font-weight: 700; background: var(--surface); color: var(--ink); border: 1px solid var(--rule); border-radius: 7px; width: 30px; height: 28px; cursor: pointer; }
+.transport button.stepbtn:hover { border-color: var(--cobalt); }
+ul.doing { list-style: none; margin: 0; padding: 0 4px; display: grid; gap: 5px; font-size: 13px; }
+ul.doing li { display: grid; grid-template-columns: 2.6em minmax(0, 1fr); gap: 8px; align-items: baseline; }
+ul.doing b { font-weight: 650; }
+.nid { font-family: var(--mono); font-variation-settings: "MONO" 1; font-size: 11.5px; color: var(--muted); }
+.details .panel-title small { font-weight: 500; }
+ul.stream { list-style: none; margin: 0; padding: 6px 0; display: grid; gap: 2px; max-height: 300px; overflow-y: auto;
+  font-family: var(--mono); font-variation-settings: "MONO" 1; font-size: 11.5px; line-height: 1.45; border-top: 1px solid var(--rule-soft); }
+ul.stream li { display: flex; gap: 8px; justify-content: space-between; align-items: baseline; padding: 1px 6px; border-radius: 4px; }
+ul.stream li .lt { overflow-wrap: anywhere; }
+ul.stream li .tag { flex: none; font-family: var(--sans); font-size: 10.5px; font-weight: 650; color: var(--muted); }
+ul.stream li.mark.to { background: var(--plum-soft); }
+ul.stream li.mark.to .tag { color: var(--plum); }
+ul.stream li.mark.held { background: var(--cobalt-soft); }
+ul.stream li.mark.held .tag { color: var(--cobalt); }
+ul.stream li.idx { color: var(--muted); }
+ul.stream li.now .lt { font-weight: 650; }
+ul.doing li.auto { color: var(--muted); }
+ul.doing li.auto b { font-weight: 600; color: var(--muted); }
+ul.stream li.budget { color: var(--muted); font-style: italic; }
+.cell-label { font-size: 11.5px; color: var(--muted); font-family: var(--mono); font-variation-settings: "MONO" 1; padding: 8px 14px 0; }
+.code + .code, .code + .final { margin-top: 6px; }
+.final { background: var(--pine-soft); border-radius: 8px; padding: 2px 0 10px; }
+.final .cell-label { color: var(--pine); }
+.final p { padding: 4px 14px 0; font-size: 13.5px; color: var(--ink); }
+.stream-sample { font-family: var(--mono); font-variation-settings: "MONO" 1; font-size: 12px; line-height: 1.7; background: var(--code-bg); border: 1px solid var(--rule-soft); border-radius: 8px; padding: 10px 14px; overflow-x: auto; white-space: pre; }
+.stream-sample .to { color: var(--plum); font-weight: 650; }
+.stream-sample .dim { color: var(--muted); }
+.lists { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 20px; }
+.lists > div { background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; padding: 14px 18px; }
+.lists ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; font-size: 13.5px; }
+.walk { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; }
+.walk .stage-card .narration { font-size: 14.5px; min-height: 3.2em; }
+.walk-grid { display: grid; grid-template-columns: minmax(0, 1.12fr) minmax(0, 0.88fr); gap: 14px; align-items: start; }
+.walk-steps ul.doing { font-size: 13.5px; gap: 7px; }
+.walk-code { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; max-width: 900px; }
+.small-note { font-size: 13px; color: var(--muted); }
+@media (max-width: 920px) {
+  .walk-grid, .lists { grid-template-columns: minmax(0, 1fr); }
+}
+.stream li.pending .lt, .stream li.never .lt { color: var(--muted); }
+.stream li.never .lt { text-decoration: line-through; text-decoration-color: var(--rule); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="masthead">
+    <h1>Sharing in real runs</h1>
+    <p class="lede">Replays of real runs from the sharing experiment. Each node is a live Sonnet 5.5 session working through PTC code cells against a fictional sandbox, and every line, hold, cite, read and shared call shown here is taken from the run's record.</p>
+    <p class="lede-sub">The steps and notes are written by hand from that record. The clock shows the run's own seconds. Select a node to see its stream as it actually received it: a line reaches a node at the end of its next cell, is <em>pending</em> until then, and <em>never arrived</em> if the node finished first.</p>
+    <nav class="jump" aria-label="Replays"><a href="#miss">Contradiction: 0.1 s</a><a href="#twice">Shared need: fetched twice</a><a href="#stuck">Cross-branch: stays put</a></nav>
+    <div class="legend-block" aria-label="How to read the graphs">
+      <div class="legend-row"><b>Nodes</b>
+        <span class="lg"><svg width="16" height="16" viewBox="-8 -8 16 16"><circle r="6.5" fill="var(--cobalt)" stroke="var(--cobalt)" stroke-width="2"/></svg>working</span>
+        <span class="lg"><svg width="16" height="16" viewBox="-8 -8 16 16"><circle r="6.5" fill="var(--cobalt-soft)" stroke="var(--cobalt)" stroke-width="2"/></svg>waiting on children or lines</span>
+        <span class="lg"><svg width="16" height="16" viewBox="-8 -8 16 16"><circle r="6.5" fill="var(--pine)" stroke="var(--pine)" stroke-width="2"/></svg>published its result</span>
+        <span class="lg"><svg width="16" height="16" viewBox="-8 -8 16 16"><path d="M0-5L5 0 0 5-5 0Z" fill="var(--ochre)"/></svg>checkpoint</span>
+      </div>
+      <div class="legend-row"><b>Between nodes</b>
+        <span class="lg"><svg width="30" height="8" viewBox="0 0 30 8"><path d="M1 4H29" stroke="var(--edge)" stroke-width="2.4"/></svg>opened and holds</span>
+        <span class="lg"><svg width="30" height="8" viewBox="0 0 30 8"><path d="M1 4H29" stroke="var(--plum)" stroke-width="2"/></svg>addressed checkpoint</span>
+        <span class="lg"><svg width="30" height="8" viewBox="0 0 30 8"><path d="M1 4H29" stroke="var(--ochre)" stroke-width="1.6"/></svg>cites a ref</span>
+        <span class="lg"><svg width="30" height="8" viewBox="0 0 30 8"><path d="M1 4H29" stroke="var(--muted)" stroke-width="1.6" stroke-dasharray="3 4"/></svg>read a ref, or joined or reused a call</span>
+      </div>
+    </div>
+  </header>
+  
+  <section class="block" id="miss" aria-labelledby="miss-h">
+    <div class="sec-head">
+      <h2 id="miss-h">The fire arrives 0.1 s too late</h2>
+      <p>Stage 1, broadcast: every line goes to every node at its next turn boundary. The question is whether Voltaris will meet its 2027 guidance. Orders are up, shipments are down, and a plant fire that only the disclosures branch can find explains the gap. Select n3 at the last steps: n2's result is marked <em>never arrived</em>.</p>
+      <p class="note">Run <code>stage1/conflict-broadcast-s101</code>: condition <code>broadcast</code>, seed 101, 44 s, $0.079.</p>
+    </div>
+    <div class="walk" id="miss-stage"></div>
+    <div class="walk-code" id="miss-code" style="margin-top: 18px"><div class="panel-title">Cells the nodes ran</div></div>
+  </section>
+  <section class="block" id="twice" aria-labelledby="twice-h">
+    <div class="sec-head">
+      <h2 id="twice-h">The slow series, fetched twice at once</h2>
+      <p>Stage 1, broadcast. Both branches need the market-implied CMA policy path, which comes from a slow series (7–11 s). Watch the second fetch start while the first is in flight: no line exists for a call in progress, so broadcast has nothing to deliver.</p>
+      <p class="note">Run <code>stage1/shared-broadcast-s102</code>: condition <code>broadcast</code>, seed 102, 44 s, $0.075.</p>
+    </div>
+    <div class="walk" id="twice-stage"></div>
+    <div class="walk-code" id="twice-code" style="margin-top: 18px"><div class="panel-title">Cells the nodes ran</div></div>
+  </section>
+  <section class="block" id="stuck" aria-labelledby="stuck-h">
+    <div class="sec-head">
+      <h2 id="stuck-h">The finding stays in the financing branch</h2>
+      <p>Stage 1, broadcast. The financing branch's equity node finds a demand fact: Pellham Power, the largest buyer, is cutting 2027 transformer orders by about 40%. Its result line carries its verdict on equity markets, not Pellham, and it goes out after the demand branch's last cell.</p>
+      <p class="note">Run <code>stage1/cross-broadcast-s101</code>: condition <code>broadcast</code>, seed 101, 43 s, $0.138.</p>
+    </div>
+    <div class="walk" id="stuck-stage"></div>
+    <div class="walk-code" id="stuck-code" style="margin-top: 18px"><div class="panel-title">Cells the nodes ran</div></div>
+  </section>
+  <footer class="made" id="made">
+    <h2>How this page was made</h2>
+    <p>Every run is replayed from its <code>state.json</code> in <code>experiments/sharing/runs/</code>: node states, holds, lines, artifacts, cites, reads and shared calls are the harness's own record, mapped onto hand-written steps. Within a step, events keep their real order and spacing. A line's arrival is the end of the receiving node's next cell, which is when the harness appended it to that cell's output.</p>
+    <p>The experiment, its stages and its findings are in <code>experiments/sharing/</code>. The design these runs exercise is v3, described on the patterns page.</p>
+  </footer>
+</div>
+<script type="application/json" id="data">{"replays":[{"id":"miss","group":"replay","title":"The fire arrives 0.1 s too late","summary":"Stage 1, broadcast. The disclosures branch reads the release that explains the shipment drop 0.1 s after the shipments branch finished.","run":"conflict","uses":[],"user":false,"cap":16,"big":false,"wide":true,"T":7,"nodes":[{"id":"n1","name":"VLTG guidance?","task":"Will Voltaris Grid (VLTG) meet its 2027 revenue guidance of C$4.2B?","skill":null,"by":null,"frm":null,"request":{"task":"Will Voltaris Grid (VLTG) meet its 2027 revenue guidance of C$4.2B?"},"t0":0.06,"li":0,"states":[[0.06,"running"],[1.4492,"waiting"],[5.9389,"running"],[6.9381,"completed"]],"subs":[[0.06,"n1"],[6.9381,"n1 \u00b7 r1"]],"cps":[],"index":[],"reads":[[6.2246,"n2.r1"],[6.2246,"n3.r1"]]},{"id":"n2","name":"own disclosures","task":"What do Voltaris's own disclosures, its orders and backlog and its operations, imply for its 2027 revenue?","skill":null,"by":"n1","frm":null,"request":{"task":"What do Voltaris's own disclosures, its orders and backlog and its operations, imply for its 2027 revenue?"},"t0":0.06,"li":1,"states":[[0.06,"running"],[5.9389,"completed"]],"subs":[[0.06,"n2"],[5.9389,"n2 \u00b7 r1"]],"cps":[],"index":["n1 \u00b7 Will Voltaris Grid (VLTG) meet its 2027 revenue guidance of C$4.2B? \u00b7 running","n3 \u00b7 What do industry statistics, shipments and market share, imply for Vo\u2026 \u00b7 running"],"reads":[]},{"id":"n3","name":"industry stats","task":"What do industry statistics, shipments and market share, imply for Voltaris's 2027 revenue?","skill":null,"by":"n1","frm":null,"request":{"task":"What do industry statistics, shipments and market share, imply for Voltaris's 2027 revenue?"},"t0":0.06,"li":2,"states":[[0.06,"running"],[4.236,"completed"]],"subs":[[0.06,"n3"],[4.236,"n3 \u00b7 r1"]],"cps":[],"index":["n1 \u00b7 Will Voltaris Grid (VLTG) meet its 2027 revenue guidance of C$4.2B? \u00b7 running","n2 \u00b7 What do Voltaris's own disclosures, its orders and backlog and its op\u2026 \u00b7 running"],"reads":[]}],"ghosts":[],"edges":[{"kind":"call","disp":"started","from":"n1","to":"n2","t0":0.06,"t1":5.9389},{"kind":"call","disp":"started","from":"n1","to":"n3","t0":0.06,"t1":4.236},{"kind":"read","from":"n2","to":"n1","t0":6.2246,"t1":6.8246},{"kind":"read","from":"n3","to":"n1","t0":6.2246,"t1":6.8246}],"lines":[{"t":0.06,"text":"the run opened n1 \u00b7 Will Voltaris Grid (VLTG) meet its 2027 revenue guidance of C$4.2B?","kind":"open","subj":"n1","got":{},"gotReal":{}},{"t":0.06,"text":"n1 opened n2 \u00b7 What do Voltaris's own disclosures, its orders and backlog and its operations,\u2026","kind":"open","subj":"n2","got":{},"gotReal":{},"by":"n1"},{"t":0.06,"text":"n1 opened n3 \u00b7 What do industry statistics, shipments and market share, imply for Voltaris's 2\u2026","kind":"open","subj":"n3","got":{"n2":1.7177},"gotReal":{"n2":7.2},"by":"n1"},{"t":4.236,"text":"n3.r1 \u00b7 **Industry shipments and market share point to 2027 revenue of about C$3.4\u20133.7B, well sho\u2026","kind":"result","subj":"n3","got":{"n1":5.94,"n2":4.852},"gotReal":{"n1":34.4,"n2":26.3},"ref":"n3.r1"},{"t":5.9389,"text":"n2.r1 \u00b7 **Voltaris's own disclosures point to 2027 revenue at or just above C$4.2B. That makes th\u2026","kind":"result","subj":"n2","got":{"n1":5.94,"n3":null},"gotReal":{"n1":34.4,"n3":null},"ref":"n2.r1"},{"t":6.9381,"text":"n1.r1 \u00b7 **Voltaris probably will not reach C$4.2B in 2027. I put the chance of meeting guidance a\u2026","kind":"result","subj":"n1","got":{"n2":null,"n3":null},"gotReal":{"n2":null,"n3":null},"ref":"n1.r1"}],"ripples":[[0.06,"n1"],[0.06,"n1"],[0.06,"n1"],[4.236,"n3"],[5.9389,"n2"],[6.9381,"n1"]],"artifacts":{"n3.r1":{"t":4.236,"node":"n3","kind":"result","text":"Industry shipments and market share point to 2027 revenue of about C$3.4\u20133.7B, well short of the C$4.2B guidance. This rests on only four quarters of revenue and a single quarter of industry data.","to":null,"cites":[]},"n2.r1":{"t":5.9389,"node":"n2","kind":"result","text":"Voltaris's own disclosures point to 2027 revenue at or just above C$4.2B. That makes the guidance plausible but not comfortable.","to":null,"cites":[]},"n1.r1":{"t":6.9381,"node":"n1","kind":"result","text":"Voltaris probably will not reach C$4.2B in 2027. I put the chance of meeting guidance at roughly 35\u201340%. My estimate for 2027 revenue is about C$3.8\u20134.0B. The company's own figures and the industry data disagree, and that gap is why I'm not more confident.","to":null,"cites":[]}},"steps":[{"say":"n1 opens n2 on Voltaris's own disclosures and n3 on industry statistics, then waits on both.","doing":[["n1","Waits in one cell for both results."],["n2","Starts from the run index: n1 and n3 are running."],["n3","Starts from the run index too."]]},{"say":"Each branch runs one search cell. n2's output carries the one start line it had not seen. n3 started last, so its stream is empty: nothing has been published yet.","doing":[["n2","Searched orders, backlog and guidance."],["n3","Searched shipments and market share."]]},{"say":"n3 reads the shipments and market-share releases and both series in one parallel cell. Voltaris shipments fell 9% and its share fell from 31% to 27%. Nothing it read says why.","doing":[["n3","Has its numbers; about to write its answer."],["n2","Read the orders release, which points to a separate restart release."]]},{"say":"n3 finishes: '2027 revenue of about C$3.4\u20133.7B, well short'. Its result line enters n2's stream.","doing":[["n3","Done. Its answer has no cause for the drop."],["n2","Mid-cell, fetching the restart release; n3's line waits for this cell to end."]]},{"say":"The same cell returns n2's read of 'Halbrook plant restarts after fire': the largest plant was offline nine weeks in Q2, which explains n3's shipment drop. n3 finished 0.1 s earlier, and nothing can reach it now.","doing":[["n2","Has the fire and n3's result line in the same cell output."]]},{"say":"n2 finishes 'at or just above C$4.2B'. It ties the fire to its own revenue dip, not to n3's shipment drop, and cites nothing.","doing":[["n2","Done. Never read n3.r1."],["n1","Gets both results and reads them."]]},{"say":"n1 answers 'probably will not reach C$4.2B'. It repeats the fire as a fact, yet still puts the shipment drop down to the industry. The ground truth is likely yes.","doing":[["n1","Done. Sided with the shipments branch."]]}],"code":[{"name":"n2 \u00b7 own disclosures","cells":["const r=await Promise.all([\"Halbrook plant restart\",\"Halbrook incident\"].map(q=>world.search(q)));\nconst ids=[...new Set(r.flatMap(x=>x.docs.map(d=>d.id)))];\nreturn await Promise.all(ids.map(i=>world.doc(i)));"],"final":"**Voltaris's own disclosures point to 2027 revenue at or just above C$4.2B. That makes the guidance plausible but not comfortable.**","final_ref":"n2.r1"},{"name":"n3 \u00b7 industry stats","cells":["const [a,b,s1,s2]=await Promise.all([world.doc(\"cea-market-share\"),world.doc(\"cea-shipments-q2\"),world.series(\"vltg_quarterly\"),world.series(\"cea_shipments\")]);\nreturn [a.body,b.body,JSON.stringify(s1),JSON.stringify(s2)];"],"final":"**Industry shipments and market share point to 2027 revenue of about C$3.4\u20133.7B, well short of the C$4.2B guidance. This rests on only four quarters of revenue and a single quarter of industry data.**","final_ref":"n3.r1"}],"built":{},"pos":{"n1":[179.0,58],"n2":[84.0,190],"n3":[274.0,190]},"width":358,"height":264,"real":[[0.0,0.0],[0.0,9.7],[9.7,17.6],[17.6,26.2],[26.2,26.3],[26.3,34.4],[34.4,43.7]],"meta":{"stage":"stage1","cond":"broadcast","seed":101,"wall":43.68,"cost":0.0785}},{"id":"twice","group":"replay","title":"The slow series, fetched twice at once","summary":"Stage 1, broadcast. Both branches need the CMA path and fetch the same slow series, the second 1.9 s after the first, while it is still in flight.","run":"shared","uses":[],"user":false,"cap":16,"big":false,"wide":true,"T":7,"nodes":[{"id":"n1","name":"add VLTX calls?","task":"Is now a good time to add VLTX Jan-2028 calls?","skill":null,"by":null,"frm":null,"request":{"task":"Is now a good time to add VLTX Jan-2028 calls?"},"t0":0.06,"li":0,"states":[[0.06,"running"],[1.3409,"waiting"],[5.7557,"running"],[5.7557,"waiting"],[6.0611,"running"],[6.9389,"completed"]],"subs":[[0.06,"n1"],[6.9389,"n1 \u00b7 r1"]],"cps":[],"index":[],"reads":[[6.2532,"n2.r1"],[6.2532,"n3.r1"]]},{"id":"n2","name":"valuation case","task":"Is the valuation case for VLTX's holdings intact through 2027, given the expected CMA policy path and the holdings' earnings outlook?","skill":null,"by":"n1","frm":null,"request":{"task":"Is the valuation case for VLTX's holdings intact through 2027, given the expected CMA policy path and the holdings' earnings outlook?"},"t0":0.06,"li":1,"states":[[0.06,"running"],[5.7557,"completed"]],"subs":[[0.06,"n2"],[5.7557,"n2 \u00b7 r1"]],"cps":[],"index":["n1 \u00b7 Is now a good time to add VLTX Jan-2028 calls? \u00b7 running","n3 \u00b7 Are VLTX Jan-2028 calls attractively priced, given the expected CMA p\u2026 \u00b7 running"],"reads":[]},{"id":"n3","name":"call pricing","task":"Are VLTX Jan-2028 calls attractively priced, given the expected CMA policy path and VLTX volatility?","skill":null,"by":"n1","frm":null,"request":{"task":"Are VLTX Jan-2028 calls attractively priced, given the expected CMA policy path and VLTX volatility?"},"t0":0.06,"li":2,"states":[[0.06,"running"],[6.0611,"completed"]],"subs":[[0.06,"n3"],[6.0611,"n3 \u00b7 r1"]],"cps":[],"index":["n1 \u00b7 Is now a good time to add VLTX Jan-2028 calls? \u00b7 running","n2 \u00b7 Is the valuation case for VLTX's holdings intact through 2027, given\u2026 \u00b7 running"],"reads":[]}],"ghosts":[],"edges":[{"kind":"call","disp":"started","from":"n1","to":"n2","t0":0.06,"t1":5.7557},{"kind":"call","disp":"started","from":"n1","to":"n3","t0":0.06,"t1":6.0611},{"kind":"read","from":"n2","to":"n1","t0":6.2532,"t1":6.8532},{"kind":"read","from":"n3","to":"n1","t0":6.2532,"t1":6.8532}],"lines":[{"t":0.06,"text":"the run opened n1 \u00b7 Is now a good time to add VLTX Jan-2028 calls?","kind":"open","subj":"n1","got":{},"gotReal":{}},{"t":0.06,"text":"n1 opened n2 \u00b7 Is the valuation case for VLTX's holdings intact through 2027, given the expect\u2026","kind":"open","subj":"n2","got":{},"gotReal":{},"by":"n1"},{"t":0.06,"text":"n1 opened n3 \u00b7 Are VLTX Jan-2028 calls attractively priced, given the expected CMA policy path\u2026","kind":"open","subj":"n3","got":{"n2":1.8146},"gotReal":{"n2":8.1},"by":"n1"},{"t":5.7557,"text":"n2.r1 \u00b7 **Yes, the valuation case looks intact through 2027, with one caveat: the 19x multiple li\u2026","kind":"result","subj":"n2","got":{"n1":6.0611,"n3":null},"gotReal":{"n1":36.0,"n3":null},"ref":"n2.r1"},{"t":6.0611,"text":"n3.r1 \u00b7 **Verdict: mildly attractive on volatility, but the dovish policy path is already priced\u2026","kind":"result","subj":"n3","got":{"n1":6.0611,"n2":null},"gotReal":{"n1":36.0,"n2":null},"ref":"n3.r1"},{"t":6.9389,"text":"n1.r1 \u00b7 **Short answer: it's a reasonable time to add, but only modestly sized, and not a clear b\u2026 \u00b7 cites n2.r1, n3.r1","kind":"result","subj":"n1","got":{"n2":null,"n3":null},"gotReal":{"n2":null,"n3":null},"ref":"n1.r1"}],"ripples":[[0.06,"n1"],[0.06,"n1"],[0.06,"n1"],[5.7557,"n2"],[6.0611,"n3"],[6.9389,"n1"]],"artifacts":{"n2.r1":{"t":5.7557,"node":"n2","kind":"result","text":"Yes, the valuation case looks intact through 2027, with one caveat: the 19x multiple likely already prices in more rate cuts than the CMA expects.","to":null,"cites":[]},"n3.r1":{"t":6.0611,"node":"n3","kind":"result","text":"Verdict: mildly attractive on volatility, but the dovish policy path is already priced in, so I would not call it a clear buy.","to":null,"cites":[]},"n1.r1":{"t":6.9389,"node":"n1","kind":"result","text":"Short answer: it's a reasonable time to add, but only modestly sized, and not a clear buy. This is not personal financial advice.","to":null,"cites":["n2.r1","n3.r1"]}},"steps":[{"say":"n1 opens n2 on the valuation case and n3 on Jan-2028 call pricing, then waits. Both tasks name the expected CMA policy path.","doing":[["n1","Waits for both results."]]},{"say":"Each runs one search cell. n2's output carries n1 opening n3, a line that names the CMA path. A start line says what a node will answer, not what it will fetch.","doing":[["n2","Found the CMA minutes, the Governor's speech and the factsheet."],["n3","Found the same three, plus the options note."]]},{"say":"n2's second cell reads four documents, then starts the slow series cma_futures. n3 is already reading three of the same documents.","doing":[["n2","Fetching cma_futures."],["n3","Reading the CMA minutes, the speech and the factsheet, all of which n2 is reading too."]]},{"say":"1.9 s later, n3 starts the same fetch while n2's is still in flight. No line exists for a call in flight, and a ref to the finished data would not exist for another 7 s.","doing":[["n3","Fetching cma_futures, a second time for the run."]]},{"say":"Both fetches return within 0.1 s of each other. The run made four duplicate fetches, and every pair overlapped.","doing":[["n2","Derives 4.50% to 4.00% by end-2027."],["n3","Derives the same path on its own."]]},{"say":"n2 and n3 finish 2.2 s apart. Neither result line reaches the other: both are done by then.","doing":[["n1","Reads both results."]]},{"say":"n1 integrates: 'a reasonable time to add, but only modestly sized'. Every line in this run that could have saved work arrived after the work was done.","doing":[["n1","Done."]]}],"code":[{"name":"n2 \u00b7 valuation case","cells":["const ids=[\"vltx-factsheet\",\"vltx-earnings-2027\",\"cma-minutes-oct\",\"cma-speech-ashby\"];\nconst d=await Promise.all(ids.map(i=>world.doc(i)));\nconst s=await world.series(\"cma_futures\");\nreturn d.map(x=>x.title+\"\\n\"+x.body).join(\"\\n---\\n\")+\"\\n\"+JSON.stringify(s).slice(0,1500);"],"final":"**Yes, the valuation case looks intact through 2027, with one caveat: the 19x multiple likely already prices in more rate cuts than the CMA expects.**","final_ref":"n2.r1"},{"name":"n3 \u00b7 call pricing","cells":["const ids=[\"vltx-factsheet\",\"vltx-options-note\",\"cma-minutes-oct\",\"cma-speech-ashby\"];\nconst d=await Promise.all(ids.map(world.doc));\nconst s=await Promise.all([\"vltx_iv\",\"vltx_rv\",\"cma_futures\"].map(world.series));\nreturn {d:d.map(x=>x.body),s:s.map(x=>({n:x.name,u:x.unit,p:JSON.stringify(x.points).slice(0,1500)}))};"],"final":"**Verdict: mildly attractive on volatility, but the dovish policy path is already priced in, so I would not call it a clear buy.**","final_ref":"n3.r1"}],"built":{},"pos":{"n1":[179.0,58],"n2":[84.0,190],"n3":[274.0,190]},"width":358,"height":264,"real":[[0.0,0.0],[0.0,9.4],[9.4,16.1],[16.1,18.0],[18.0,25.4],[25.4,36.0],[36.0,44.2]],"meta":{"stage":"stage1","cond":"broadcast","seed":102,"wall":44.19,"cost":0.0749}},{"id":"stuck","group":"replay","title":"The finding stays in the financing branch","summary":"Stage 1, broadcast. The equity node reads that Pellham is cutting 2027 orders by 40%; the demand branch, which needs it, finishes without it.","run":"cross","uses":[],"user":false,"cap":16,"big":false,"wide":true,"T":8,"nodes":[{"id":"n1","name":"add LEAPS?","task":"Should we add to our VLTX LEAPS this month?","skill":null,"by":null,"frm":null,"request":{"task":"Should we add to our VLTX LEAPS this month?"},"t0":0.06,"li":0,"states":[[0.06,"running"],[1.5209,"waiting"],[1.7365,"running"],[1.7398,"waiting"],[2.0636,"running"],[2.2151,"waiting"],[4.127,"running"],[4.1291,"waiting"],[4.1983,"running"],[4.1983,"waiting"],[5.1187,"running"],[5.1333,"waiting"],[5.8813,"running"],[5.8813,"waiting"],[6.348,"running"],[6.348,"waiting"],[6.932,"running"],[6.932,"waiting"],[7.2664,"running"],[7.94,"completed"]],"subs":[[0.06,"n1"],[7.94,"n1 \u00b7 r1"]],"cps":[],"index":[],"reads":[[7.4835,"n2.r1"],[7.4835,"n3.r1"],[7.4842,"n4.r1"]]},{"id":"n2","name":"demand","task":"Is demand for grid equipment from Caldrian utilities and data centres rising through 2027?","skill":null,"by":"n1","frm":null,"request":{"task":"Is demand for grid equipment from Caldrian utilities and data centres rising through 2027?"},"t0":0.06,"li":1,"states":[[0.06,"running"],[2.0636,"waiting"],[5.1187,"running"],[6.932,"completed"]],"subs":[[0.06,"n2"],[6.932,"n2 \u00b7 r1"]],"cps":[],"index":["n1 \u00b7 Should we add to our VLTX LEAPS this month? \u00b7 running","n3 \u00b7 Can Caldrian utilities finance their 2027 capex plans, through debt m\u2026 \u00b7 running","n4 \u00b7 Are VLTX LEAPS attractively priced right now? \u00b7 running"],"reads":[]},{"id":"n3","name":"financing","task":"Can Caldrian utilities finance their 2027 capex plans, through debt markets and through equity markets?","skill":null,"by":"n1","frm":null,"request":{"task":"Can Caldrian utilities finance their 2027 capex plans, through debt markets and through equity markets?"},"t0":0.06,"li":2,"states":[[0.06,"running"],[1.7376,"waiting"],[6.348,"running"],[7.2664,"completed"]],"subs":[[0.06,"n3"],[7.2664,"n3 \u00b7 r1"]],"cps":[],"index":["n1 \u00b7 Should we add to our VLTX LEAPS this month? \u00b7 running","n2 \u00b7 Is demand for grid equipment from Caldrian utilities and data centres\u2026 \u00b7 running","n4 \u00b7 Are VLTX LEAPS attractively priced right now? \u00b7 running"],"reads":[[6.348,"n5.r1"],[6.348,"n6.r1"]]},{"id":"n4","name":"LEAPS price","task":"Are VLTX LEAPS attractively priced right now?","skill":null,"by":"n1","frm":null,"request":{"task":"Are VLTX LEAPS attractively priced right now?"},"t0":0.06,"li":3,"states":[[0.06,"running"],[4.127,"completed"]],"subs":[[0.06,"n4"],[4.127,"n4 \u00b7 r1"]],"cps":[],"index":["n1 \u00b7 Should we add to our VLTX LEAPS this month? \u00b7 running","n2 \u00b7 Is demand for grid equipment from Caldrian utilities and data centres\u2026 \u00b7 running","n3 \u00b7 Can Caldrian utilities finance their 2027 capex plans, through debt m\u2026 \u00b7 running"],"reads":[]},{"id":"n5","name":"debt","task":"Can Caldrian utilities finance their 2027 capex plans through debt markets?","skill":null,"by":"n3","frm":null,"request":{"task":"Can Caldrian utilities finance their 2027 capex plans through debt markets?"},"t0":1.7365,"li":4,"states":[[1.7365,"running"],[6.348,"completed"]],"subs":[[1.7365,"n5"],[6.348,"n5 \u00b7 r1"]],"cps":[],"index":["n1 \u00b7 Should we add to our VLTX LEAPS this month? \u00b7 running","n2 \u00b7 Is demand for grid equipment from Caldrian utilities and data centres\u2026 \u00b7 running","n3 \u00b7 Can Caldrian utilities finance their 2027 capex plans, through debt m\u2026 \u00b7 running","n4 \u00b7 Are VLTX LEAPS attractively priced right now? \u00b7 running"],"reads":[]},{"id":"n6","name":"equity","task":"Can Caldrian utilities finance their 2027 capex plans through equity markets?","skill":null,"by":"n3","frm":null,"request":{"task":"Can Caldrian utilities finance their 2027 capex plans through equity markets?"},"t0":1.7376,"li":5,"states":[[1.7376,"running"],[5.8813,"completed"]],"subs":[[1.7376,"n6"],[5.8813,"n6 \u00b7 r1"]],"cps":[],"index":["n1 \u00b7 Should we add to our VLTX LEAPS this month? \u00b7 running","n2 \u00b7 Is demand for grid equipment from Caldrian utilities and data centres\u2026 \u00b7 running","n3 \u00b7 Can Caldrian utilities finance their 2027 capex plans, through debt m\u2026 \u00b7 running","n4 \u00b7 Are VLTX LEAPS attractively priced right now? \u00b7 running","n5 \u00b7 Can Caldrian utilities finance their 2027 capex plans through debt ma\u2026 \u00b7 running"],"reads":[]},{"id":"n7","name":"utility demand","task":"Is demand for grid equipment from Caldrian utilities rising through 2027?","skill":null,"by":"n2","frm":null,"request":{"task":"Is demand for grid equipment from Caldrian utilities rising through 2027?"},"t0":2.0636,"li":6,"states":[[2.0636,"running"],[5.1187,"completed"]],"subs":[[2.0636,"n7"],[5.1187,"n7 \u00b7 r1"]],"cps":[],"index":["n1 \u00b7 Should we add to our VLTX LEAPS this month? \u00b7 running","n2 \u00b7 Is demand for grid equipment from Caldrian utilities and data centres\u2026 \u00b7 running","n3 \u00b7 Can Caldrian utilities finance their 2027 capex plans, through debt m\u2026 \u00b7 waiting","n4 \u00b7 Are VLTX LEAPS attractively priced right now? \u00b7 running","n5 \u00b7 Can Caldrian utilities finance their 2027 capex plans through debt ma\u2026 \u00b7 running","n6 \u00b7 Can Caldrian utilities finance their 2027 capex plans through equity\u2026 \u00b7 running"],"reads":[]},{"id":"n8","name":"DC demand","task":"Is demand for grid equipment from Caldrian data centres rising through 2027?","skill":null,"by":"n2","frm":null,"request":{"task":"Is demand for grid equipment from Caldrian data centres rising through 2027?"},"t0":2.0636,"li":7,"states":[[2.0636,"running"],[4.1983,"completed"]],"subs":[[2.0636,"n8"],[4.1983,"n8 \u00b7 r1"]],"cps":[],"index":["n1 \u00b7 Should we add to our VLTX LEAPS this month? \u00b7 running","n2 \u00b7 Is demand for grid equipment from Caldrian utilities and data centres\u2026 \u00b7 waiting","n3 \u00b7 Can Caldrian utilities finance their 2027 capex plans, through debt m\u2026 \u00b7 waiting","n4 \u00b7 Are VLTX LEAPS attractively priced right now? \u00b7 running","n5 \u00b7 Can Caldrian utilities finance their 2027 capex plans through debt ma\u2026 \u00b7 running","n6 \u00b7 Can Caldrian utilities finance their 2027 capex plans through equity\u2026 \u00b7 running","n7 \u00b7 Is demand for grid equipment from Caldrian utilities rising through 2\u2026 \u00b7 running"],"reads":[]}],"ghosts":[],"edges":[{"kind":"call","disp":"started","from":"n1","to":"n2","t0":0.06,"t1":6.932},{"kind":"call","disp":"started","from":"n1","to":"n3","t0":0.06,"t1":7.2664},{"kind":"call","disp":"started","from":"n1","to":"n4","t0":0.06,"t1":4.127},{"kind":"call","disp":"started","from":"n3","to":"n5","t0":1.7365,"t1":6.348},{"kind":"call","disp":"started","from":"n3","to":"n6","t0":1.7376,"t1":5.8813},{"kind":"call","disp":"started","from":"n2","to":"n7","t0":2.0636,"t1":5.1187},{"kind":"call","disp":"started","from":"n2","to":"n8","t0":2.0636,"t1":4.1983},{"kind":"read","from":"n5","to":"n3","t0":6.348,"t1":6.948},{"kind":"read","from":"n6","to":"n3","t0":6.348,"t1":6.948},{"kind":"read","from":"n2","to":"n1","t0":7.4835,"t1":8.0835},{"kind":"read","from":"n3","to":"n1","t0":7.4835,"t1":8.0835},{"kind":"read","from":"n4","to":"n1","t0":7.4842,"t1":8.0842}],"lines":[{"t":0.06,"text":"the run opened n1 \u00b7 Should we add to our VLTX LEAPS this month?","kind":"open","subj":"n1","got":{},"gotReal":{}},{"t":0.06,"text":"n1 opened n2 \u00b7 Is demand for grid equipment from Caldrian utilities and data centres rising th\u2026","kind":"open","subj":"n2","got":{},"gotReal":{},"by":"n1"},{"t":0.06,"text":"n1 opened n3 \u00b7 Can Caldrian utilities finance their 2027 capex plans, through debt markets and\u2026","kind":"open","subj":"n3","got":{"n2":5.1333},"gotReal":{"n2":26.2},"by":"n1"},{"t":0.06,"text":"n1 opened n4 \u00b7 Are VLTX LEAPS attractively priced right now?","kind":"open","subj":"n4","got":{"n2":5.1333,"n3":6.348},"gotReal":{"n2":26.2,"n3":27.5},"by":"n1"},{"t":1.7365,"text":"n3 opened n5 \u00b7 Can Caldrian utilities finance their 2027 capex plans through debt markets?","kind":"open","subj":"n5","got":{"n1":2.0654,"n2":5.1333,"n4":1.7706},"gotReal":{"n1":8.1,"n2":26.2,"n4":6.5},"by":"n3"},{"t":1.7376,"text":"n3 opened n6 \u00b7 Can Caldrian utilities finance their 2027 capex plans through equity markets?","kind":"open","subj":"n6","got":{"n1":2.0654,"n2":5.1333,"n4":1.7706,"n5":2.6978},"gotReal":{"n1":8.1,"n2":26.2,"n4":6.5,"n5":15.0},"by":"n3"},{"t":2.0636,"text":"n2 opened n7 \u00b7 Is demand for grid equipment from Caldrian utilities rising through 2027?","kind":"open","subj":"n7","got":{"n1":2.0654,"n3":6.348,"n4":2.9264,"n5":2.6978,"n6":2.5762},"gotReal":{"n1":8.1,"n3":27.5,"n4":17.6,"n5":15.0,"n6":13.7},"by":"n2"},{"t":2.0636,"text":"n2 opened n8 \u00b7 Is demand for grid equipment from Caldrian data centres rising through 2027?","kind":"open","subj":"n8","got":{"n1":2.0654,"n3":6.348,"n4":2.9264,"n5":2.6978,"n6":2.5762,"n7":2.9037},"gotReal":{"n1":8.1,"n3":27.5,"n4":17.6,"n5":15.0,"n6":13.7,"n7":17.3},"by":"n2"},{"t":4.127,"text":"n4.r1 \u00b7 VLTX LEAPS look fairly priced, not cheap and not expensive.","kind":"result","subj":"n4","got":{"n1":7.2664,"n2":5.1333,"n3":6.348,"n5":4.1794,"n6":null,"n7":null,"n8":null},"gotReal":{"n1":32.3,"n2":26.2,"n3":27.5,"n5":22.6,"n6":null,"n7":null,"n8":null},"ref":"n4.r1"},{"t":4.1983,"text":"n8.r1 \u00b7 Yes, but more slowly. Demand for grid equipment from Caldrian data centres is still risin\u2026","kind":"result","subj":"n8","got":{"n1":7.2664,"n2":5.1333,"n3":6.348,"n4":null,"n5":null,"n6":null,"n7":null},"gotReal":{"n1":32.3,"n2":26.2,"n3":27.5,"n4":null,"n5":null,"n6":null,"n7":null},"ref":"n8.r1"},{"t":5.1187,"text":"n7.r1 \u00b7 Yes, on the plans, though the plans depend on financing.","kind":"result","subj":"n7","got":{"n1":7.2664,"n2":5.1333,"n3":6.348,"n4":null,"n5":null,"n6":null,"n8":null},"gotReal":{"n1":32.3,"n2":26.2,"n3":27.5,"n4":null,"n5":null,"n6":null,"n8":null},"ref":"n7.r1"},{"t":5.8813,"text":"n6.r1 \u00b7 **Short answer: mostly no. Equity markets can't be relied on to fund Caldrian utilities'\u2026","kind":"result","subj":"n6","got":{"n1":7.2664,"n2":null,"n3":6.348,"n4":null,"n5":null,"n7":null,"n8":null},"gotReal":{"n1":32.3,"n2":null,"n3":27.5,"n4":null,"n5":null,"n7":null,"n8":null},"ref":"n6.r1"},{"t":6.348,"text":"n5.r1 \u00b7 **Short answer: partly.** Debt markets are open, but the evidence doesn't show them closi\u2026","kind":"result","subj":"n5","got":{"n1":7.2664,"n2":null,"n3":6.348,"n4":null,"n6":null,"n7":null,"n8":null},"gotReal":{"n1":32.3,"n2":null,"n3":27.5,"n4":null,"n6":null,"n7":null,"n8":null},"ref":"n5.r1"},{"t":6.932,"text":"n2.r1 \u00b7 Yes, demand is still rising through 2027 from both sources, but data-centre growth is slo\u2026 \u00b7 cites n7.r1, n8.r1","kind":"result","subj":"n2","got":{"n1":7.2664,"n3":null,"n4":null,"n5":null,"n6":null,"n7":null,"n8":null},"gotReal":{"n1":32.3,"n3":null,"n4":null,"n5":null,"n6":null,"n7":null,"n8":null},"ref":"n2.r1"},{"t":7.2664,"text":"n3.r1 \u00b7 **Short answer: debt, mostly yes. Equity, mostly no. Together they don't fully fund the s\u2026 \u00b7 cites n5.r1, n6.r1","kind":"result","subj":"n3","got":{"n1":7.2664,"n2":null,"n4":null,"n5":null,"n6":null,"n7":null,"n8":null},"gotReal":{"n1":32.3,"n2":null,"n4":null,"n5":null,"n6":null,"n7":null,"n8":null},"ref":"n3.r1"},{"t":7.94,"text":"n1.r1 \u00b7 **Lean: don't add this month. Hold your current position, or add only a small amount.** T\u2026 \u00b7 cites n4.r1, n2.r1, n3.r1","kind":"result","subj":"n1","got":{"n2":null,"n3":null,"n4":null,"n5":null,"n6":null,"n7":null,"n8":null},"gotReal":{"n2":null,"n3":null,"n4":null,"n5":null,"n6":null,"n7":null,"n8":null},"ref":"n1.r1"}],"ripples":[[0.06,"n1"],[0.06,"n1"],[0.06,"n1"],[0.06,"n1"],[1.7365,"n3"],[1.7376,"n3"],[2.0636,"n2"],[2.0636,"n2"],[4.127,"n4"],[4.1983,"n8"],[5.1187,"n7"],[5.8813,"n6"],[6.348,"n5"],[6.932,"n2"],[7.2664,"n3"],[7.94,"n1"]],"artifacts":{"n4.r1":{"t":4.127,"node":"n4","kind":"result","text":"VLTX LEAPS look fairly priced, not cheap and not expensive.","to":null,"cites":[]},"n8.r1":{"t":4.1983,"node":"n8","kind":"result","text":"Yes, but more slowly. Demand for grid equipment from Caldrian data centres is still rising through 2027, though growth is slowing.","to":null,"cites":[]},"n7.r1":{"t":5.1187,"node":"n7","kind":"result","text":"Yes, on the plans, though the plans depend on financing.","to":null,"cites":[]},"n6.r1":{"t":5.8813,"node":"n6","kind":"result","text":"Short answer: mostly no. Equity markets can't be relied on to fund Caldrian utilities' 2027 capex right now. Debt is working better.","to":null,"cites":[]},"n5.r1":{"t":6.348,"node":"n5","kind":"result","text":"Short answer: partly. Debt markets are open, but the evidence doesn't show them closing the gap that equity left.","to":null,"cites":[]},"n2.r1":{"t":6.932,"node":"n2","kind":"result","text":"Yes, demand is still rising through 2027 from both sources, but data-centre growth is slowing and utility demand depends on financing. I didn't read the underlying documents myself. This rests on the one-line results from the two child nodes.","to":null,"cites":["n7.r1","n8.r1"]},"n3.r1":{"t":7.2664,"node":"n3","kind":"result","text":"Short answer: debt, mostly yes. Equity, mostly no. Together they don't fully fund the sector's 2027 capex. Confidence is moderate, because the evidence is thin: about three short documents and no time series.","to":null,"cites":["n5.r1","n6.r1"]},"n1.r1":{"t":7.94,"node":"n1","kind":"result","text":"Lean: don't add this month. Hold your current position, or add only a small amount. This rests on the child nodes' summaries (n2, n3, n4), and I didn't check their sources myself.","to":null,"cites":["n4.r1","n2.r1","n3.r1"]}},"steps":[{"say":"n1 opens n2 on demand, n3 on financing and n4 on LEAPS pricing, then waits on all three.","doing":[["n1","Waits for three results."]]},{"say":"n3 splits into debt (n5) and equity (n6), and n2 into utility demand (n7) and data-centre demand (n8). Both parents then wait on their children.","doing":[["n2","Waits on n7 and n8."],["n3","Waits on n5 and n6."]]},{"say":"n6 reads 'Pellham Power withdraws equity offering, scales back procurement': Pellham will cut 2027 transformer orders by about 40%. That is a demand fact, found by the financing branch.","doing":[["n6","Has the cut. Its question is whether equity markets can fund capex."],["n7","Reading the capital plans."]]},{"say":"n7 reads the utilities' 2027 capital plans: Pellham, the largest buyer, plans spending up 18%. The plan n6 learned is being cut is now in n7's output, and no line says so.","doing":[["n7","Has the +18% plan and about to answer."],["n5","Read the same Pellham release at 21.9 s."]]},{"say":"n7 finishes: 'Yes, on the plans, though the plans depend on financing'. Nothing in its stream ever mentioned Pellham.","doing":[["n7","Done."],["n2","Its waiting cell ends with n7 and n8."]]},{"say":"n6's result line goes out: 'Short answer: mostly no. Equity markets can't be relied on\u2026'. It carries n6's verdict, not Pellham. n2's last cell ended at 26.2 s, so the line never reaches the demand branch.","doing":[["n6","Done."],["n2","Writing its final message; no cell left to receive lines."]]},{"say":"n2 finishes 'Yes, demand is still rising through 2027', citing n7.r1 and n8.r1.","doing":[["n2","Done."]]},{"say":"n1 connects Pellham to demand itself and answers 'don't add this month', which is right. But n2.r1 still says demand is rising, and an identical request later in a standing run would reuse it.","doing":[["n1","Done."]]}],"code":[{"name":"n6 \u00b7 equity","cells":["const d=await Promise.all([\"pellham-offering\",\"utility-capex-2027\",\"utility-credit\"].map(world.doc));return d.map(x=>x.body).join(\"\\n----\\n\")"],"final":"**Short answer: mostly no. Equity markets can't be relied on to fund Caldrian utilities' 2027 capex right now. Debt is working better.**","final_ref":"n6.r1"},{"name":"n7 \u00b7 utility demand","cells":["return (await world.doc(\"utility-capex-2027\")).body"],"final":"Yes, on the plans, though the plans depend on financing.","final_ref":"n7.r1"}],"built":{},"pos":{"n1":[286.5,58],"n2":[121.5,190],"n3":[286.5,190],"n4":[451.5,190],"n7":[84.0,322],"n8":[219.0,322],"n5":[354.0,322],"n6":[489.0,322]},"width":573,"height":396,"real":[[0.0,0.0],[0.0,8.0],[8.0,17.7],[17.7,22.0],[22.0,26.2],[26.2,26.8],[26.8,29.0],[29.0,42.9]],"meta":{"stage":"stage1","cond":"broadcast","seed":101,"wall":42.94,"cost":0.138}}]}</script>
+<script>
+(() => {
+  'use strict';
+  const DATA = JSON.parse(document.getElementById('data').textContent);
+  const $ = (s, el = document) => el.querySelector(s);
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
+  const NS = 'http://www.w3.org/2000/svg';
+  const REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const TITLES = Object.fromEntries((DATA.patterns || []).map(p => [p.id, p.title]));
+  const R = 15;
+
+  /* ---------- code highlighting ---------- */
+  const PRIMS = [
+    [/^tools\.readNode$/, 'readNode'],
+    [/^tools\.readArtifact$|^read$|^inspect$/, 'readArtifact'],
+    [/^nodes\.run$/, 'openNode nextNodeEvent'],
+    [/^nodes\.open$|^nodes\.with$|^tools\.openNode$/, 'openNode'],
+    [/^nodes\.next$|^tools\.nextNodeEvent$|\.next$|\.result$/, 'nextNodeEvent'],
+    [/^tools\.closeNode$|\.close$/, 'closeNode'],
+    [/^tools\.publishCheckpoint$/, 'publishCheckpoint'],
+  ];
+  const TOKEN = /(\/\/[^\n]*)|('(?:\\.|[^'\\\n])*'|"(?:\\.|[^"\\\n])*"|`(?:\\.|[^`\\])*`)|(\b\d+(?:\.\d+)?\b)|(\b(?:const|let|var|await|async|for|of|if|else|return|try|catch|throw|new|function|null|true|false)\b)|(\b(?:tools|nodes)\.\w+|\b(?:read|inspect)\b(?=\()|\b\w+\.(?:next|result|close)\b(?=\())/g;
+  function highlight(code) {
+    let out = '', last = 0, m;
+    TOKEN.lastIndex = 0;
+    while ((m = TOKEN.exec(code))) {
+      out += esc(code.slice(last, m.index));
+      const [tok, com, str, num, kw, host] = m;
+      if (com) out += `<span class="tok-com">${esc(com)}</span>`;
+      else if (str) out += `<span class="tok-str">${esc(str)}</span>`;
+      else if (num) out += `<span class="tok-num">${esc(num)}</span>`;
+      else if (kw) out += `<span class="tok-kw">${esc(kw)}</span>`;
+      else if (host) {
+        const hit = PRIMS.find(([re]) => re.test(host));
+        out += hit ? `<span class="tok-host" data-prim="${hit[1]}">${esc(host)}</span>` : esc(host);
+      }
+      last = m.index + tok.length;
+    }
+    return out + esc(code.slice(last));
+  }
+  function codeBlock(code, label) {
+    const div = document.createElement('div');
+    div.className = 'code';
+    div.innerHTML = (label ? `<div class="cell-label">${esc(label)}</div>` : '') + `<pre><code>${highlight(code)}</code></pre>`;
+    return div;
+  }
+  if ($('#wrapper-code')) $('#wrapper-code').appendChild(codeBlock(
+`const r  = await nodes.run(request)   // open, then wait: {node, ref, line}
+const op = await nodes.open(request)  // {node, disp}: started, joined or reused
+await op.next()                       // the next line about that node
+await op.result()                     // wait for its result
+await op.close()                      // release this hold
+await nodes.with(request, async op => {})   // scoped, always released
+await nodes.next()                    // the next batch of this node's stream
+
+// request: {task, node?, inputs?, refs?, from?, key?}
+// refs:    n7 · n7.c3 · n7.r2 · n7.trail · you.m1 · run`));
+  if ($('#helpers-code')) $('#helpers-code').appendChild(codeBlock(
+`// Application code, not built-ins: whole-artifact reads over readArtifact slices.
+async function read(ref) {
+  let text = '', offset = 0;
+  for (;;) {
+    const part = await tools.readArtifact({ref, offset, limit: 4000});
+    text += part.text;
+    if (part.next_offset >= part.total_chars) return text;
+    offset = part.next_offset;
+  }
+}
+const inspect = async ref => JSON.parse(await read(ref));   // a node record: {request, state, holders, refs}`));
+
+  /* ---------- geometry ---------- */
+  const trim = (p, cx, cy, r) => { const dx = cx - p.x, dy = cy - p.y, d = Math.hypot(dx, dy) || 1; return {x: p.x + dx / d * r, y: p.y + dy / d * r}; };
+  function callPath(a, b, below = R + 1) {
+    const dy = b.y - a.y;
+    if (dy > 12) {
+      const sy = a.y + below, k = Math.max(18, (b.y - R - sy) * 0.5);
+      return `M${a.x} ${sy}C${a.x} ${sy + k} ${b.x} ${b.y - R - k} ${b.x} ${b.y - R - 3}`;
+    }
+    if (dy < -12) {
+      const side = b.x >= a.x ? -1 : 1;
+      return `M${a.x} ${a.y - R - 1}C${a.x} ${a.y - R - 50} ${b.x + side * 60} ${b.y} ${b.x + side * (R + 3)} ${b.y}`;
+    }
+    const s = b.x > a.x ? 1 : -1, lift = Math.min(30 + Math.abs(b.x - a.x) * 0.16, a.y - R - 8);
+    return `M${a.x + s * R * 0.75} ${a.y - R * 0.66}Q${(a.x + b.x) / 2} ${a.y - R - lift} ${b.x - s * R * 0.75} ${b.y - R * 0.66}`;
+  }
+  function forkPath(a, b) {
+    if (Math.abs(b.y - a.y) <= 12) {
+      const s = b.x > a.x ? 1 : -1, lift = Math.min(52 + Math.abs(b.x - a.x) * 0.2, a.y - R - 8);
+      return `M${a.x + s * R * 0.35} ${a.y - R}Q${(a.x + b.x) / 2} ${a.y - R - lift} ${b.x - s * R * 0.35} ${b.y - R - 3}`;
+    }
+    const s = b.x >= a.x ? 1 : -1;
+    return `M${a.x + s * (R + 2)} ${a.y}C${a.x + s * 80} ${a.y} ${b.x - s * 80} ${b.y} ${b.x - s * (R + 4)} ${b.y}`;
+  }
+  function citePath(a, b) {
+    const dy = b.y - a.y;
+    if (dy > 12) {
+      const ox = a.x + R + 1, oy = a.y;
+      return `M${ox} ${oy}C${ox + 58} ${oy + 10} ${b.x + 56} ${b.y - dy * 0.45} ${b.x + R * 0.72} ${b.y - R * 0.72}`;
+    }
+    if (dy < -12) {
+      return `M${a.x + R * 0.7} ${a.y - R}C${a.x + 40} ${a.y - 60} ${b.x + 60} ${b.y + 40} ${b.x + R * 0.8} ${b.y + R * 0.6}`;
+    }
+    const s = b.x > a.x ? 1 : -1, lift = Math.min(44 + Math.abs(b.x - a.x) * 0.2, a.y - R - 8);
+    return `M${a.x + s * R * 0.3} ${a.y - R}Q${(a.x + b.x) / 2} ${a.y - R - lift} ${b.x - s * R * 0.3} ${b.y - R - 3}`;
+  }
+  function msgPath(a, b, sign) {
+    const dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy) || 1;
+    const nx = -dy / d, ny = dx / d, bulge = (0.2 * d + 18) * sign;
+    const cx = (a.x + b.x) / 2 + nx * bulge, cy = Math.max(8, (a.y + b.y) / 2 + ny * bulge);
+    const ta = trim(a, cx, cy, R + 3), tb = trim(b, cx, cy, R + 6);
+    return `M${ta.x} ${ta.y}Q${cx} ${cy} ${tb.x} ${tb.y}`;
+  }
+  function readPath(a, b) {
+    const ta = trim(a, b.x, b.y, R + 4), tb = trim(b, a.x, a.y, R + 6);
+    return `M${ta.x} ${ta.y}L${tb.x} ${tb.y}`;
+  }
+  const keyOf = id => id === 'you' ? -1 : id.startsWith('n') ? +id.slice(1) : 999;
+
+  const el = (tag, attrs = {}, parent) => {
+    const n = document.createElementNS(NS, tag);
+    for (const [k, v] of Object.entries(attrs)) n.setAttribute(k, v);
+    if (parent) parent.appendChild(n);
+    return n;
+  };
+  const ease = u => 1 - Math.pow(1 - Math.min(1, Math.max(0, u)), 3);
+  const at = (list, t, dflt) => { let v = dflt; for (const [tt, s] of list) { if (tt <= t) v = s; else break; } return v; };
+  const STATE_WORD = {running: 'working', waiting: 'idle', completed: 'done', failed: 'failed', cancelled: 'cancelled'};
+  const STATE_TONE = {running: 'run', waiting: 'run', completed: 'good', failed: 'bad', cancelled: 'warn'};
+
+  /* ---------- player ---------- */
+  const players = [];
+  function makePlayer(p, mount, opts = {}) {
+    const byId = new Map(p.nodes.map(n => [n.id, n]));
+    const pos = id => ({x: p.pos[id][0], y: p.pos[id][1]});
+    const name = id => id === 'you' ? 'you' : (byId.get(id) || {}).name || id;
+    const svg = el('svg', {viewBox: `0 0 ${p.width} ${p.height}`, role: 'img',
+      'aria-label': `${p.title}: ${p.nodes.length} nodes over ${p.T} steps`});
+    svg.style.maxWidth = Math.round(p.width * (opts.wide ? 1.15 : 1.3)) + 'px';
+    svg.style.minWidth = Math.min(Math.round(p.width * 0.8), 640) + 'px';
+    const defs = el('defs', {}, svg);
+    for (const [k, color] of [['started', 'var(--edge)'], ['joined', 'var(--cobalt)'], ['reused', 'var(--pine)'],
+      ['fork', 'var(--edge)'], ['cite', 'var(--ochre)'], ['msg', 'var(--plum)'], ['read', 'var(--muted)']]) {
+      const m = el('marker', {id: `${p.id}-m-${k}`, viewBox: '0 0 10 10', refX: '8', refY: '5', markerWidth: '9', markerHeight: '9',
+        orient: 'auto-start-reverse', markerUnits: 'userSpaceOnUse'}, defs);
+      el('path', {d: 'M0 1L9 5L0 9z', style: `fill:${color}`}, m);
+    }
+    const gEdges = el('g', {}, svg), gRip = el('g', {}, svg), gNodes = el('g', {}, svg), gDots = el('g', {}, svg);
+
+    const below = id => id === 'you' ? R + 22 : R + 35;
+    const edges = p.edges.map((e, i) => {
+      const a = pos(e.from), b = pos(e.to);
+      let d, cls, marker, dotColor;
+      if (e.kind === 'call') { d = callPath(a, b, below(e.from)); cls = e.disp; marker = e.disp; dotColor = e.disp === 'joined' ? 'var(--cobalt)' : e.disp === 'reused' ? 'var(--pine)' : 'var(--edge)'; }
+      else if (e.kind === 'fork') { d = forkPath(a, b); cls = 'fork'; marker = 'fork'; dotColor = 'var(--edge)'; }
+      else if (e.kind === 'cite') { d = citePath(a, b); cls = 'cite'; marker = 'cite'; dotColor = 'var(--ochre)'; }
+      else if (e.kind === 'msg') { d = msgPath(a, b, 1); cls = 'msg'; marker = 'msg'; dotColor = 'var(--plum)'; }
+      else if (e.kind === 'read') { d = readPath(a, b); cls = 'readx'; marker = 'read'; dotColor = 'var(--muted)'; }
+      else { d = callPath(a, b, below(e.from)); cls = e.gkind === 'read' ? 'read' : 'link'; marker = e.gkind === 'read' ? 'read' : null; dotColor = 'var(--muted)'; }
+      const path = el('path', {d, class: `g-edge ${cls}`, 'marker-end': marker ? `url(#${p.id}-m-${marker})` : ''}, gEdges);
+      const dot = el('circle', {r: e.kind === 'msg' ? 4.6 : 3.6, class: 'g-dot', style: `fill:${dotColor}`}, gDots);
+      return {e, i, path, dot, len: 0};
+    });
+    edges.forEach(x => { x.len = x.path.getTotalLength ? x.path.getTotalLength() : 0; });
+
+    const ripples = p.ripples.map(([t, id]) => {
+      const {x, y} = pos(id);
+      return {t, c: el('circle', {cx: x, cy: y, r: R, class: 'g-ripple'}, gRip)};
+    });
+
+    const nodes = new Map();
+    for (const n of p.nodes) {
+      const {x, y} = pos(n.id);
+      const outer = el('g', {transform: `translate(${x} ${y})`}, gNodes);
+      const g = el('g', {class: 'g-node', tabindex: '0', role: 'button', 'aria-label': `${n.id} ${n.name}: ${n.task}`}, outer);
+      el('circle', {class: 'hit', r: R + 10}, g);
+      el('circle', {class: 'ring', r: R + 4.5}, g);
+      el('circle', {class: 'core', r: R}, g);
+      el('path', {class: 'glyph ok', d: 'M-6 0.5L-2 4.5L6.5-4'}, g);
+      el('path', {class: 'glyph x', d: 'M-5-5L5 5M5-5L-5 5'}, g);
+      el('path', {class: 'glyph slash', d: 'M-8 8L8-8'}, g);
+      const cps = n.cps.slice(0, 4).map((c, i) => el('path', {class: 'g-cp', d: 'M0-6L6 0 0 6-6 0Z', transform: `translate(${-R * 0.95 - i * 5} ${-R * 0.95})`}, g));
+      const t1 = el('text', {class: 'name', x: 0, y: R + 16, 'text-anchor': 'middle'}, g); t1.textContent = n.name;
+      const sub = el('text', {class: 'sub', x: 0, y: R + 29, 'text-anchor': 'middle'}, g);
+      nodes.set(n.id, {n, outer, g, cps, sub});
+      g.addEventListener('click', () => select(n.id));
+      g.addEventListener('keydown', ev => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); select(n.id); } });
+    }
+    let user = null;
+    if (p.user) {
+      const {x, y} = pos('you');
+      const outer = el('g', {transform: `translate(${x} ${y})`}, gNodes);
+      const g = el('g', {class: 'g-user', tabindex: '0', role: 'button', 'aria-label': 'you, the person'}, outer);
+      el('rect', {class: 'hit', x: -R - 8, y: -R - 8, width: 2 * R + 16, height: 2 * R + 16}, g);
+      el('rect', {class: 'core', x: -R, y: -R, width: 2 * R, height: 2 * R, rx: 8}, g);
+      const t1 = el('text', {class: 'name', x: 0, y: R + 16, 'text-anchor': 'middle'}, g); t1.textContent = 'you';
+      user = {outer, g};
+      g.addEventListener('click', () => select('you'));
+      g.addEventListener('keydown', ev => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); select('you'); } });
+    }
+    const ghosts = p.ghosts.map(gh => {
+      const {x, y} = pos(gh.id);
+      const outer = el('g', {transform: `translate(${x} ${y})`}, gNodes);
+      const g = el('g', {class: `g-ghost ${gh.kind}`}, outer);
+      el('circle', {class: 'core', r: R - 2}, g);
+      const t1 = el('text', {class: 'name', x: 0, y: R + 15, 'text-anchor': 'middle'}, g); t1.textContent = gh.skill;
+      const t2 = el('text', {class: 'sub', x: 0, y: R + 28, 'text-anchor': 'middle'}, g); t2.textContent = gh.kind === 'read' ? 'read, not run' : 'not followed';
+      return {outer, gh};
+    });
+
+    /* panels */
+    const card = document.createElement('div'); card.className = 'stage-card';
+    const graph = document.createElement('div'); graph.className = 'graph'; graph.appendChild(svg);
+    const transport = document.createElement('div'); transport.className = 'transport';
+    const play = document.createElement('button'); play.className = 'play'; play.type = 'button';
+    const prev = document.createElement('button'); prev.className = 'stepbtn'; prev.type = 'button'; prev.textContent = '‹'; prev.setAttribute('aria-label', 'Previous step');
+    const next = document.createElement('button'); next.className = 'stepbtn'; next.type = 'button'; next.textContent = '›'; next.setAttribute('aria-label', 'Next step');
+    const range = document.createElement('input'); range.type = 'range'; range.min = '0'; range.max = '1000'; range.step = '1';
+    range.setAttribute('aria-label', `Position in ${p.title}`);
+    const clock = document.createElement('span'); clock.className = 'clock';
+    transport.append(play, prev, next, range, clock);
+    const narration = document.createElement('div'); narration.className = 'narration';
+    const doing = document.createElement('ul'); doing.className = 'doing';
+    const counts = document.createElement('div'); counts.className = 'counts';
+    const C = {joined: 0, reused: 0, fork: 0, msg: 0, reopen: 0};
+    p.edges.forEach(e => { if (e.kind === 'call' && C[e.disp] != null) C[e.disp]++; if (e.kind === 'fork') C.fork++; if (e.kind === 'msg') C.msg++; });
+    p.lines.forEach(l => { if (l.kind === 'reopen') C.reopen++; });
+    const bits = [`${p.nodes.length} nodes`];
+    if (C.joined) bits.push(`${C.joined} joined`);
+    if (C.reused) bits.push(`${C.reused} reused`);
+    if (C.fork) bits.push(`${C.fork} forked`);
+    if (C.msg) bits.push(`${C.msg} addressed`);
+    if (C.reopen) bits.push(`${C.reopen} reopened`);
+    counts.textContent = `${bits.join(', ')}. ${p.T} steps, ${p.lines.length} lines.`;
+    const details = document.createElement('div'); details.className = 'details';
+    if (opts.wide) {
+      const left = document.createElement('div'); left.className = 'walk-left';
+      card.append(graph, transport, narration, counts);
+      const lower = document.createElement('div'); lower.className = 'walk-grid';
+      const steps = document.createElement('div'); steps.className = 'details walk-steps';
+      const h = document.createElement('div'); h.className = 'panel-title'; h.textContent = 'What each node is doing at this step';
+      steps.append(h, doing);
+      lower.append(steps, details);
+      mount.append(card, lower);
+    } else {
+      card.append(graph, transport, narration, doing, counts);
+      mount.append(card, details);
+    }
+
+    const T = p.T;
+    const stepMs = opts.wide ? 2600 : 1900;
+    const trans = 0.22;
+    const state = {t: T, playing: false, last: null, selected: null};
+    const DIM = new Set();
+    const stepOf = t => Math.min(T - 1, Math.max(0, Math.floor(t)));
+    const realAt = t => { const k = stepOf(t), [a, b] = p.real[k], f = Math.min(1, Math.max(0, (t - k - 0.06) / 0.88)); return a + f * (b - a); };
+
+    function holdersAt(id, t) {
+      return p.edges.filter(e => e.kind === 'call' && e.disp !== 'reused' && e.to === id && e.t0 <= t && (e.t1 == null || t < e.t1)).map(e => e.from);
+    }
+    function render() {
+      const t = state.t;
+      for (const [id, x] of nodes) {
+        const s = t < x.n.t0 ? 'hidden' : at(x.n.states, t, 'running');
+        x.g.setAttribute('class', `g-node ${s === 'hidden' ? '' : s}${state.selected === id ? ' selected' : ''}`);
+        const u = s === 'hidden' ? 0 : ease((t - x.n.t0) / trans);
+        x.outer.style.opacity = s === 'hidden' ? 0 : Math.max(0.001, u);
+        const {x: px, y: py} = pos(id);
+        x.outer.setAttribute('transform', `translate(${px} ${py}) scale(${0.72 + 0.28 * u})`);
+        x.cps.forEach((cp, i) => { cp.style.opacity = t >= x.n.cps[i] ? 1 : 0; });
+        x.sub.textContent = at(x.n.subs, t, id);
+        x.outer.classList.toggle('dimmed', DIM.size > 0 && !DIM.has(id));
+      }
+      if (user) user.g.setAttribute('class', `g-user${state.selected === 'you' ? ' selected' : ''}`);
+      ghosts.forEach(({outer, gh}) => {
+        outer.style.opacity = t >= gh.t ? ease((t - gh.t) / trans) : 0;
+        outer.classList.toggle('dimmed', DIM.size > 0);
+      });
+      for (const x of edges) {
+        const e = x.e;
+        const u = t >= e.t0 ? (t - e.t0) / trans : -1;
+        let op = 0, width = 1.5;
+        if (u >= 0) {
+          if (e.kind === 'call') { const live = e.t1 == null || t < e.t1; op = Math.min(1, u * 1.4); width = e.disp === 'reused' ? 1.6 : live ? 2.8 : 1.4; }
+          else if (e.kind === 'msg') { const age = t - e.t0; op = age < 0.9 ? 0.95 : e.trace ? 0.42 : Math.max(0, 0.95 - (age - 0.9) * 3); width = 1.7; }
+          else if (e.kind === 'read') { const fade = t > e.t1 ? Math.max(0, 1 - (t - e.t1) / 0.25) : 1; op = Math.min(1, u * 1.6) * fade * 0.9; width = 1.4; }
+          else if (e.kind === 'fork') { op = Math.min(1, u * 1.4); width = 1.8; }
+          else if (e.kind === 'cite') { op = Math.min(1, u * 1.4) * 0.9; width = 1.4; }
+          else { op = Math.min(1, u * 1.4) * 0.9; width = 1.4; }
+        }
+        x.path.style.opacity = op;
+        x.path.style.strokeWidth = width;
+        const travel = e.kind === 'msg' ? (t - e.t0) / 0.45 : u;
+        if (u >= 0 && travel < 1 && x.len) {
+          const pt = x.path.getPointAtLength(x.len * ease(travel));
+          x.dot.setAttribute('cx', pt.x); x.dot.setAttribute('cy', pt.y); x.dot.style.opacity = 1;
+        } else x.dot.style.opacity = 0;
+        const dim = DIM.size > 0 && !(DIM.has(e.from) && DIM.has(e.to));
+        x.path.classList.toggle('dimmed', dim);
+      }
+      for (const r of ripples) {
+        const v = (t - r.t) / 0.5;
+        if (v >= 0 && v < 1) { r.c.setAttribute('r', R + 3 + 24 * v); r.c.style.opacity = 0.42 * (1 - v); }
+        else r.c.style.opacity = 0;
+      }
+      range.value = String(Math.round(1000 * t / T));
+      const k = stepOf(t);
+      clock.textContent = `step ${k + 1} of ${T}` + (p.real ? ` · ${realAt(t).toFixed(1)} s` : '');
+      const st = p.steps[k];
+      narration.textContent = st.say;
+      const noted = new Map(st.doing);
+      const rows = st.doing.map(([id, text]) => [id, text, false]);
+      if (opts.wide) {
+        // Every opened node gets a row: the authored note if there is one, otherwise what its state implies.
+        for (const n of p.nodes) {
+          if (noted.has(n.id) || t < n.t0) continue;
+          const s = at(n.states, t, 'running');
+          const holds = p.edges.filter(e => e.kind === 'call' && e.disp !== 'reused' && e.from === n.id && e.t0 <= t && (e.t1 == null || t < e.t1)).map(e => e.to);
+          const sub = at(n.subs, t, n.id).split(' · ')[1];
+          const text = s === 'waiting' ? (holds.length ? `Idle, holding ${holds.join(', ')}; its stream keeps arriving.` : 'Idle until a line arrives.')
+            : s === 'completed' ? `Done${sub ? ': ' + n.id + '.' + sub.split(' ')[0] : ''}. Still visible; reopens only if addressed.`
+            : s === 'running' ? (holds.length ? `Working on its own task while holding ${holds.join(', ')}.` : 'Working on its own task.')
+            : s === 'cancelled' ? 'Cancelled.' : 'Failed.';
+          rows.push([n.id, text, true]);
+        }
+      }
+      doing.innerHTML = rows.map(([id, text, auto]) => {
+        const s = id === 'you' ? null : at((byId.get(id) || {states: []}).states, t, 'running');
+        const pill = s && !opts.compact ? `<span class="pill ${STATE_TONE[s]}">${STATE_WORD[s]}</span>` : '';
+        return `<li class="${auto ? 'auto' : ''}"><span class="nid">${esc(id)}</span><span><b>${esc(name(id))}</b> ${pill} ${esc(text)}</span></li>`;
+      }).join('');
+      play.textContent = state.playing ? '❚❚ Pause' : (t >= T ? '↺ Replay' : '▶ Play');
+      play.setAttribute('aria-label', state.playing ? `Pause ${p.title}` : `Play ${p.title}`);
+      renderDetails();
+    }
+    function lineHtml(l, mark, status, at) {
+      const now = l.t >= stepOf(state.t) ? ' now' : '';
+      const tag = status === 'pending' ? '<span class="tag">pending</span>' : status === 'never' ? '<span class="tag">never arrived</span>'
+        : status === 'own' ? '<span class="tag">its own</span>' : mark === 'to' ? '<span class="tag">to this node</span>' : mark === 'held' ? '<span class="tag">held</span>'
+        : at != null ? `<span class="tag">arrived ${at.toFixed(1)} s</span>` : '';
+      return `<li class="${mark ? 'mark ' + mark : ''}${status ? ' ' + status : ''}${now}"><span class="lt">${esc(l.text)}</span>${tag}</li>`;
+    }
+    function streamRow(l, n, mark, done) {
+      if (!l.got) return lineHtml(l, mark);
+      const g = l.got[n.id];
+      if (g === undefined) return (l.by || l.subj) === n.id ? lineHtml(l, null, 'own') : '';
+      if (g === null || g > state.t) return lineHtml(l, mark, g === null && done ? 'never' : 'pending');
+      return lineHtml(l, mark, null, l.gotReal ? l.gotReal[n.id] : null);
+    }
+    function renderDetails() {
+      const t = state.t;
+      const lines = p.lines.filter(l => l.t <= t);
+      const left = `left: ${p.cap - p.nodes.filter(n => n.t0 <= t).length} of ${p.cap} nodes`;
+      if (!state.selected) {
+        details.innerHTML = `<div class="panel-title">Every node's stream so far <small>${lines.length} lines</small></div>
+          <ul class="stream">${lines.slice(-9).map(l => lineHtml(l)).join('')}<li class="budget">${esc(left)}</li></ul>
+          <p class="hint">Select a node to see its own stream, request and refs.</p>`;
+        const s = details.querySelector('.stream'); if (s) s.scrollTop = s.scrollHeight;
+        return;
+      }
+      if (state.selected === 'you') {
+        const mine = lines.filter(l => l.to === 'you' || l.subj === 'you');
+        details.innerHTML = `<h4>you <small>the person</small></h4>
+          <p class="hint">You see every line, like any node. These are the ones addressed to you or sent by you.</p>
+          <ul class="stream">${mine.map(l => lineHtml(l, l.to === 'you' ? 'to' : null)).join('') || '<li class="budget">nothing yet</li>'}</ul>`;
+        return;
+      }
+      const n = byId.get(state.selected);
+      if (t < n.t0) { details.innerHTML = `<h4>${esc(n.name)} <small>${esc(n.id)}</small></h4><p class="hint">Not opened yet at this step.</p>`; return; }
+      const s = at(n.states, t, 'running');
+      const held = new Set(p.edges.filter(e => e.kind === 'call' && e.from === n.id && e.disp !== 'reused' && e.t0 <= t).map(e => e.to));
+      const mine = p.lines.slice(n.li).filter(l => l.t <= t);
+      const arts = Object.entries(p.artifacts).filter(([, a]) => a.node === n.id && a.t <= t);
+      const holders = holdersAt(n.id, t).map(h => h === 'you' ? 'you' : h);
+      const reads = n.reads.filter(([rt]) => rt <= t).map(([, ref]) => ref);
+      details.innerHTML = `<h4>${esc(n.name)} <small>${esc(n.id)}${n.skill ? ', skill ' + esc(n.skill) : ', no skill'}${n.frm ? ', forked from ' + esc(n.frm) : ''}</small> <span class="pill ${STATE_TONE[s]}">${STATE_WORD[s]}</span></h4>
+        <dl>
+          <dt>Request</dt><dd><code>${esc(JSON.stringify(n.request))}</code></dd>
+          <dt>Opened by</dt><dd>${esc(n.by || 'the launcher')}</dd>
+          ${holders.length ? `<dt>Held by</dt><dd>${esc(holders.join(', '))}</dd>` : ''}
+          ${arts.length ? `<dt>Published</dt><dd>${arts.map(([ref, a]) => `<code>${esc(ref)}</code>${a.to ? ' → ' + esc(a.to) : ''} ${esc(a.text)}`).join('<br>')}</dd>` : ''}
+          ${reads.length ? `<dt>Read</dt><dd>${reads.map(r => `<code>${esc(r)}</code>`).join(', ')}</dd>` : ''}
+        </dl>
+        <div class="panel-title">What ${esc(n.id)} sees <small>${n.index.length ? 'starting index, then ' : ''}${mine.length} lines</small></div>
+        <ul class="stream">${n.index.map(x => `<li class="idx"><span class="lt">${esc(x)}</span><span class="tag">index</span></li>`).join('')}${mine.map(l => streamRow(l, n, l.to === n.id ? 'to' : (held.has(l.subj) && l.subj !== n.id) ? 'held' : null, ['completed', 'failed', 'cancelled'].includes(s))).join('')}<li class="budget">${esc(left)}</li></ul>`;
+      const ul = details.querySelector('.stream'); if (ul) ul.scrollTop = ul.scrollHeight;
+    }
+    function select(id) {
+      state.selected = state.selected === id ? null : id;
+      render();
+    }
+    const player = {
+      p, state, render,
+      start() { if (state.t >= T) state.t = 0; state.playing = true; state.last = null; render(); },
+      pause() { state.playing = false; render(); },
+      tick(now) {
+        if (!state.playing) return;
+        if (state.last != null) state.t = Math.min(T, state.t + (now - state.last) / stepMs);
+        state.last = now;
+        if (state.t >= T) state.playing = false;
+        render();
+      },
+      go(t) { state.playing = false; state.t = Math.max(0, Math.min(T, t)); render(); },
+      highlight(ids) { DIM.clear(); (ids || []).forEach(id => DIM.add(id)); render(); },
+      seen: false,
+    };
+    play.addEventListener('click', () => (state.playing ? player.pause() : player.start()));
+    next.addEventListener('click', () => {
+      const k = stepOf(state.t);
+      player.go(state.t < k + 0.99 ? k + 0.999 : Math.min(T - 0.001, k + 1.999));
+    });
+    prev.addEventListener('click', () => {
+      const k = stepOf(state.t);
+      player.go(k === 0 ? 0 : (k - 1) + 0.999);
+    });
+    range.addEventListener('input', () => player.go(T * (+range.value / 1000)));
+    render();
+    players.push({player, card});
+    return player;
+  }
+
+  /* ---------- pattern rows ---------- */
+  function codeArea(p) {
+    const wrap = document.createElement('div'); wrap.className = 'code-wrap';
+    const panes = p.code.map(tab => {
+      const pane = document.createElement('div'); pane.className = 'pane';
+      tab.cells.forEach((c, i) => pane.appendChild(codeBlock(c, tab.cells.length > 1 ? `cell ${i + 1}` : '')));
+      if (tab.final) {
+        const f = document.createElement('div'); f.className = 'final';
+        f.innerHTML = `<div class="cell-label">final message${tab.final_ref ? ' → ' + esc(tab.final_ref) : ''}</div><p>${esc(tab.final)}</p>`;
+        pane.appendChild(f);
+      }
+      return pane;
+    });
+    if (p.code.length > 1) {
+      const tabs = document.createElement('div'); tabs.className = 'tabs'; tabs.setAttribute('role', 'tablist');
+      p.code.forEach((tab, i) => {
+        const b = document.createElement('button'); b.type = 'button'; b.setAttribute('role', 'tab');
+        b.textContent = tab.name; b.setAttribute('aria-selected', String(i === 0));
+        b.addEventListener('click', () => {
+          tabs.querySelectorAll('button').forEach((x, j) => x.setAttribute('aria-selected', String(j === i)));
+          panes.forEach((pn, j) => { pn.hidden = j !== i; });
+        });
+        tabs.appendChild(b);
+      });
+      wrap.appendChild(tabs);
+    } else {
+      const fl = document.createElement('div'); fl.className = 'filelabel'; fl.textContent = p.code[0].name;
+      wrap.appendChild(fl);
+    }
+    panes.forEach((pn, i) => { pn.hidden = i !== 0; wrap.appendChild(pn); });
+    return {wrap, panes};
+  }
+  function primChips(p, panes) {
+    const chips = document.createElement('div'); chips.className = 'chips';
+    chips.innerHTML = `<span class="lab">Primitives</span>` + p.uses.map(u => `<button type="button" class="chip prim-chip" data-prim="${u}">${u}</button>`).join('');
+    chips.querySelectorAll('.prim-chip').forEach(btn => {
+      const blocks = () => panes.flatMap(pn => [...pn.querySelectorAll('.code')]);
+      const on = () => blocks().forEach(b => b.setAttribute('data-hl', btn.dataset.prim));
+      const off = () => blocks().forEach(b => b.removeAttribute('data-hl'));
+      btn.addEventListener('mouseenter', on); btn.addEventListener('focus', on);
+      btn.addEventListener('mouseleave', off); btn.addEventListener('blur', off);
+      btn.addEventListener('click', on);
+    });
+    return chips;
+  }
+  const groups = {traversal: '#traversal-list', coordination: '#coordination-list', validation: '#validation-list', composition: '#composition-list'};
+  for (const p of DATA.patterns || []) {
+    const row = document.createElement('article');
+    row.className = 'pattern' + (p.big ? ' big' : '');
+    row.id = p.id;
+    row.setAttribute('aria-labelledby', `${p.id}-h`);
+    const text = document.createElement('div'); text.className = 'p-text';
+    text.innerHTML = `<h3 id="${p.id}-h">${esc(p.title)}</h3>
+      <p class="summary">${esc(p.summary)}</p>
+      <p class="p-task">Run: <q>${esc(p.run)}</q></p>`;
+    const {wrap, panes} = codeArea(p);
+    text.appendChild(primChips(p, panes));
+    let built = null;
+    if (p.built && Object.keys(p.built).length) {
+      built = document.createElement('div'); built.className = 'chips';
+      built.innerHTML = `<span class="lab">Built from</span>` + Object.keys(p.built).map(k => `<button type="button" class="chip" aria-pressed="false" data-tag="${k}">${esc(TITLES[k] || k)}</button>`).join('');
+      text.appendChild(built);
+    }
+    text.appendChild(wrap);
+    const stage = document.createElement('div'); stage.className = 'p-stage';
+    row.append(text, stage);
+    $(groups[p.group]).appendChild(row);
+    const player = makePlayer(p, stage, {compact: true});
+    if (built) {
+      let pinned = null;
+      built.querySelectorAll('[data-tag]').forEach(btn => {
+        const tag = btn.dataset.tag;
+        btn.addEventListener('mouseenter', () => { if (!pinned) player.highlight(p.built[tag]); });
+        btn.addEventListener('mouseleave', () => { if (!pinned) player.highlight(null); });
+        btn.addEventListener('click', () => {
+          pinned = pinned === tag ? null : tag;
+          built.querySelectorAll('[data-tag]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.tag === pinned)));
+          player.highlight(pinned ? p.built[pinned] : null);
+        });
+      });
+    }
+  }
+
+  /* ---------- walkthrough ---------- */
+  if (DATA.walk) {
+    const w = DATA.walk;
+    const mount = $('#walk-stage');
+    const player = makePlayer(w, mount, {wide: true});
+    player.go(0.999);
+    const {wrap, panes} = codeArea(w);
+    const codeMount = $('#walk-code');
+    codeMount.appendChild(primChips(w, panes));
+    codeMount.appendChild(wrap);
+  }
+
+  /* ---------- replays of real runs ---------- */
+  for (const r of DATA.replays || []) {
+    const mount = $(`#${r.id}-stage`);
+    if (!mount) continue;
+    const player = makePlayer(r, mount, {wide: true});
+    player.go(0.999);
+    const codeMount = $(`#${r.id}-code`);
+    if (codeMount && r.code && r.code.length) codeMount.appendChild(codeArea(r).wrap);
+  }
+
+  /* ---------- playback loop and autoplay ---------- */
+  function loop(now) {
+    for (const {player} of players) player.tick(now);
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+  if (!REDUCED && 'IntersectionObserver' in window) {
+    const io = new IntersectionObserver(entries => {
+      for (const entry of entries) {
+        const hit = players.find(x => x.card === entry.target);
+        if (hit && entry.isIntersecting && !hit.player.seen) { hit.player.seen = true; hit.player.start(); }
+      }
+    }, {threshold: 0.55});
+    players.forEach(({card}) => io.observe(card));
+  }
+})();
+
+</script>
+</body>
+</html>

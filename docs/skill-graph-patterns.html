@@ -278,6 +278,8 @@ ul.stream li.budget { color: var(--muted); font-style: italic; }
 @media (max-width: 920px) {
   .walk-grid, .lists { grid-template-columns: minmax(0, 1fr); }
 }
+.stream li.pending .lt, .stream li.never .lt { color: var(--muted); }
+.stream li.never .lt { text-decoration: line-through; text-decoration-color: var(--rule); }
 </style>
 </head>
 <body>
@@ -488,7 +490,7 @@ n5.r1 · Hyperscaler 2027 capex is credible; the debt-funded 20% is the risk · 
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
   const NS = 'http://www.w3.org/2000/svg';
   const REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const TITLES = Object.fromEntries(DATA.patterns.map(p => [p.id, p.title]));
+  const TITLES = Object.fromEntries((DATA.patterns || []).map(p => [p.id, p.title]));
   const R = 15;
 
   /* ---------- code highlighting ---------- */
@@ -526,7 +528,7 @@ n5.r1 · Hyperscaler 2027 capex is credible; the debt-funded 20% is the risk · 
     div.innerHTML = (label ? `<div class="cell-label">${esc(label)}</div>` : '') + `<pre><code>${highlight(code)}</code></pre>`;
     return div;
   }
-  $('#wrapper-code').appendChild(codeBlock(
+  if ($('#wrapper-code')) $('#wrapper-code').appendChild(codeBlock(
 `const r  = await nodes.run(request)   // open, then wait: {node, ref, line}
 const op = await nodes.open(request)  // {node, disp}: started, joined or reused
 await op.next()                       // the next line about that node
@@ -537,7 +539,7 @@ await nodes.next()                    // the next batch of this node's stream
 
 // request: {task, node?, inputs?, refs?, from?, key?}
 // refs:    n7 · n7.c3 · n7.r2 · n7.trail · you.m1 · run`));
-  $('#helpers-code').appendChild(codeBlock(
+  if ($('#helpers-code')) $('#helpers-code').appendChild(codeBlock(
 `// Application code, not built-ins: whole-artifact reads over readArtifact slices.
 async function read(ref) {
   let text = '', offset = 0;
@@ -734,6 +736,7 @@ const inspect = async ref => JSON.parse(await read(ref));   // a node record: {r
     const state = {t: T, playing: false, last: null, selected: null};
     const DIM = new Set();
     const stepOf = t => Math.min(T - 1, Math.max(0, Math.floor(t)));
+    const realAt = t => { const k = stepOf(t), [a, b] = p.real[k], f = Math.min(1, Math.max(0, (t - k - 0.06) / 0.88)); return a + f * (b - a); };
 
     function holdersAt(id, t) {
       return p.edges.filter(e => e.kind === 'call' && e.disp !== 'reused' && e.to === id && e.t0 <= t && (e.t1 == null || t < e.t1)).map(e => e.from);
@@ -785,7 +788,7 @@ const inspect = async ref => JSON.parse(await read(ref));   // a node record: {r
       }
       range.value = String(Math.round(1000 * t / T));
       const k = stepOf(t);
-      clock.textContent = `step ${k + 1} of ${T}`;
+      clock.textContent = `step ${k + 1} of ${T}` + (p.real ? ` · ${realAt(t).toFixed(1)} s` : '');
       const st = p.steps[k];
       narration.textContent = st.say;
       const noted = new Map(st.doing);
@@ -813,9 +816,19 @@ const inspect = async ref => JSON.parse(await read(ref));   // a node record: {r
       play.setAttribute('aria-label', state.playing ? `Pause ${p.title}` : `Play ${p.title}`);
       renderDetails();
     }
-    function lineHtml(l, mark) {
+    function lineHtml(l, mark, status, at) {
       const now = l.t >= stepOf(state.t) ? ' now' : '';
-      return `<li class="${mark ? 'mark ' + mark : ''}${now}"><span class="lt">${esc(l.text)}</span>${mark === 'to' ? '<span class="tag">to this node</span>' : mark === 'held' ? '<span class="tag">held</span>' : ''}</li>`;
+      const tag = status === 'pending' ? '<span class="tag">pending</span>' : status === 'never' ? '<span class="tag">never arrived</span>'
+        : status === 'own' ? '<span class="tag">its own</span>' : mark === 'to' ? '<span class="tag">to this node</span>' : mark === 'held' ? '<span class="tag">held</span>'
+        : at != null ? `<span class="tag">arrived ${at.toFixed(1)} s</span>` : '';
+      return `<li class="${mark ? 'mark ' + mark : ''}${status ? ' ' + status : ''}${now}"><span class="lt">${esc(l.text)}</span>${tag}</li>`;
+    }
+    function streamRow(l, n, mark, done) {
+      if (!l.got) return lineHtml(l, mark);
+      const g = l.got[n.id];
+      if (g === undefined) return (l.by || l.subj) === n.id ? lineHtml(l, null, 'own') : '';
+      if (g === null || g > state.t) return lineHtml(l, mark, g === null && done ? 'never' : 'pending');
+      return lineHtml(l, mark, null, l.gotReal ? l.gotReal[n.id] : null);
     }
     function renderDetails() {
       const t = state.t;
@@ -852,7 +865,7 @@ const inspect = async ref => JSON.parse(await read(ref));   // a node record: {r
           ${reads.length ? `<dt>Read</dt><dd>${reads.map(r => `<code>${esc(r)}</code>`).join(', ')}</dd>` : ''}
         </dl>
         <div class="panel-title">What ${esc(n.id)} sees <small>${n.index.length ? 'starting index, then ' : ''}${mine.length} lines</small></div>
-        <ul class="stream">${n.index.map(x => `<li class="idx"><span class="lt">${esc(x)}</span><span class="tag">index</span></li>`).join('')}${mine.map(l => lineHtml(l, l.to === n.id ? 'to' : (held.has(l.subj) && l.subj !== n.id) ? 'held' : null)).join('')}<li class="budget">${esc(left)}</li></ul>`;
+        <ul class="stream">${n.index.map(x => `<li class="idx"><span class="lt">${esc(x)}</span><span class="tag">index</span></li>`).join('')}${mine.map(l => streamRow(l, n, l.to === n.id ? 'to' : (held.has(l.subj) && l.subj !== n.id) ? 'held' : null, ['completed', 'failed', 'cancelled'].includes(s))).join('')}<li class="budget">${esc(left)}</li></ul>`;
       const ul = details.querySelector('.stream'); if (ul) ul.scrollTop = ul.scrollHeight;
     }
     function select(id) {
@@ -935,7 +948,7 @@ const inspect = async ref => JSON.parse(await read(ref));   // a node record: {r
     return chips;
   }
   const groups = {traversal: '#traversal-list', coordination: '#coordination-list', validation: '#validation-list', composition: '#composition-list'};
-  for (const p of DATA.patterns) {
+  for (const p of DATA.patterns || []) {
     const row = document.createElement('article');
     row.className = 'pattern' + (p.big ? ' big' : '');
     row.id = p.id;
@@ -973,7 +986,7 @@ const inspect = async ref => JSON.parse(await read(ref));   // a node record: {r
   }
 
   /* ---------- walkthrough ---------- */
-  {
+  if (DATA.walk) {
     const w = DATA.walk;
     const mount = $('#walk-stage');
     const player = makePlayer(w, mount, {wide: true});
@@ -982,6 +995,16 @@ const inspect = async ref => JSON.parse(await read(ref));   // a node record: {r
     const codeMount = $('#walk-code');
     codeMount.appendChild(primChips(w, panes));
     codeMount.appendChild(wrap);
+  }
+
+  /* ---------- replays of real runs ---------- */
+  for (const r of DATA.replays || []) {
+    const mount = $(`#${r.id}-stage`);
+    if (!mount) continue;
+    const player = makePlayer(r, mount, {wide: true});
+    player.go(0.999);
+    const codeMount = $(`#${r.id}-code`);
+    if (codeMount && r.code && r.code.length) codeMount.appendChild(codeArea(r).wrap);
   }
 
   /* ---------- playback loop and autoplay ---------- */

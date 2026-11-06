@@ -90,6 +90,7 @@ globalThis.read = async ref => {
   }
 };
 globalThis.inspect = async ref => JSON.parse(await read(ref));
+globalThis.load = async ref => JSON.parse(await read(ref));
 `, ctx);
 
 function show(v) {

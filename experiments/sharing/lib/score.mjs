@@ -54,6 +54,10 @@ export function score(state, summary) {
     msgs: e.filter(x => x.kind === 'msg').length,
     crossMsgs: e.filter(x => x.kind === 'msg' && cross(x.from, x.to)).length,
     reopens: state.lines.filter(l => l.kind === 'reopen').length,
+    dataJoins: state.worldCalls.filter(c => c.shared === 'joined').length,
+    dataReuses: state.worldCalls.filter(c => c.shared === 'reused').length,
+    crossData: state.worldCalls.filter(c => c.shared && c.from && cross(c.node, c.from)).length,
+    crossDataReads: state.reads.filter(r => /^n\d+\.d\d+$/.test(r.ref) && cross(r.ref.split('.')[0], r.node)).length,
     cancels: state.lines.filter(l => l.kind === 'cancel').length,
     fails: state.lines.filter(l => l.kind === 'fail').length,
     crossCites: e.filter(x => x.kind === 'cite' && cross(x.from, x.to)).length,
@@ -71,16 +75,25 @@ export function score(state, summary) {
   m.linesDelivered = Object.values(d).reduce((s, x) => s + x, 0);
   m.linesPerNode = +(m.linesDelivered / Math.max(1, state.nodes.length)).toFixed(1);
 
-  const calls = (fn, arg) => state.worldCalls.filter(c => c.fn === fn && !c.error && (!arg || (c.args || [])[0] === arg));
+  // Calls that fetched: a joined or reused call is not a fetch.
+  const calls = (fn, arg) => state.worldCalls.filter(c => c.fn === fn && !c.error && !c.shared && (!arg || (c.args || [])[0] === arg));
   const subtree = b => state.nodes.filter(n => of(n.id) === b).map(n => n.id);
-  const wf = summary.workflow;
+  const wf = summary.workflow.replace(/-long$/, '');
+  m.duplicateFetches = (() => {
+    const seen = new Map();
+    for (const c of state.worldCalls.filter(c => !c.error && !c.shared && c.fn !== 'search')) {
+      const k = `${c.fn}:${JSON.stringify(c.args)}`;
+      seen.set(k, (seen.get(k) || 0) + 1);
+    }
+    return [...seen.values()].reduce((s, v) => s + v - 1, 0);
+  })();
   const checks = {};
   if (wf === 'shared') {
     const fetchers = new Set(calls('series', 'cma_futures').map(c => c.node));
     checks.fetchedOnce = fetchers.size <= 1;
     m.futuresFetchers = fetchers.size;
     m.pathNodes = state.nodes.filter(n => !['n1', ...top].includes(n.id) && /cma|policy|rate path|rates path/i.test(n.request.task)).length;
-    checks.reused = m.joins + m.reuses + m.crossCites + m.crossReads > 0;
+    checks.reused = m.joins + m.reuses + m.dataJoins + m.dataReuses + m.crossCites + m.crossReads > 0;
   } else if (wf === 'conflict') {
     const [a, b] = top;
     const readers = new Set(calls('doc', 'halbrook-fire').map(c => c.node));
@@ -94,9 +107,10 @@ export function score(state, summary) {
     const readers = new Set(calls('doc', 'pellham-offering').map(c => c.node));
     m.offeringReaders = readers.size;
     const aText = textsOf(state, subtree(a));
-    checks.demandBranchKnows = /pellham/i.test(aText) && /(40\s?%|withdr\w*[^.]{0,40}offering|cut\w*[^.]{0,40}2027 transformer orders)/i.test(aText);
+    checks.demandBranchKnows = /pellham/i.test(aText) && /(40\s?%|withdr\w*[^.]{0,40}offering|cut\w*[^.]{0,40}2027 transformer orders|resiz)/i.test(aText);
     checks.findingCrossed = e.some(x => (x.kind === 'cite' || x.kind === 'msg') && of(x.from) === b && of(x.to) === a) ||
-      state.reads.some(r => of(r.node) === a && of(r.ref.split('.')[0]) === b);
+      state.reads.some(r => of(r.node) === a && of(r.ref.split('.')[0]) === b) ||
+      state.worldCalls.some(c => c.shared && c.from && of(c.node) === a && of(c.from) === b && (c.args || [])[0] === 'pellham-offering');
   } else if (wf === 'noise') {
     checks.noCrossTraffic = m.crossMsgs === 0 && m.crossReads === 0;
   }

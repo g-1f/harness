@@ -36,6 +36,22 @@ function discard(dir, summary, why) {
 if (fs.existsSync(discardFile)) {
   for (const l of fs.readFileSync(discardFile, 'utf8').split('\n').filter(Boolean)) spent += JSON.parse(l).cost || 0;
 }
+// Imports: an earlier stage's runs of an identical condition count as this stage's runs, copied with the condition renamed.
+for (const imp of S.imports || []) {
+  const srcRoot = path.resolve('runs', imp.stage);
+  const as = S.conds.find(c => c.id === imp.as);
+  const have = new Set(fs.existsSync(resultsFile) ? fs.readFileSync(resultsFile, 'utf8').split('\n').filter(Boolean).map(l => { const r = JSON.parse(l); return keyOf(r.workflow, r.cond.id, r.seed); }) : []);
+  for (const l of fs.readFileSync(path.join(srcRoot, 'results.jsonl'), 'utf8').split('\n').filter(Boolean)) {
+    const r = JSON.parse(l);
+    if (r.cond.id !== imp.from || !S.workflows.includes(r.workflow) || !S.seeds.includes(r.seed)) continue;
+    if (have.has(keyOf(r.workflow, as.id, r.seed))) continue;
+    const dir = `${r.workflow}-${as.id}-s${r.seed}`;
+    fs.cpSync(path.join(srcRoot, r.dir), path.join(root, dir), {recursive: true});
+    fs.appendFileSync(resultsFile, JSON.stringify({...r, cond: as, dir, imported: imp.stage}) + '\n');
+    console.log(`imported ${imp.stage}/${r.dir} as ${dir}`);
+  }
+}
+
 const toRegrade = [];
 if (fs.existsSync(resultsFile)) {
   const kept = [];

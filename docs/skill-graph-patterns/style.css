@@ -268,3 +268,5 @@ ul.stream li.budget { color: var(--muted); font-style: italic; }
 @media (max-width: 920px) {
   .walk-grid, .lists { grid-template-columns: minmax(0, 1fr); }
 }
+.stream li.pending .lt, .stream li.never .lt { color: var(--muted); }
+.stream li.never .lt { text-decoration: line-through; text-decoration-color: var(--rule); }

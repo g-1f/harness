@@ -35,14 +35,37 @@ This experiment asks how nodes in a v3 run should share work in practice: what e
 
 ## Stages
 
-Stages run one at a time. Each stage varies one mechanism and keeps the rest at the previous stage's winner, where the winner is the condition that passes the most checks, with ties going to the lowest cost. Each stage uses 3 seeds, and the whole experiment is capped at $60.
+Stages run one at a time. Each stage varies one mechanism and keeps the rest at the previous stage's winner, where the winner is the condition that passes the most checks, with ties going to the lowest cost. The whole experiment is capped at $60.
 
-| Stage | Varies |
-|---|---|
-| 1 | Delivery: `tree`, `broadcast`, `scoped`, `index` |
-| 2 | Data reuse |
-| 3 | What a line carries |
-| 4 | What wakes a waiting node |
+| Stage | Varies | Conditions | Seeds |
+|---|---|---|---|
+| 1 | Delivery | `tree`, `broadcast`, `scoped`, `index` | 3 |
+| 2 | Data reuse, under `broadcast` | `base` (Stage 1's `broadcast`), `identity`, `guided` | 5 |
+| 3 | What a line carries | Chosen by the rule after Stage 2 | 5 |
+
+Stage 4, which would have varied what wakes a waiting node, was dropped. Only nodes that hold children ever wait on the stream, so the change would have reached parents only.
+
+**Stage 2 conditions.**
+- **`base`:** Stage 1's `broadcast`. Data moves only in checkpoints and results.
+- **`identity`:** every world call's output is stored as a ref `nK.dJ`.
+  - An identical call joins the call still running, or reuses its stored output. "Identical" means the same function and arguments, from any node.
+  - The output comes back marked with `ref`, `from` and `joined` or `reused`, and a line records it: `n3 joined n2.d4 · series cma_futures`.
+  - `load(ref)` returns a data ref's output.
+- **`guided`:** `identity`, plus one paragraph on when to share:
+  - publish findings early, with the finding in the first line
+  - read refs instead of redoing work
+  - before finishing, address a conflicting or explained result, which reopens a finished node
+
+  This is the only condition whose prompt says when to use the mechanisms. The other prompts state the mechanics only.
+
+**Workflows.** Stage 2 adds long variants of `conflict` and `cross` to the four Stage 1 workflows.
+- Each document names the next one, and search finds that next document only by its name, so each hop costs a turn.
+- Calls take 3–8 s, and series take 6–12 s.
+- The planted facts are the same as in the short variants.
+
+**Grading.** Grades are reported in two parts:
+- **Evidence:** the facts and connections.
+- **Judgment:** the final call, which the world does not always force.
 
 Stage definitions are in `lib/stages.mjs`, and findings are in [FINDINGS.md](FINDINGS.md).
 
@@ -52,7 +75,7 @@ Stage definitions are in `lib/stages.mjs`, and findings are in [FINDINGS.md](FIN
 node stage.mjs stage1 --cap 25 --parallel 4   # resumable; skips recorded runs, regrades failed grades
 node report.mjs stage1                        # runs/stage1/report.md
 node timing.mjs stage1                        # runs/stage1/timing.md
-node run_one.mjs conflict broadcast 101 runs/try   # one run
+node run_one.mjs conflict-long guided 201         # one run, any condition id from lib/stages.mjs
 ```
 
 Each run directory holds the following:

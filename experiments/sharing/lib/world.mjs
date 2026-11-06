@@ -21,6 +21,7 @@ export const WORKFLOWS = {
       'States that VLTX Jan-2028 calls are cheap: implied vol about 24% vs realized about 29%.',
       'Concludes that adding now is reasonable, with the rates path and the option pricing both supporting it.',
     ],
+    judgment: [3],
   },
   conflict: {
     title: 'Contradiction',
@@ -40,6 +41,7 @@ export const WORKFLOWS = {
       'Explains the shipment drop by the Halbrook plant fire and outage (restarted in August).',
       'Concludes Voltaris will likely meet guidance, because the C$5.1B backlog covers it.',
     ],
+    judgment: [2],
   },
   cross: {
     title: 'Cross-branch finding',
@@ -61,6 +63,51 @@ export const WORKFLOWS = {
       'Notes that LEAPS are fairly priced (implied vol about 27%, near the median), not cheap.',
       'Recommends waiting or only a partial add, rather than a full add.',
     ],
+    judgment: [3],
+  },
+  'conflict-long': {
+    title: 'Contradiction, long',
+    question: 'Will Voltaris Grid (VLTG) meet its 2027 revenue guidance of C$4.2B?',
+    split: [
+      "What do Voltaris's own disclosures, its orders and backlog and its operations, imply for its 2027 revenue?",
+      "What do industry statistics, shipments and market share, imply for Voltaris's 2027 revenue?",
+    ],
+    // Each branch follows a chain of documents, one pointer per hop, so leaves run several cells and overlap for longer.
+    planted: {
+      orders: 'Voltaris orders +11% y/y in H1 2026; backlog C$5.1B, enough to cover 2027 guidance.',
+      shipments: 'Caldrian transformer shipments -4% y/y in Q2 2026 and Voltaris -9%; the drop is in large power transformers, where Voltaris fell 38% while Tarnwell rose 6%.',
+      resolution: "Halbrook, the plant that builds all of Voltaris's large power transformers, was offline nine weeks in Q2 after a fire; it restarted in August, and about C$310M of delayed shipments are scheduled for Q4 2026 to Q2 2027.",
+      answer: 'Likely yes: the shipment drop is a temporary plant outage, not weaker demand; the delayed shipments are scheduled back, and the backlog covers guidance.',
+    },
+    rubric: [
+      'Notices that orders (+11%) and shipments (-4% industry, -9% Voltaris) point in opposite directions.',
+      "Explains the shipment drop (Voltaris's large power transformers down 38%) by the Halbrook plant fire and outage, restarted in August.",
+      'Notes that the delayed shipments (about C$310M) are scheduled to be delivered by mid-2027.',
+      'Concludes Voltaris will likely meet guidance, because the backlog covers it and the lost shipments are recovered.',
+    ],
+    judgment: [3],
+  },
+  'cross-long': {
+    title: 'Cross-branch finding, long',
+    question: 'Should we add to our VLTX LEAPS this month?',
+    split: [
+      'Is demand for grid equipment from Caldrian utilities and data centres rising through 2027?',
+      'Can Caldrian utilities finance their 2027 capex plans, through debt markets and through equity markets?',
+      'Are VLTX LEAPS attractively priced right now?',
+    ],
+    planted: {
+      demand: "Utility capex plans: Pellham Power +18%, Norvane +12% for 2027; Pellham's C$900M transformer tender is due to award in Q1 2027.",
+      finding: "Pellham Power withdrew its C$2.4B equity offering and is cutting 2027 transformer orders by about 40%, resizing its Q1 2027 tender. Pellham is 35% of VLTX holdings' utility orders.",
+      price: 'VLTX LEAPS implied vol 27%, near its 2-year median of 26%: fairly priced.',
+      answer: 'Hold off or add only partially: the Pellham cut (35% of utility orders) undercuts the demand case; pricing is only fair.',
+    },
+    rubric: [
+      'Mentions that Pellham Power is cutting 2027 transformer orders by about 40% after withdrawing its equity offering.',
+      'Connects the Pellham cut to demand for VLTX holdings (Pellham is about 35% of their utility orders, and its Q1 2027 tender is being resized), so demand is weaker than the capex plans suggest.',
+      'Notes that LEAPS are fairly priced (implied vol about 27%, near the median), not cheap.',
+      'Recommends waiting or only a partial add, rather than a full add.',
+    ],
+    judgment: [3],
   },
   noise: {
     title: 'Noise',
@@ -82,6 +129,7 @@ export const WORKFLOWS = {
       'Ostrand: smart-meter contract with Norvane adds 20% revenue.',
       'Kelby: losing share; revenue -5%.',
     ],
+    judgment: [],
   },
 };
 
@@ -144,6 +192,69 @@ export const CORPUS = {
       vltx_iv_history: {unit: 'implied vol', desc: 'VLTX LEAPS implied vol history', points: [['2024', 0.24], ['2025', 0.26], ['2026', 0.27]]},
     },
   },
+  // Long variants: an entry document gives only part of the answer and names the next document, whose keys hold only
+  // that name, so each hop costs a turn. The branch that finds the planted fact reaches it in fewer hops than the
+  // branch that needs it has to make, and calls are slower.
+  'conflict-long': {
+    latency: [3, 8],
+    docs: [
+      D('vltg-orders-h1', 'Voltaris Grid H1 2026 results: orders and backlog', ['orders', 'backlog', 'h1 results', 'order book', 'customers', 'cancellations'],
+        'Voltaris Grid reported H1 2026 orders up 11% year on year, led by utility and data-centre customers. Backlog reached C$5.1B, which management says covers its 2027 revenue guidance of C$4.2B. Customer cancellations remained below 1%. Q2 output was disrupted at one site; the Q2 operations update has the details.'),
+      D('halbrook-fire', 'Voltaris Q2 2026 operations update', ['operations update', 'q2 operations', 'ops update'],
+        "Production at the Halbrook plant, which builds all of Voltaris's large power transformers, was suspended for most of Q2 2026 after a fire in the coil-winding hall. Other plants ran normally. Restart timing is set out in the Halbrook restart notice."),
+      D('halbrook-restart', 'Halbrook restart notice', ['halbrook', 'restart notice', 'restart'],
+        'The Halbrook plant was offline for nine weeks in Q2 2026 and restarted in August at full capacity. Orders delayed by the outage will be delivered under the delivery recovery plan.'),
+      D('vltg-recovery', 'Voltaris delivery recovery plan', ['recovery plan', 'delivery recovery', 'recovery', 'catch-up'],
+        "About C$310M of shipments delayed by the Halbrook outage will be delivered between Q4 2026 and Q2 2027, on top of normal output, by adding a third shift at Halbrook. Customers have accepted the revised dates. Management's guidance statement reconciles this with the 2027 target."),
+      D('vltg-guidance', 'Voltaris 2027 guidance statement', ['guidance statement', 'management guidance', 'reconcil'],
+        'Management guides 2027 revenue of C$4.2B: about C$3.9B at the normal quarterly run rate, plus about C$0.3B of shipments recovered from the Halbrook outage. Pricing is assumed flat.'),
+      D('cea-shipments-q2', 'Caldrian Electrical Association: Q2 2026 transformer shipments', ['shipments', 'shipment', 'industry', 'association', 'transformer', 'statistics', 'market share', 'share'],
+        'Industry transformer shipments fell 4% year on year in Q2 2026, the first decline in three years. Shipments typically trail orders by about two quarters. Figures for each maker are in the CEA maker table.'),
+      D('cea-maker-table', 'CEA Q2 2026 shipments by maker', ['maker table', 'by maker', 'makers'],
+        'Q2 2026 transformer shipments, year on year: Voltaris -9%, the steepest decline among large makers; Tarnwell +4%; imports +11%. The split by product class is in the CEA product-class table.'),
+      D('cea-product-class', 'CEA Q2 2026 shipments by product class', ['product class', 'product-class', 'by product'],
+        "Large power transformers fell 14% year on year in Q2 2026, and distribution transformers rose 2%. Voltaris's large power transformer shipments fell 38% while its distribution transformers rose 3%; Tarnwell's large units rose 6%. Lead times for large units lengthened to 70 weeks. Shares are in the CEA market-share report."),
+      D('cea-market-share', 'CEA market-share report, Q2 2026', ['market-share report', 'share report'],
+        "Voltaris's share of Caldrian transformer shipments fell from 31% to 27% in Q2 2026, all of it in large power transformers; Tarnwell and imports gained. The CEA demand survey covers buyers' plans."),
+      D('cea-demand-survey', 'CEA utility demand survey, Q3 2026', ['demand survey', 'survey', 'buyers'],
+        'Utilities expect 2027 transformer purchases to rise 6%. Seven in ten name lead times, not budgets, as their main constraint.'),
+    ],
+    series: {
+      vltg_quarterly: {latency: [6, 12], unit: 'C$M', desc: 'Voltaris quarterly revenue', points: [['2025Q3', 905], ['2025Q4', 960], ['2026Q1', 980], ['2026Q2', 890]]},
+      cea_shipments: {latency: [6, 12], unit: 'y/y %', desc: 'industry transformer shipments', points: [['2025Q4', 3.1], ['2026Q1', 1.8], ['2026Q2', -4.0]]},
+    },
+  },
+  'cross-long': {
+    latency: [3, 8],
+    docs: [
+      D('utility-capex-2027', 'Caldrian utilities: 2027 capital plans', ['utility', 'utilities', 'capex', 'capital plans', 'capital spending', 'grid'],
+        'Pellham Power and Norvane Utilities filed their 2027 capital plans in October, mostly for substations and transformers. Pellham is the largest single buyer of grid equipment in Caldria. The amounts, and how they compare with 2026, are in the utility tender calendar.'),
+      D('utility-tenders', 'Caldrian utility tender calendar, 2027', ['tender calendar', 'tenders', 'tender'],
+        "Pellham Power plans 2027 capital spending up 18%, with a transformer tender of about C$900M due to award in Q1 2027. Norvane Utilities plans spending up 12%, with a C$450M tender in Q2. VLTX holdings won 60% of the last round. Each buyer's weight in VLTX orders is in the VLTX customer mix."),
+      D('vltx-order-mix', 'VLTX holdings: customer mix', ['customer mix', 'customers', 'utility orders', 'order mix', 'holdings'],
+        "Utilities account for 62% of VLTX holdings' orders. Pellham Power alone is 35% of utility orders; Norvane is 21%. Quarterly intake is in the vltx_orders series."),
+      D('datacentre-demand', 'Data-centre grid connections outlook', ['data centre', 'data center', 'data centres', 'data centers', 'datacentre', 'hyperscaler', 'compute'],
+        'Data-centre grid connection requests in Caldria are expected to grow 9% in 2027, slower than 2026 as power availability limits new sites. Detail is in the grid connection queue report.'),
+      D('grid-queue', 'Caldria grid connection queue, Q3 2026', ['connection queue', 'queue report', 'queue'],
+        'The connection queue grew 4% in Q3 2026. Data centres are 60% of new requests, and the average wait is 26 months.'),
+      D('utility-credit', 'Caldrian utility credit conditions, Q3 2026', ['credit', 'spreads', 'bonds', 'debt', 'funding', 'financing'],
+        'Utility bond spreads widened 30bp in Q3 to 165bp. Norvane priced a C$1.1B bond comfortably. Equity markets have been less receptive; the equity issuance tracker lists the deals.'),
+      D('pellham-offering', 'Caldrian utility equity issuance tracker, Q3 2026', ['equity', 'issuance', 'offering', 'offerings', 'share sale', 'tracker'],
+        "Two utility share offerings were cut back in size in Q3. Pellham Power's C$2.4B offering was pulled on 14 October, and Pellham said it will cut 2027 transformer orders by about 40% and resize its Q1 2027 tender. Pellham's market statement has the detail."),
+      D('pellham-statement', 'Pellham Power market statement', ['market statement', 'statement'],
+        'Pellham Power withdrew its planned C$2.4B equity offering after investor demand fell short. It will cut 2027 transformer orders by about 40%, resize its Q1 2027 transformer tender, and defer two substation programmes until financing improves.'),
+      D('utility-ratings', 'Caldria Ratings: utility watch list', ['ratings', 'rating', 'watch list', 'downgrade'],
+        'Pellham Power was placed on negative watch after its withdrawn offering. Norvane is stable.'),
+      D('vltx-leaps', 'VLTX LEAPS pricing snapshot', ['leaps', 'options', 'implied vol', 'pricing', 'calls'],
+        'VLTX LEAPS implied volatility is 27%, close to its 2-year median of 26%. Skew is flat. The term structure is in the vltx_iv_term series.'),
+    ],
+    series: {
+      vltx_orders: {latency: [6, 12], unit: 'C$M', desc: 'VLTX holdings utility order intake by quarter', points: [['2025Q4', 610], ['2026Q1', 640], ['2026Q2', 655], ['2026Q3', 670]]},
+      utility_spreads: {latency: [6, 12], unit: 'bp', desc: 'Caldrian utility bond spreads', points: [['2026Q1', 130], ['2026Q2', 135], ['2026Q3', 165]]},
+      vltx_iv_history: {latency: [6, 12], unit: 'implied vol', desc: 'VLTX LEAPS implied vol history', points: [['2024', 0.24], ['2025', 0.26], ['2026', 0.27]]},
+      vltx_iv_term: {latency: [6, 12], unit: 'implied vol', desc: 'VLTX LEAPS implied vol term structure', points: [['Jan-2027', 0.26], ['Jan-2028', 0.27], ['Jan-2029', 0.275]]},
+    },
+  },
   noise: {
     docs: [
       D('vltg-revenue', 'Voltaris Grid: 2027 revenue', ['voltaris', 'vltg', 'revenue', 'sales', 'backlog'], 'Backlog C$5.1B; management reaffirmed 2027 revenue guidance of C$4.2B.'),
@@ -180,7 +291,7 @@ export class World {
     this.instant = instant;
     this.calls = 0;
   }
-  async delay(node, range = [1, 6]) {
+  async delay(node, range = this.corpus.latency || [1, 6]) {
     if (this.instant) return;
     const r = mulberry32(hash(`${this.seed}:${node}:${this.calls++}`))();
     const s = range[0] + r * (range[1] - range[0]);
@@ -208,7 +319,7 @@ export class World {
   }
   async series(node, name) {
     const s = this.corpus.series[name];
-    await this.delay(node, s && s.latency ? s.latency : [1, 6]);
+    await this.delay(node, s && s.latency ? s.latency : undefined);
     if (!s) throw new Error(`no series ${name}`);
     return {name, unit: s.unit, desc: s.desc, points: s.points};
   }

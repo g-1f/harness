@@ -21,7 +21,7 @@ Times are seconds from the start of the run.
 
 In flight: 12 of 12 duplicate fetches.
 
-## Contradiction: the fire release, found by the disclosures branch
+## conflict: the fire release, found by the disclosures branch
 
 | Run | Found by, at | Branch that needs it ended | Window |
 |---|---|---|---|
@@ -40,7 +40,7 @@ In flight: 12 of 12 duplicate fetches.
 
 The shipments branch was still running in 5 of 12 runs.
 
-## Cross-branch finding: the offering release, found by the financing branch
+## cross: the offering release, found by the financing branch
 
 | Run | Found by, at | Branch that needs it ended | Window |
 |---|---|---|---|
@@ -79,6 +79,7 @@ The demand branch was still running in 10 of 12 runs.
 ## Shape of the work
 
 - Cells per leaf node: median 2, max 4 (193 leaves).
+- short workflows: median 2 cells per leaf (193 leaves).
 - First-level branches finish within 12.8s of each other (median).
 - Reads of the run index: 0. Reads of another branch's artifacts: 0.
 - Cells that wait on the stream, by node kind: 104 in nodes that opened children, 0 in leaves.

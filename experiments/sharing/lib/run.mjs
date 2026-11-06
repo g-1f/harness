@@ -12,7 +12,7 @@ import {limitOf} from './limit.mjs';
 
 const HERE = path.dirname(new URL(import.meta.url).pathname);
 const SERVER = path.resolve(HERE, '..', 'ptc_server.mjs');
-const REF = /\b(?:n\d+\.(?:c\d+|r\d+|trail))\b/g;
+const REF = /\b(?:n\d+\.(?:c\d+|r\d+|d\d+|trail))\b/g;
 const LIVE = new Set(['running', 'waiting']);
 
 const first = (text, n = 90) => {
@@ -42,6 +42,7 @@ export class Run {
     this.worldCalls = [];
     this.cells = [];
     this.edges = [];
+    this.calls = new Map();
     this.cost = 0;
     this.usage = {input: 0, output: 0, cacheRead: 0, cacheWrite: 0};
     fs.mkdirSync(path.join(this.dir, 'nodes'), {recursive: true});
@@ -114,7 +115,7 @@ export class Run {
       id, request, opener, key: canon(request), holders: new Set(opener ? [opener] : []), holdersEver: new Set(opener ? [opener] : []),
       holding: new Set(), everHeld: new Set(), state: 'running', states: [[this.now(), 'running']], results: [], cps: [],
       cursor: this.lines.length, about: {}, session: null, proc: null, cost: 0, turns: 0, activations: 0, nudges: 0,
-      cellCount: 0, indexSeen: {}, t0: this.now(),
+      cellCount: 0, indexSeen: {}, t0: this.now(), data: 0,
     };
     this.nodes.set(id, n);
     this.identities.set(n.key, id);
@@ -241,7 +242,7 @@ export class Run {
   }
   lineText(text, refs) {
     let head = String(text).trim().split('\n', 1)[0];
-    if (refs.length) head = head.replace(/\s*\((?:\s*n\d+\.(?:c\d+|r\d+|trail)\s*,?)+\)\.?\s*$/, '').replace(/[ ;,]+$/, '');
+    if (refs.length) head = head.replace(/\s*\((?:\s*n\d+\.(?:c\d+|r\d+|d\d+|trail)\s*,?)+\)\.?\s*$/, '').replace(/[ ;,]+$/, '');
     return first(head) + (refs.length ? ` · cites ${refs.join(', ')}` : '');
   }
   publishResult(n, text) {
@@ -426,19 +427,7 @@ export class Run {
       }
       case 'publish': return this.publish(n, a);
       case 'read': return this.read(n, a);
-      case 'world': {
-        const t0 = Date.now();
-        const fn = a.fn;
-        if (!['search', 'doc', 'series'].includes(fn)) throw new Error(`no world.${fn}`);
-        try {
-          const v = await this.world[fn](id, ...(a.args || []));
-          this.worldCalls.push({node: id, fn, args: a.args, ms: Date.now() - t0, t: this.now()});
-          return v;
-        } catch (e) {
-          this.worldCalls.push({node: id, fn, args: a.args, ms: Date.now() - t0, t: this.now(), error: e.message});
-          throw e;
-        }
-      }
+      case 'world': return this.worldCall(n, a.fn, a.args || []);
       case 'pending': {
         const lines = this.takeStream(n);
         const out = {lines, left: this.left()};
@@ -488,6 +477,52 @@ export class Run {
       this.spawn(n, 'fresh', taskPrompt(n, this, {index: this.startIndex(n)}));
     }
     return {node: n.id, disp: 'started', versions: 0};
+  }
+
+  // A world call. With call identity, an identical call (same function and arguments, from any node) joins the one
+  // still running or reuses its stored output, and a line records it; every output is stored as a ref nK.dJ.
+  async worldCall(n, fn, args) {
+    if (!['search', 'doc', 'series'].includes(fn)) throw new Error(`no world.${fn}`);
+    const identity = this.cond.data === 'identity';
+    const key = `${fn}:${JSON.stringify(args)}`;
+    const t0 = Date.now();
+    const known = identity && this.calls.get(key);
+    if (known) {
+      const disp = known.done ? 'reused' : 'joined';
+      // A node repeating its own call shares nothing, so only calls first made by another node get a line.
+      if (known.node !== n.id) {
+        this.addLine({text: `${n.id} ${disp} ${known.ref} · ${fn} ${first(String(args[0]), 60)}`, kind: disp === 'joined' ? 'djoin' : 'dreuse',
+          subj: known.node, by: n.id, ref: known.ref});
+        this.edges.push({kind: 'data', disp, from: n.id, to: known.node, ref: known.ref, t: this.now()});
+      }
+      let v;
+      try { v = await known.promise; } catch (e) {
+        this.worldCalls.push({node: n.id, fn, args, ms: Date.now() - t0, t: this.now(), shared: disp, from: known.node, error: e.message});
+        throw e;
+      }
+      this.worldCalls.push({node: n.id, fn, args, ms: Date.now() - t0, t: this.now(), shared: disp, ref: known.ref, from: known.node});
+      return {...v, ref: known.ref, from: known.node, [disp]: true};
+    }
+    const dataLines = this.cond.lines === 'data';
+    const entry = {ref: identity || dataLines ? `${n.id}.d${++n.data}` : null, node: n.id, done: false};
+    entry.promise = this.world[fn](n.id, ...args);
+    if (identity) this.calls.set(key, entry);
+    try {
+      const v = await entry.promise;
+      entry.done = true;
+      if (entry.ref) this.artifacts.set(entry.ref, {node: n.id, kind: 'data', fn, args, content: JSON.stringify(v), t: this.now()});
+      // Data lines: each fetched output is one line, its first line being the document's title or the series' description.
+      if (dataLines && fn !== 'search') {
+        const head = fn === 'doc' ? v.title : `${v.desc} (${v.unit})`;
+        this.addLine({text: `${entry.ref} · ${fn} ${first(String(args[0]), 40)} · ${first(head, 80)}`, kind: 'data', subj: n.id, ref: entry.ref});
+      }
+      this.worldCalls.push({node: n.id, fn, args, ms: Date.now() - t0, t: this.now(), ...(entry.ref ? {ref: entry.ref} : {})});
+      return entry.ref ? {...v, ref: entry.ref} : v;
+    } catch (e) {
+      if (identity) this.calls.delete(key);
+      this.worldCalls.push({node: n.id, fn, args, ms: Date.now() - t0, t: this.now(), error: e.message});
+      throw e;
+    }
   }
 
   publish(n, {content, to}) {

@@ -19,6 +19,13 @@ There were 48 runs: four designs × four workflows × three seeds. All nodes ran
 
 Answer quality ran from 0.68 to 0.81 of rubric items, which is within noise at three seeds.
 
+Rescored with judgment items set apart, the evidence grade is 0.90 for `scoped`, 0.78 for `index`, and 0.76 for both `broadcast` and `tree`.
+- The gap comes from two places:
+  - **The contradiction's fire item**, explaining the shipment drop by the fire. It passed in 2 of 3 runs for `scoped` and `index`, 1 for `tree`, and 0 for `broadcast`.
+  - **The shared need's two rates items.**
+- At three seeds per cell, none of these differences is reliable.
+- The judgment items stay near zero in every design.
+
 ### Why: nothing worth delivering exists until the end, and the end comes all at once
 
 1. **Leaves finish in two cells.** A leaf runs one search cell, then one cell that reads everything and computes in parallel: the median is 2 cells across 193 leaves, and the most any leaf used was 4. A leaf therefore has about one turn boundary mid-run at which a line can reach it.
@@ -57,6 +64,19 @@ Two rubric items judge a call that the world does not force, and they almost nev
 |---|---|---|
 | `conflict` | Concludes that Voltaris will likely meet guidance | 0/12 |
 | `shared` | Concludes that adding now is reasonable | 2/12 |
+
+From Stage 2 on, each workflow's final-call item counts as a judgment item and is reported apart from the evidence grade. Stage 1 is rescored the same way.
+
+### Decisions for Stage 2
+
+| Topic | Decision |
+|---|---|
+| Delivery | `broadcast` is held fixed, as the rule picks |
+| Data reuse | Refs plus call identity: an identical call joins the one in flight or reuses its stored output. The output is marked with its source, and a line records the sharing |
+| Guided arm | One arm adds a paragraph on when to share. Every other prompt states mechanics only |
+| Long variants | `conflict` and `cross` get long variants |
+| Seeds | 5 seeds |
+| Stage 4 | Dropped |
 
 ### Cost
 

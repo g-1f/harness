@@ -40,14 +40,19 @@ const windows = (wf, docId, needIdx) => {
   }
   return {t, open, n};
 };
-const c = windows('conflict', 'halbrook-fire', 1);
-md += `\n## Contradiction: the fire release, found by the disclosures branch\n\n${c.t}\nThe shipments branch was still running in ${c.open} of ${c.n} runs.\n`;
-const x = windows('cross', 'pellham-offering', 0);
-md += `\n## Cross-branch finding: the offering release, found by the financing branch\n\n${x.t}\nThe demand branch was still running in ${x.open} of ${x.n} runs.\n`;
+const present = w => runs.some(r => r.sm.workflow === w);
+for (const wf of ['conflict', 'conflict-long'].filter(present)) {
+  const c = windows(wf, 'halbrook-fire', 1);
+  md += `\n## ${wf}: the fire release, found by the disclosures branch\n\n${c.t}\nThe shipments branch was still running in ${c.open} of ${c.n} runs.\n`;
+}
+for (const wf of ['cross', 'cross-long'].filter(present)) {
+  const x = windows(wf, 'pellham-offering', 0);
+  md += `\n## ${wf}: the offering release, found by the financing branch\n\n${x.t}\nThe demand branch was still running in ${x.open} of ${x.n} runs.\n`;
+}
 
 // 3. Did the finding ever appear in a line, and when?
 md += `\n## Cross-branch finding: lines that mention it\n\n| Run | First line naming Pellham, the offering or the cut |\n|---|---|\n`;
-for (const {d, st} of runs.filter(r => r.sm.workflow === 'cross')) {
+for (const {d, st} of runs.filter(r => r.sm.workflow.startsWith('cross'))) {
   const l = st.lines.find(l => /pellham|offering|withdr|40\s?%/i.test(l.text));
   md += `| ${d} | ${l ? `${l.t.toFixed(1)}s: ${l.text.replace(/\|/g, '/').slice(0, 90)}` : 'none'} |\n`;
 }
@@ -61,6 +66,14 @@ for (const {st} of runs) {
   if (ends.length > 1) spread.push(Math.max(...ends) - Math.min(...ends));
 }
 md += `\n## Shape of the work\n\n- Cells per leaf node: median ${median(leafCells)}, max ${Math.max(...leafCells)} (${leafCells.length} leaves).\n`;
+for (const kind of ['short', 'long']) {
+  const lc = [];
+  for (const {st, sm} of runs.filter(r => (r.sm.workflow.endsWith('-long') ? 'long' : 'short') === kind)) {
+    const openers = new Set(st.nodes.map(n => n.opener));
+    for (const n of st.nodes) if (!openers.has(n.id)) lc.push(st.cells.filter(c => c.node === n.id).length);
+  }
+  if (lc.length) md += `- ${kind} workflows: median ${median(lc)} cells per leaf (${lc.length} leaves).\n`;
+}
 md += `- First-level branches finish within ${median(spread).toFixed(1)}s of each other (median).\n`;
 md += `- Reads of the run index: ${runs.reduce((s, r) => s + r.st.reads.filter(x => x.ref === 'run').length, 0)}. Reads of another branch's artifacts: ${runs.reduce((s, {st}) => { const {of} = branches(st); return s + st.reads.filter(x => /^n\d+/.test(x.ref) && of(x.ref.split('.')[0]) !== of(x.node) && of(x.ref.split('.')[0]) !== 'root' && of(x.node) !== 'root').length; }, 0)}.\n`;
 md += `- Cells that wait on the stream, by node kind: ${(() => { let p = 0, l = 0; for (const {st} of runs) { const openers = new Set(st.nodes.map(n => n.opener)); for (const c of st.cells) if (/nodes\.next\(|nextNodeEvent|\.result\(\)/.test(c.code)) openers.has(c.node) ? p++ : l++; } return `${p} in nodes that opened children, ${l} in leaves`; })()}.\n`;
