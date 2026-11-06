@@ -182,7 +182,10 @@ export class Run {
       this.usage.cacheRead += u.cache_read_input_tokens || 0; this.usage.cacheWrite += u.cache_creation_input_tokens || 0;
       if (d.session_id) n.session = d.session_id;
     }
-    fs.appendFileSync(path.join(this.dir, 'nodes', `${n.id}.exits.jsonl`), JSON.stringify({t: this.now(), code, d, err: err.slice(-2000)}) + '\n');
+    // A session killed when the run ended can exit after a void run's directory is deleted; its record is then dropped.
+    try {
+      fs.appendFileSync(path.join(this.dir, 'nodes', `${n.id}.exits.jsonl`), JSON.stringify({t: this.now(), code, d, err: err.slice(-2000)}) + '\n');
+    } catch (e) { if (!this.ended) throw e; }
     const lim = limitOf(d);
     if (lim && !this.ended) { this.limit = lim; return this.end('usage limit'); }
     if (this.ended || !LIVE.has(n.state)) return;
