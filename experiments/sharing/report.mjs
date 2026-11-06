@@ -55,7 +55,7 @@ const M = [
   ['cost', 'Cost per run ($)', 3], ['wall', 'Wall time (s)', 0], ['nodes', 'Nodes', 1], ['openedBeyondSplit', 'Nodes opened below the split', 1],
   ['turns', 'Model turns', 1], ['cells', 'Cells', 1], ['worldCalls', 'World calls', 1], ['duplicateFetches', 'Duplicate fetches', 2],
   ['dataJoins', 'Calls joined in flight', 2], ['dataReuses', 'Calls reused', 2], ['crossData', 'Calls shared across branches', 2],
-  ['linesPerNode', 'Lines delivered per node', 1], ['cps', 'Checkpoints published', 2], ['msgs', 'Addressed checkpoints', 2], ['reopens', 'Reopens', 2],
+  ['dataLines', 'Data lines', 1], ['linesPerNode', 'Lines delivered per node', 1], ['cps', 'Checkpoints published', 2], ['msgs', 'Addressed checkpoints', 2], ['reopens', 'Reopens', 2],
   ['joins', 'Node joins', 2], ['reuses', 'Node reuses', 2], ['crossCites', 'Cross-branch cites', 2], ['crossReads', 'Cross-branch reads', 2],
 ];
 md += `\n## Mechanics and cost (mean per run)\n\n| Measure | ${conds.join(' | ')} |\n|---|${conds.map(() => '---|').join('')}\n`;

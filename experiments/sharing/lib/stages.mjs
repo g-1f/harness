@@ -21,4 +21,17 @@ export const STAGES = {
     seeds: [101, 102, 103, 104, 105],
     imports: [{stage: 'stage1', from: 'broadcast', as: 'base'}],
   },
+  // Stage 3: what a line carries. A 2x2 of data lines x the sharing paragraph, all with call identity under broadcast;
+  // the two conditions without data lines are Stage 2's runs, imported.
+  stage3: {
+    conds: [
+      cond('identity', {delivery: 'broadcast', data: 'identity'}),
+      cond('guided', {delivery: 'broadcast', data: 'identity', guided: true}),
+      cond('identity-data', {delivery: 'broadcast', data: 'identity', lines: 'data'}),
+      cond('guided-data', {delivery: 'broadcast', data: 'identity', guided: true, lines: 'data'}),
+    ],
+    workflows: [...SHORT, ...LONG],
+    seeds: [101, 102, 103, 104, 105],
+    imports: [{stage: 'stage2', from: 'identity', as: 'identity'}, {stage: 'stage2', from: 'guided', as: 'guided'}],
+  },
 };

@@ -511,10 +511,18 @@ export class Run {
       const v = await entry.promise;
       entry.done = true;
       if (entry.ref) this.artifacts.set(entry.ref, {node: n.id, kind: 'data', fn, args, content: JSON.stringify(v), t: this.now()});
-      // Data lines: each fetched output is one line, its first line being the document's title or the series' description.
+      // Data lines: each fetched document or series is one line. A document's line carries its title and first sentence;
+      // a series' line carries its description and latest point.
       if (dataLines && fn !== 'search') {
-        const head = fn === 'doc' ? v.title : `${v.desc} (${v.unit})`;
-        this.addLine({text: `${entry.ref} · ${fn} ${first(String(args[0]), 40)} · ${first(head, 80)}`, kind: 'data', subj: n.id, ref: entry.ref});
+        let head;
+        if (fn === 'doc') {
+          const m = String(v.body || '').match(/^(.*?[.!?])(?:\s|$)/s);
+          head = `${v.title}: ${(m ? m[1] : String(v.body || '')).trim()}`;
+        } else {
+          const last = (v.points || []).at(-1);
+          head = `${v.desc} (${v.unit})${last ? `: latest ${last[0]} ${last[1]}` : ''}`;
+        }
+        this.addLine({text: `${entry.ref} · ${fn} ${first(String(args[0]), 40)} · ${first(head, 160)}`, kind: 'data', subj: n.id, ref: entry.ref});
       }
       this.worldCalls.push({node: n.id, fn, args, ms: Date.now() - t0, t: this.now(), ...(entry.ref ? {ref: entry.ref} : {})});
       return entry.ref ? {...v, ref: entry.ref} : v;

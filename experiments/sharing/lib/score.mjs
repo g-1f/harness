@@ -58,6 +58,7 @@ export function score(state, summary) {
     dataReuses: state.worldCalls.filter(c => c.shared === 'reused').length,
     crossData: state.worldCalls.filter(c => c.shared && c.from && cross(c.node, c.from)).length,
     crossDataReads: state.reads.filter(r => /^n\d+\.d\d+$/.test(r.ref) && cross(r.ref.split('.')[0], r.node)).length,
+    dataLines: state.lines.filter(l => l.kind === 'data').length,
     cancels: state.lines.filter(l => l.kind === 'cancel').length,
     fails: state.lines.filter(l => l.kind === 'fail').length,
     crossCites: e.filter(x => x.kind === 'cite' && cross(x.from, x.to)).length,

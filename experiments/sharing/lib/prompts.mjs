@@ -26,7 +26,7 @@ export function systemPrompt(cond) {
     + (dataLines && identity ? ', and so is every document or series a node fetches and every joined or reused world call'
       : dataLines ? ', and so is every document or series a node fetches'
         : identity ? ', and so is every joined or reused world call' : '');
-  const example = dataLines ? `, "n5.r1 · <first line> · cites n3.c1" or "n2.d5 · doc <id> · <its title>"` : ` or "n5.r1 · <first line> · cites n3.c1"`;
+  const example = dataLines ? `, "n5.r1 · <first line> · cites n3.c1" or "n2.d5 · doc <id> · <its title>: <its first sentence>"` : ` or "n5.r1 · <first line> · cites n3.c1"`;
   const delivery = (identity || dataLines) && cond.delivery === 'broadcast'
     ? `You receive every line from every other node in the run: starts, joins, reuses, checkpoints, results, closes, cancellations, failures, reopens${dataLines ? ', fetched documents and series' : ''}${identity ? ', and joined or reused world calls' : ''}.`
     : LINES[cond.delivery];
