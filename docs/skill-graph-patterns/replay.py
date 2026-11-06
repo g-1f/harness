@@ -34,7 +34,9 @@ def build(spec):
     sm = json.loads((d / 'summary.json').read_text())
     steps = spec['steps']
     T = len(steps)
-    bounds = [0.0] + [s[0] for s in steps]
+    shown = [0.0] + [s[0] for s in steps]
+    # Step times are rounded to 0.1 s, so each step reaches 0.05 s past its time to take in the events it names.
+    bounds = [0.0] + [s[0] + 0.05 for s in steps]
     for a, b in zip(bounds, bounds[1:]):
         if b < a:
             raise ValueError(f"{spec['id']}: step times must not decrease ({a} then {b})")
@@ -151,7 +153,7 @@ def build(spec):
         nodes=nodes, ghosts=[], edges=edges, lines=lines, ripples=ripples, artifacts=artifacts,
         steps=[dict(say=s[1], doing=[[k, v] for k, v in (s[2] if len(s) > 2 else {}).items()]) for s in steps],
         code=code, built={}, pos=pos, width=width, height=height,
-        real=[[bounds[k], bounds[k + 1]] for k in range(T)],
+        real=[[shown[k], shown[k + 1]] for k in range(T)],
         meta=dict(stage=spec['run'].split('/')[0], cond=sm['cond']['id'], seed=sm['seed'], wall=sm['wall'], cost=sm['cost']),
     )
 
