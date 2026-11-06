@@ -1,0 +1,384 @@
+{
+ "nodes": [
+  {
+   "id": "n1",
+   "request": {
+    "task": "Will Voltaris Grid (VLTG) meet its 2027 revenue guidance of C$4.2B?"
+   },
+   "opener": null,
+   "state": "completed",
+   "results": [
+    "n1.r1"
+   ],
+   "cps": [],
+   "holdersEver": [],
+   "states": [
+    [
+     0,
+     "running"
+    ],
+    [
+     2.99,
+     "waiting"
+    ],
+    [
+     30.4,
+     "running"
+    ],
+    [
+     39.04,
+     "completed"
+    ]
+   ],
+   "cost": 0.022788,
+   "turns": 3,
+   "activations": 1,
+   "session": "d71bc61c-493b-4563-82c9-596feb4fd536",
+   "from": null
+  },
+  {
+   "id": "n2",
+   "request": {
+    "task": "What do Voltaris's own disclosures, its orders and backlog and its operations, imply for its 2027 revenue?"
+   },
+   "opener": "n1",
+   "state": "completed",
+   "results": [
+    "n2.r1"
+   ],
+   "cps": [],
+   "holdersEver": [
+    "n1"
+   ],
+   "states": [
+    [
+     0,
+     "running"
+    ],
+    [
+     30.4,
+     "completed"
+    ]
+   ],
+   "cost": 0.0230028,
+   "turns": 4,
+   "activations": 1,
+   "session": "8496dd34-df11-4353-96c9-7a1cc4f36a03",
+   "from": null
+  },
+  {
+   "id": "n3",
+   "request": {
+    "task": "What do industry statistics, shipments and market share, imply for Voltaris's 2027 revenue?"
+   },
+   "opener": "n1",
+   "state": "completed",
+   "results": [
+    "n3.r1"
+   ],
+   "cps": [],
+   "holdersEver": [
+    "n1"
+   ],
+   "states": [
+    [
+     0,
+     "running"
+    ],
+    [
+     27.79,
+     "completed"
+    ]
+   ],
+   "cost": 0.0234494,
+   "turns": 3,
+   "activations": 1,
+   "session": "03bbd09f-fb89-4ecc-9c96-f3572a3a9af2",
+   "from": null
+  }
+ ],
+ "lines": [
+  {
+   "i": 0,
+   "t": 0,
+   "text": "the run opened n1 · Will Voltaris Grid (VLTG) meet its 2027 revenue guidance of C$4.2B?",
+   "kind": "open",
+   "subj": "n1",
+   "by": null
+  },
+  {
+   "i": 1,
+   "t": 0,
+   "text": "n1 opened n2 · What do Voltaris's own disclosures, its orders and backlog and its operations,…",
+   "kind": "open",
+   "subj": "n2",
+   "by": "n1"
+  },
+  {
+   "i": 2,
+   "t": 0,
+   "text": "n1 opened n3 · What do industry statistics, shipments and market share, imply for Voltaris's 2…",
+   "kind": "open",
+   "subj": "n3",
+   "by": "n1"
+  },
+  {
+   "i": 3,
+   "t": 27.79,
+   "text": "n3.r1 · **Implied 2027 revenue for Voltaris: about C$3.4B in the base case, within a range of C$3…",
+   "kind": "result",
+   "subj": "n3",
+   "ref": "n3.r1"
+  },
+  {
+   "i": 4,
+   "t": 30.4,
+   "text": "n2.r1 · **Voltaris's own disclosures point to 2027 revenue of about C$4.2B, with a modest upside…",
+   "kind": "result",
+   "subj": "n2",
+   "ref": "n2.r1"
+  },
+  {
+   "i": 5,
+   "t": 39.04,
+   "text": "n1.r1 · **Probably not. Voltaris is more likely to land below C$4.2B, at roughly C$3.7–4.0B, than…",
+   "kind": "result",
+   "subj": "n1",
+   "ref": "n1.r1"
+  }
+ ],
+ "artifacts": {
+  "n3.r1": {
+   "node": "n3",
+   "kind": "result",
+   "content": "**Implied 2027 revenue for Voltaris: about C$3.4B in the base case, within a range of C$3.1B to 3.7B. That is below the 2026 run-rate of roughly C$3.6B.**\n\n**Data**\n- Voltaris quarterly revenue (C$M): 2025Q3 905, 2025Q4 960, 2026Q1 980, 2026Q2 890. The last four quarters sum to C$3,735M.\n- Industry transformer shipments (y/y): +3.1% in Q4 2025, +1.8% in Q1 2026, then −4% in Q2 2026. That is the first decline in three years and a clear deceleration.\n- Voltaris shipments fell 9% y/y in Q2, the steepest drop among the large makers.\n- Voltaris's share of Caldrian transformer shipments fell from 31% to 27% in Q2. Tarnwell and imports gained.\n- Shipments trail orders by about two quarters. A Q2 decline therefore points to weak orders in Q4 2025 to Q1 2026, and the weakness likely continues through H2 2026.\n\n**Reasoning**\n1. I assume 2026H2 revenue stays near the Q2 level of about C$880–890M a quarter. That gives 2026 of roughly C$3.6B (980 + 890 + about 1,760).\n2. Revenue roughly equals industry volume times share times price. For Voltaris, share is now 27% against 31% before. If the 27% share holds, the loss is already in the run-rate, but it is not recovered.\n3. For 2027, the base case is flat to slightly lower industry volume (about −2%) with share steady at 27%. Price/mix is flat to slightly positive. That gives a 2027 revenue of C$3.4–3.5B, about 5% below 2026.\n4. The downside case is industry volume at −5% and share sliding to about 25%. That gives about C$3.1B.\n5. The upside case is industry volume recovering to +3% and share stabilising at 27–28%. That gives about C$3.7B, roughly the 2026 level.\n\n**Caveats**\n- The data stops at Q2 2026, so every 2027 figure is an extrapolation.\n- The Q2 numbers don't fully agree with each other. A 13% relative share loss plus a 4% industry decline would imply about −16% for Voltaris, against the reported −9%. The share figure may use a different base.\n- The revenue series is only four quarters long, so I can't separate seasonality from trend.\n- Order-intake and backlog data would sharpen the 2027 view. I did not find any in this search.",
+   "cites": [],
+   "invalid": [],
+   "t": 27.79
+  },
+  "n2.r1": {
+   "node": "n2",
+   "kind": "result",
+   "content": "**Voltaris's own disclosures point to 2027 revenue of about C$4.2B, with a modest upside from recovered Halbrook shipments. The risk is in execution, not demand.** This rests on two documents (the H1 2026 results and the Halbrook release) and one quarterly revenue series.\n\n**Orders and backlog**\n- H1 2026 orders were up 11% year on year, led by utility and data-centre customers.\n- Backlog is C$5.1B. Management says it covers 2027 revenue guidance of C$4.2B, which is about 1.2 times guidance.\n- Cancellations are below 1%, so the backlog looks firm.\n\n**Operations**\n- Halbrook, the largest plant, was offline for nine weeks in Q2 2026 after a fire. That explains why Q2 revenue fell to C$890M, from C$980M in Q1.\n- Production restarted in August at full capacity.\n- Management expects to recover the lost shipments by mid-2027. That adds some deferred revenue to the first half of 2027.\n\n**Run-rate check**\n- The last four quarters sum to about C$3.7B (905 + 960 + 980 + 890 = C$3,735M).\n- Reaching C$4.2B needs about 12% growth. That is consistent with the 11% order growth, plus catch-up from the plant outage.\n- Revenue for the next four quarters at a normal run-rate near C$980M a quarter would be about C$3.9B. The remaining roughly C$0.3B has to come from growth and the recovered shipments.\n\n**Implied range**\n- Base case: C$4.1–4.2B, in line with guidance.\n- Downside: about C$3.9–4.0B, if the backlog converts slowly or the catch-up slips past mid-2027.\n- Upside: modestly above C$4.2B, because the backlog has room beyond guidance and the Halbrook recovery adds shipments.\n\n**Caveats**\n- Both the coverage claim and the recovery timing are management statements. I found no independent check of either.\n- The backlog's delivery schedule and the 2026 Q3 revenue figure were not in the sources, so conversion timing is unverified.",
+   "cites": [],
+   "invalid": [],
+   "t": 30.4
+  },
+  "n1.r1": {
+   "node": "n1",
+   "kind": "result",
+   "content": "**Probably not. Voltaris is more likely to land below C$4.2B, at roughly C$3.7–4.0B, than to meet guidance.** I'm moderately confident in that, because my two sub-analyses disagreed and the evidence is thin on both sides.\n\n**Company view (n2).** The company's own disclosures support guidance.\n- H1 2026 orders were up 11%.\n- Backlog is C$5.1B, about 1.2 times guidance.\n- Cancellations are below 1%.\n- The Halbrook plant restarted in August after a fire, and management expects to recover the lost shipments by mid-2027.\n- On this view, 2027 revenue would be C$4.1–4.2B.\n\n**Industry view (n3).** The industry data points the other way.\n- Industry shipments fell 4% year on year in Q2 2026.\n- Voltaris shipments fell 9% in Q2.\n- Its share of Caldrian transformer shipments dropped from 31% to 27%.\n- On this view, 2027 revenue would be about C$3.4B, within a range of C$3.1–3.7B.\n\n**Why I lean below guidance.**\n- Hitting C$4.2B needs about 12% growth over the last four quarters of revenue (C$3,735M). Only 2026Q1 was above C$975M, and Q2 slipped to C$890M.\n- Backlog coverage and the recovery timing are management statements with no independent check. The delivery schedule is not disclosed.\n- Share loss and falling industry volumes are independent evidence that conflicts with the 11% order growth.\n- The industry view probably overstates the downside. Part of Voltaris's Q2 drop came from the Halbrook outage, which hits shipments directly. That means the share loss may be temporary.\n- The industry view also has an internal inconsistency. The share loss plus the industry decline would imply about −16% for Voltaris, not the reported −9%.\n\n**What would change this.**\n- Q3 and Q4 2026 revenue near C$1B a quarter would favor guidance.\n- Share recovering toward 31% would also favor guidance.\n- A backlog delivery schedule showing most of the C$5.1B converting in 2027 would favor guidance.\n- Q3 revenue at or below Q2's level, or further share loss, would make a miss near-certain.",
+   "cites": [],
+   "invalid": [],
+   "t": 39.04
+  }
+ },
+ "edges": [
+  {
+   "kind": "call",
+   "disp": "started",
+   "from": "n1",
+   "to": "n2",
+   "t": 0,
+   "released": 30.4
+  },
+  {
+   "kind": "call",
+   "disp": "started",
+   "from": "n1",
+   "to": "n3",
+   "t": 0,
+   "released": 27.79
+  }
+ ],
+ "reads": [
+  {
+   "node": "n1",
+   "ref": "n2.r1",
+   "t": 30.4
+  },
+  {
+   "node": "n1",
+   "ref": "n3.r1",
+   "t": 30.4
+  },
+  {
+   "node": "n1",
+   "ref": "n2.r1",
+   "t": 32.22
+  },
+  {
+   "node": "n1",
+   "ref": "n3.r1",
+   "t": 32.22
+  }
+ ],
+ "worldCalls": [
+  {
+   "node": "n3",
+   "fn": "search",
+   "args": [
+    "Voltaris shipments market share revenue"
+   ],
+   "ms": 2808,
+   "t": 6.38
+  },
+  {
+   "node": "n2",
+   "fn": "search",
+   "args": [
+    "Voltaris backlog orders revenue 2027"
+   ],
+   "ms": 1837,
+   "t": 6.53
+  },
+  {
+   "node": "n2",
+   "fn": "search",
+   "args": [
+    "Voltaris capacity production guidance"
+   ],
+   "ms": 1128,
+   "t": 7.67
+  },
+  {
+   "node": "n3",
+   "fn": "search",
+   "args": [
+    "industry shipments forecast 2027"
+   ],
+   "ms": 2657,
+   "t": 9.04
+  },
+  {
+   "node": "n2",
+   "fn": "doc",
+   "args": [
+    "vltg-orders-h1"
+   ],
+   "ms": 2993,
+   "t": 12.38
+  },
+  {
+   "node": "n3",
+   "fn": "series",
+   "args": [
+    "cea_shipments"
+   ],
+   "ms": 1394,
+   "t": 12.39
+  },
+  {
+   "node": "n3",
+   "fn": "series",
+   "args": [
+    "vltg_quarterly"
+   ],
+   "ms": 2985,
+   "t": 13.98
+  },
+  {
+   "node": "n3",
+   "fn": "doc",
+   "args": [
+    "cea-shipments-q2"
+   ],
+   "ms": 4127,
+   "t": 15.12
+  },
+  {
+   "node": "n3",
+   "fn": "doc",
+   "args": [
+    "cea-market-share"
+   ],
+   "ms": 5143,
+   "t": 16.14
+  },
+  {
+   "node": "n2",
+   "fn": "series",
+   "args": [
+    "vltg_quarterly"
+   ],
+   "ms": 4603,
+   "t": 16.99
+  },
+  {
+   "node": "n2",
+   "fn": "search",
+   "args": [
+    "Halbrook plant restart"
+   ],
+   "ms": 1054,
+   "t": 19.95
+  },
+  {
+   "node": "n2",
+   "fn": "doc",
+   "args": [
+    "halbrook-fire"
+   ],
+   "ms": 3748,
+   "t": 23.7
+  }
+ ],
+ "cells": [
+  {
+   "node": "n2",
+   "t": 7.67,
+   "code": "// Single judgment: implied 2027 revenue from Voltaris's own disclosures (orders/backlog/operations). Answer directly.\nconst r=await world.search(\"Voltaris backlog orders revenue 2027\");\nconst r2=await world.search(\"Voltaris capacity production guidance\");\nreturn {a:r,b:r2}",
+   "output": "{\n \"a\": {\n  \"docs\": [\n   {\n    \"id\": \"vltg-orders-h1\",\n    \"title\": \"Voltaris Grid H1 2026 results: orders and backlog\",\n    \"snippet\": \"Voltaris Grid reported H1 2026 orders up 11% year on year, led by utility and data-centre customers. Backlog reached C$5.1B, which managemen…\"\n   }\n  ],\n  \"series\": [\n   {\n    \"series\": \"vltg_quarterly\",\n    \"desc\": \"Voltaris quarterly revenue\"\n   }\n  ]\n },\n \"b\": {\n  \"docs\": [\n   {\n    \"id\": \"vltg-orders-h1\",\n    \"title\": \"Voltaris Grid H1 2026 results: orders and backlog\",\n    \"snippet\": \"Voltaris Grid reported H1 2026 orders up 11% year on year, led by utility and data-centre customers. Backlog reached C$5.1B, which managemen…\"\n   }\n  ],\n  \"series\": [\n   {\n    \"series\": \"vltg_quarterly\",\n    \"desc\": \"Voltaris quarterly revenue\"\n   }\n  ]\n }\n}",
+   "ms": 2978,
+   "error": null
+  },
+  {
+   "node": "n3",
+   "t": 9.04,
+   "code": "// Single judgment; answer directly.\nconst r=await world.search(\"Voltaris shipments market share revenue\");\nconst r2=await world.search(\"industry shipments forecast 2027\");\nreturn JSON.stringify([r,r2]).slice(0,5000)",
+   "output": "[{\"docs\":[{\"id\":\"cea-shipments-q2\",\"title\":\"Caldrian Electrical Association: Q2 2026 transformer shipments\",\"snippet\":\"Industry transformer shipments fell 4% year on year in Q2 2026, the first decline in three years. Voltaris shipments fell 9%, the steepest a…\"},{\"id\":\"cea-market-share\",\"title\":\"Caldrian transformer market share, Q2 2026\",\"snippet\":\"Voltaris's share of Caldrian transformer shipments fell from 31% to 27% in Q2 2026; Tarnwell and imports gained.\"}],\"series\":[{\"series\":\"vltg_quarterly\",\"desc\":\"Voltaris quarterly revenue\"},{\"series\":\"cea_shipments\",\"desc\":\"industry transformer shipments\"}]},{\"docs\":[{\"id\":\"cea-shipments-q2\",\"title\":\"Caldrian Electrical Association: Q2 2026 transformer shipments\",\"snippet\":\"Industry transformer shipments fell 4% year on year in Q2 2026, the first decline in three years. Voltaris shipments fell 9%, the steepest a…\"}],\"series\":[{\"series\":\"cea_shipments\",\"desc\":\"industry transformer shipments\"}]}]",
+   "ms": 5481,
+   "error": null
+  },
+  {
+   "node": "n3",
+   "t": 16.14,
+   "code": "const [a,b,s1,s2]=await Promise.all([world.doc(\"cea-shipments-q2\"),world.doc(\"cea-market-share\"),world.series(\"vltg_quarterly\"),world.series(\"cea_shipments\")]);\nreturn JSON.stringify([a,b,s1,s2])",
+   "output": "[{\"id\":\"cea-shipments-q2\",\"title\":\"Caldrian Electrical Association: Q2 2026 transformer shipments\",\"body\":\"Industry transformer shipments fell 4% year on year in Q2 2026, the first decline in three years. Voltaris shipments fell 9%, the steepest among large makers. Shipments typically trail orders by about two quarters.\"},{\"id\":\"cea-market-share\",\"title\":\"Caldrian transformer market share, Q2 2026\",\"body\":\"Voltaris's share of Caldrian transformer shipments fell from 31% to 27% in Q2 2026; Tarnwell and imports gained.\"},{\"name\":\"vltg_quarterly\",\"unit\":\"C$M\",\"desc\":\"Voltaris quarterly revenue\",\"points\":[[\"2025Q3\",905],[\"2025Q4\",960],[\"2026Q1\",980],[\"2026Q2\",890]]},{\"name\":\"cea_shipments\",\"unit\":\"y/y %\",\"desc\":\"industry transformer shipments\",\"points\":[[\"2025Q4\",3.1],[\"2026Q1\",1.8],[\"2026Q2\",-4]]}]",
+   "ms": 5151,
+   "error": null
+  },
+  {
+   "node": "n2",
+   "t": 16.99,
+   "code": "return {d:await world.doc(\"vltg-orders-h1\"),s:await world.series(\"vltg_quarterly\")}",
+   "output": "{\n \"d\": {\n  \"id\": \"vltg-orders-h1\",\n  \"title\": \"Voltaris Grid H1 2026 results: orders and backlog\",\n  \"body\": \"Voltaris Grid reported H1 2026 orders up 11% year on year, led by utility and data-centre customers. Backlog reached C$5.1B, which management says covers its 2027 revenue guidance of C$4.2B. Customer cancellations remained below 1%. Q2 output was affected by an incident at the Halbrook plant; see the separate release on its restart.\"\n },\n \"s\": {\n  \"name\": \"vltg_quarterly\",\n  \"unit\": \"C$M\",\n  \"desc\": \"Voltaris quarterly revenue\",\n  \"points\": [\n   [\n    \"2025Q3\",\n    905\n   ],\n   [\n    \"2025Q4\",\n    960\n   ],\n   [\n    \"2026Q1\",\n    980\n   ],\n   [\n    \"2026Q2\",\n    890\n   ]\n  ]\n }\n}",
+   "ms": 7602,
+   "error": null
+  },
+  {
+   "node": "n2",
+   "t": 23.7,
+   "code": "const r=await world.search(\"Halbrook plant restart\");return {r, docs:await Promise.all(r.docs.map(d=>world.doc(d.id)))}",
+   "output": "{\n \"r\": {\n  \"docs\": [\n   {\n    \"id\": \"halbrook-fire\",\n    \"title\": \"Halbrook plant restarts after fire\",\n    \"snippet\": \"Voltaris's Halbrook plant, its largest, was offline for nine weeks in Q2 2026 after a fire in the coil-winding hall. Production restarted in…\"\n   }\n  ],\n  \"series\": []\n },\n \"docs\": [\n  {\n   \"id\": \"halbrook-fire\",\n   \"title\": \"Halbrook plant restarts after fire\",\n   \"body\": \"Voltaris's Halbrook plant, its largest, was offline for nine weeks in Q2 2026 after a fire in the coil-winding hall. Production restarted in August at full capacity; management expects to recover the lost shipments by mid-2027.\"\n  }\n ]\n}",
+   "ms": 4807,
+   "error": null
+  },
+  {
+   "node": "n1",
+   "t": 30.41,
+   "code": "const r=await Promise.all([nodes.handle(\"n2\").result(),nodes.handle(\"n3\").result()]);return r.map(x=>x.line+\"\\n\"+read(x.ref)).join(\"\\n----\\n\")",
+   "output": "**Voltaris's own disclosures point to 2027 revenue of about C$4.2B, with a modest upside from recovered Halbrook shipments. The risk is in execution, not deman…\n[object Promise]\n----\n**Implied 2027 revenue for Voltaris: about C$3.4B in the base case, within a range of C$3.1B to 3.7B. That is below the 2026 run-rate of roughly C$3.6B.**\n[object Promise]",
+   "ms": 27435,
+   "error": null
+  },
+  {
+   "node": "n1",
+   "t": 32.22,
+   "code": "return [await read(\"n2.r1\"),await read(\"n3.r1\")]",
+   "output": "[\n \"**Voltaris's own disclosures point to 2027 revenue of about C$4.2B, with a modest upside from recovered Halbrook shipments. The risk is in execution, not demand.** This rests on two documents (the H1 2026 results and the Halbrook release) and one quarterly revenue series.\\n\\n**Orders and backlog**\\n- H1 2026 orders were up 11% year on year, led by utility and data-centre customers.\\n- Backlog is C$5.1B. Management says it covers 2027 revenue guidance of C$4.2B, which is about 1.2 times guidance.\\n- Cancellations are below 1%, so the backlog looks firm.\\n\\n**Operations**\\n- Halbrook, the largest plant, was offline for nine weeks in Q2 2026 after a fire. That explains why Q2 revenue fell to C$890M, from C$980M in Q1.\\n- Production restarted in August at full capacity.\\n- Management expects to recover the lost shipments by mid-2027. That adds some deferred revenue to the first half of 2027.\\n\\n**Run-rate check**\\n- The last four quarters sum to about C$3.7B (905 + 960 + 980 + 890 = C$3,735M).\\n- Reaching C$4.2B needs about 12% growth. That is consistent with the 11% order growth, plus catch-up from the plant outage.\\n- Revenue for the next four quarters at a normal run-rate near C$980M a quarter would be about C$3.9B. The remaining roughly C$0.3B has to come from growth and the recovered shipments.\\n\\n**Implied range**\\n- Base case: C$4.1–4.2B, in line with guidance.\\n- Downside: about C$3.9–4.0B, if the backlog converts slowly or the catch-up slips past mid-2027.\\n- Upside: modestly above C$4.2B, because the backlog has room beyond guidance and the Halbrook recovery adds shipments.\\n\\n**Caveats**\\n- Both the coverage claim and the recovery timing are management statements. I found no independent check of either.\\n- The backlog's delivery schedule and the 2026 Q3 revenue figure were not in the sources, so conversion timing is unverified.\",\n \"**Implied 2027 revenue for Voltaris: about C$3.4B in the base case, within a range of C$3.1B to 3.7B. That is below the 2026 run-rate of roughly C$3.6B.**\\n\\n**Data**\\n- Voltaris quarterly revenue (C$M): 2025Q3 905, 2025Q4 960, 2026Q1 980, 2026Q2 890. The last four quarters sum to C$3,735M.\\n- Industry transformer shipments (y/y): +3.1% in Q4 2025, +1.8% in Q1 2026, then −4% in Q2 2026. That is the first decline in three years and a clear deceleration.\\n- Voltaris shipments fell 9% y/y in Q2, the steepest drop among the large makers.\\n- Voltaris's share of Caldrian transformer shipments fell from 31% to 27% in Q2. Tarnwell and imports gained.\\n- Shipments trail orders by about two quarters. A Q2 decline therefore points to weak orders in Q4 2025 to Q1 2026, and the weakness likely continues through H2 2026.\\n\\n**Reasoning**\\n1. I assume 2026H2 revenue stays near the Q2 level of about C$880–890M a quarter. That gives 2026 of roughly C$3.6B (980 + 890 + about 1,760).\\n2. Revenue roughly equals industry volume times share times price. For Voltaris, share is now 27% against 31% before. If the 27% share holds, the loss is already in the run-rate, but it is not recovered.\\n3. For 2027, the base case is flat to slightly lower industry volume (about −2%) with share steady at 27%. Price/mix is flat to slightly positive. That gives a 2027 revenue of C$3.4–3.5B, about 5% below 2026.\\n4. The downside case is industry volume at −5% and share sliding to about 25%. That gives about C$3.1B.\\n5. The upside case is industry volume recovering to +3% and share stabilising at 27–28%. That gives about C$3.7B, roughly the 2026 level.\\n\\n**Caveats**\\n- The data stops at Q2 2026, so every 2027 figure is an extrapolation.\\n- The Q2 numbers don't fully agree with each other. A 13% relative share loss plus a 4% industry decline would imply about −16% for Voltaris, against the reported −9%. The share figure may use a different base.\\n- The revenue series is only four quarters long, so I can't separate seasonality from trend.\\n- Order-intake and backlog data would sharpen the 2027 view. I did not find any in this search.\"\n]",
+   "ms": 4,
+   "error": null
+  }
+ ]
+}

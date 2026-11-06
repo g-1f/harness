@@ -1,0 +1,27 @@
+{
+ "workflow": "noise",
+ "cond": {
+  "id": "tree",
+  "delivery": "tree",
+  "broadcast": "lifecycle+cp",
+  "data": "publish",
+  "wake": "code"
+ },
+ "seed": 101,
+ "model": "claude-sonnet-5-5",
+ "status": "answered",
+ "wall": 45.92,
+ "cost": 0.1932,
+ "usage": {
+  "input": 68,
+  "output": 6459,
+  "cacheRead": 109649,
+  "cacheWrite": 29389
+ },
+ "nodes": 12,
+ "lines": 24,
+ "cells": 22,
+ "worldCalls": 20,
+ "reads": 13,
+ "answer": "**2027 outlook for VLTX's five largest holdings**\n\nI didn't check the holdings list myself. I used the five names I was given. Each outlook rests on one or two short notes, and none gives a base-year figure, so I can't give absolute numbers except where noted.\n\n1. **Voltaris Grid (VLTG):** Revenue guidance of C$4.2B was reaffirmed. Backlog of C$5.1B is about 1.2x that figure, which supports the guidance. Operating margin should stay near 11%, flat on 2026. There is no 2026 revenue base, so I can't give a growth rate.\n2. **Tarnwell Electric (TRNW):** Revenue should rise 6%, driven by price increases. Operating margin should widen to 14% from 12%. Both gains depend on the price increases holding. There is nothing on volumes or input costs.\n3. **Braxen Cable (BRXC):** Revenue should rise about 2%, with flat volumes and copper costs passed through in prices. Copper costs are up 18%, and earnings are expected to be flat. That implies margins slip slightly. This margin conclusion is my inference from the two notes, not a stated figure. The revenue child node read only the search snippet of its note, not the full document.\n4. **Ostrand Meters (OSTM):** Revenue should be higher. A smart-meter contract with Norvane Utilities adds about 20% to 2027 revenue. Margins dip one point while the Norvane rollout ramps. The notes give no revenue base or margin level, and don't say whether the contract is the only growth driver.\n5. **Kelby Switchgear (KLBS):** Revenue should fall about 5% because of share loss to Tarnwell in medium-voltage switchgear. Operating margin should hold at about 8%, kept there by restructuring. There is no 2026 margin, so I'm treating 8% as roughly flat. That depends on the restructuring offsetting the lost volume. Each figure comes from a single source.\n\n**Overall:** Pricing is the main driver in the outlooks for Tarnwell and Braxen. Tarnwell is the strongest on both revenue and margin, and its gains come at Kelby's expense. Kelby is the weakest, and Braxen and Ostrand face slight margin pressure.\n\nDetail is in n2.r1, n3.r1, n4.r1, n5.r1 and n6.r1."
+}

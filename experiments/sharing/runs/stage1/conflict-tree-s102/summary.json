@@ -1,0 +1,27 @@
+{
+ "workflow": "conflict",
+ "cond": {
+  "id": "tree",
+  "delivery": "tree",
+  "broadcast": "lifecycle+cp",
+  "data": "publish",
+  "wake": "code"
+ },
+ "seed": 102,
+ "model": "claude-sonnet-5-5",
+ "status": "answered",
+ "wall": 61.11,
+ "cost": 0.0657,
+ "usage": {
+  "input": 18,
+  "output": 3464,
+  "cacheRead": 31533,
+  "cacheWrite": 6970
+ },
+ "nodes": 3,
+ "lines": 6,
+ "cells": 6,
+ "worldCalls": 10,
+ "reads": 4,
+ "answer": "**Verdict: Voltaris will probably miss C$4.2B, though the evidence conflicts and my confidence is low to moderate.** My central estimate is about C$3.7–3.9B. I put the chance of reaching C$4.2B at roughly 25–30%.\n\nThe two lines of evidence disagree:\n\n- **Company disclosures (n2):** These point to C$4.1–4.2B.\n  - Backlog is C$5.1B, which management says covers the guidance.\n  - H1 2026 orders rose 11%.\n  - Cancellations are below 1%.\n  - The Q2 revenue dip to C$890M follows a nine-week fire at the Halbrook plant. It restarted in August, and management expects to recover the lost shipments by mid-2027.\n- **Industry data (n3):** These point to about C$3.5B, in a range of C$3.3–3.8B.\n  - Industry transformer shipments fell 4% in Q2 2026, the first decline in three years.\n  - Voltaris shipments fell 9%.\n  - Its share of Caldrian transformer shipments dropped from 31% to 27%.\n\n**Why I lean toward the miss:**\n- Revenue over the last four quarters is only about C$3.74B. Reaching C$4.2B needs about 12% growth.\n- The backlog-covers-guidance claim comes from management and has not been checked independently.\n- The share loss and the Q2 shipment fall suggest a competitive problem, not only the fire.\n- Backlog is not the same as revenue. Plant capacity and the rate of conversion limit how much of it becomes 2027 revenue.\n\n**Where the evidence is weak:**\n- The industry estimate rests on two quarters of data plus one share figure.\n- The share figure covers only the Caldrian market, and I don't know how much of Voltaris's revenue comes from there.\n- The disclosure-based estimate used only two documents and one revenue series, and it assumes revenue of about C$1.0B a quarter in H2 2026. That assumption is not a disclosure.\n- Neither child checked Q3 2026 results, which may already be out. Those are the most useful next check.\n- Pricing data and the non-transformer revenue share would also help.\n\nDetails are in n2.r1 and n3.r1."
+}

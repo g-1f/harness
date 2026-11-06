@@ -1,0 +1,27 @@
+{
+ "workflow": "cross",
+ "cond": {
+  "id": "index",
+  "delivery": "index",
+  "broadcast": "lifecycle+cp",
+  "data": "publish",
+  "wake": "code"
+ },
+ "seed": 103,
+ "model": "claude-sonnet-5-5",
+ "status": "answered",
+ "wall": 53.7,
+ "cost": 0.1329,
+ "usage": {
+  "input": 36,
+  "output": 5316,
+  "cacheRead": 66712,
+  "cacheWrite": 18249
+ },
+ "nodes": 6,
+ "lines": 12,
+ "cells": 12,
+ "worldCalls": 22,
+ "reads": 7,
+ "answer": "**Recommendation: don't add this month. Hold your current position and revisit once Pellham's financing is resolved.**\n\n- **Demand looks strong on paper (n2).**\n  - Pellham Power plans 2027 capex up 18%, and Norvane Utilities plans up 12%.\n  - Data-centre grid connection requests should grow 9% in 2027. That is slower than 2026 but still rising.\n- **Financing undercuts the biggest plan (n3).**\n  - Debt is open but costlier. Utility bond spreads widened 30bp in Q3 to 165bp, and Norvane priced a C$1.1B bond comfortably.\n  - Equity is weak. Pellham withdrew a C$2.4B equity offering, and two other utility share offerings were cut back.\n  - Pellham is now cutting 2027 transformer orders by about 40% and deferring two substation programmes.\n- **Customer concentration is the key risk.**\n  - Utilities make up 62% of VLTX orders. Pellham is 35% of those and Norvane 21%, so roughly 35% of total orders depend on those two plans.\n  - Pellham is the largest single buyer in Caldria, and it is the one pulling back. The 18% capex headline is therefore not reliable for VLTX.\n- **The options give no price edge (n4).** Implied volatility is 27% against a 2-year median of 26%, and skew is flat. LEAPS are fairly priced, not cheap, so nothing offsets the fundamental risk.\n\n**Gaps in the evidence:**\n- I found no actual option prices, strikes or expiries.\n- I found no realized-volatility comparison.\n- I found no order backlog data. The evidence on financing is thin: one bond deal, one withdrawn equity deal and one quarter of spread data.\n- The roughly 38% of orders outside utilities isn't broken down.\n\n**What would change this:**\n- Pellham restores its orders or completes its financing.\n- Implied volatility drops below its median.\n- Backlog data confirms demand.\n\nIf you want to add anyway, size it small. Norvane and data-centre demand are real, but the Pellham cut falls on the largest single customer."
+}

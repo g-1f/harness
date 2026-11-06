@@ -1,0 +1,27 @@
+{
+ "workflow": "conflict",
+ "cond": {
+  "id": "scoped",
+  "delivery": "scoped",
+  "broadcast": "lifecycle+cp",
+  "data": "publish",
+  "wake": "code"
+ },
+ "seed": 101,
+ "model": "claude-sonnet-5-5",
+ "status": "answered",
+ "wall": 43.29,
+ "cost": 0.0739,
+ "usage": {
+  "input": 20,
+  "output": 3404,
+  "cacheRead": 34367,
+  "cacheWrite": 9087
+ },
+ "nodes": 3,
+ "lines": 6,
+ "cells": 7,
+ "worldCalls": 11,
+ "reads": 2,
+ "answer": "**Probably not. My estimate is about C$3.8–4.0B, a miss of roughly 5–10%. A hit on C$4.2B is possible but less likely than not.**\n\nThe two lines of evidence disagree, and I think the one based on revenue run-rate and industry data deserves more weight than management's guidance.\n\n**The case for meeting guidance (company disclosures, n2.r1):**\n- Backlog is C$5.1B, about 1.2× guidance. Cancellations are below 1%, and H1 2026 orders rose 11%.\n- Q2 2026 revenue dipped to C$890M because the Halbrook plant was offline for nine weeks after a fire. It restarted in August, and management expects to recover the lost shipments by mid-2027.\n- n2's own central estimate is C$4.0–4.2B.\n\n**The case for missing (industry data, n3.r1):**\n- Industry transformer shipments fell 4% in Q2 2026. Voltaris's shipments fell 9%, and its market share dropped from 31% to 27%.\n- The last four quarters of revenue sum to about C$3.7B. Reaching C$4.2B needs roughly 10% or more growth over the recent run-rate, about C$1.05B a quarter.\n- n3 extrapolates about C$3.5B (range C$3.2–3.7B). That is a rough estimate, and it is too bearish in one respect. It treats the Q2 dip as a trend, but the fire explains most of that dip.\n\n**Where the two conflict:**\n- The 11% order growth is hard to square with falling shipments and falling market share. Possibly orders are strong in utilities and data centres while Voltaris loses share elsewhere. The share data also looks internally inconsistent: a 31% to 27% share drop with a 4% industry decline implies about −16% Voltaris shipments, not the reported −9%.\n- A backlog is not revenue. The Halbrook catch-up competes for capacity with new orders in H1 2027, so some backlog may slip past 2027.\n- Neither node found anything on capacity expansion, pricing or the timing of backlog conversion.\n\n**What I'd watch:** Q3 and Q4 2026 revenue. If quarterly revenue is not heading above about C$1.0B by early 2027, the guidance is unlikely to be met."
+}

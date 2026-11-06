@@ -1,0 +1,160 @@
+{"t":0,"ev":"run","workflow":"noise","cond":{"id":"tree","delivery":"tree","broadcast":"lifecycle+cp","data":"publish","wake":"code"},"seed":102,"model":"claude-sonnet-5-5"}
+{"t":0,"ev":"line","i":0,"text":"the run opened n1 · Give a short 2027 outlook for each of VLTX's five largest holdings.","kind":"open","subj":"n1","by":null}
+{"t":0,"ev":"node","id":"n1","request":{"task":"Give a short 2027 outlook for each of VLTX's five largest holdings."},"opener":null}
+{"t":0,"ev":"line","i":1,"text":"n1 opened n2 · What is the 2027 outlook for Voltaris Grid (VLTG), for revenue and for margins?","kind":"open","subj":"n2","by":"n1"}
+{"t":0,"ev":"node","id":"n2","request":{"task":"What is the 2027 outlook for Voltaris Grid (VLTG), for revenue and for margins?"},"opener":"n1"}
+{"t":0,"ev":"line","i":2,"text":"n1 opened n3 · What is the 2027 outlook for Tarnwell Electric (TRNW), for revenue and for marg…","kind":"open","subj":"n3","by":"n1"}
+{"t":0,"ev":"node","id":"n3","request":{"task":"What is the 2027 outlook for Tarnwell Electric (TRNW), for revenue and for margins?"},"opener":"n1"}
+{"t":0,"ev":"line","i":3,"text":"n1 opened n4 · What is the 2027 outlook for Braxen Cable (BRXC), for revenue and for margins?","kind":"open","subj":"n4","by":"n1"}
+{"t":0,"ev":"node","id":"n4","request":{"task":"What is the 2027 outlook for Braxen Cable (BRXC), for revenue and for margins?"},"opener":"n1"}
+{"t":0,"ev":"line","i":4,"text":"n1 opened n5 · What is the 2027 outlook for Ostrand Meters (OSTM), for revenue and for margins?","kind":"open","subj":"n5","by":"n1"}
+{"t":0,"ev":"node","id":"n5","request":{"task":"What is the 2027 outlook for Ostrand Meters (OSTM), for revenue and for margins?"},"opener":"n1"}
+{"t":0,"ev":"line","i":5,"text":"n1 opened n6 · What is the 2027 outlook for Kelby Switchgear (KLBS), for revenue and for margi…","kind":"open","subj":"n6","by":"n1"}
+{"t":0,"ev":"node","id":"n6","request":{"task":"What is the 2027 outlook for Kelby Switchgear (KLBS), for revenue and for margins?"},"opener":"n1"}
+{"t":0,"ev":"spawn","id":"n1","mode":"fresh"}
+{"t":0.01,"ev":"spawn","id":"n2","mode":"fresh"}
+{"t":0.01,"ev":"spawn","id":"n3","mode":"fresh"}
+{"t":0.03,"ev":"spawn","id":"n4","mode":"fresh"}
+{"t":0.04,"ev":"spawn","id":"n5","mode":"fresh"}
+{"t":0.04,"ev":"spawn","id":"n6","mode":"fresh"}
+{"t":5.47,"ev":"op","node":"n1","op":"next","args":{}}
+{"t":6.03,"ev":"op","node":"n5","op":"world","args":{"fn":"search","args":["Ostrand Meters OSTM 2027 outlook revenue margin"]}}
+{"t":6.58,"ev":"op","node":"n4","op":"openNode","args":{"request":{"task":"What is the 2027 revenue outlook for Braxen Cable (BRXC)?"}}}
+{"t":6.58,"ev":"line","i":6,"text":"n4 opened n7 · What is the 2027 revenue outlook for Braxen Cable (BRXC)?","kind":"open","subj":"n7","by":"n4"}
+{"t":6.58,"ev":"node","id":"n7","request":{"task":"What is the 2027 revenue outlook for Braxen Cable (BRXC)?"},"opener":"n4"}
+{"t":6.58,"ev":"spawn","id":"n7","mode":"fresh"}
+{"t":6.58,"ev":"op","node":"n4","op":"openNode","args":{"request":{"task":"What is the 2027 margin outlook for Braxen Cable (BRXC)?"}}}
+{"t":6.58,"ev":"line","i":7,"text":"n4 opened n8 · What is the 2027 margin outlook for Braxen Cable (BRXC)?","kind":"open","subj":"n8","by":"n4"}
+{"t":6.58,"ev":"node","id":"n8","request":{"task":"What is the 2027 margin outlook for Braxen Cable (BRXC)?"},"opener":"n4"}
+{"t":6.6,"ev":"spawn","id":"n8","mode":"fresh"}
+{"t":6.6,"ev":"op","node":"n4","op":"await","args":{"node":"n8","after":0}}
+{"t":6.6,"ev":"op","node":"n4","op":"await","args":{"node":"n7","after":0}}
+{"t":6.82,"ev":"op","node":"n3","op":"openNode","args":{"request":{"task":"What is the 2027 revenue outlook for Tarnwell Electric (TRNW)?"}}}
+{"t":6.82,"ev":"line","i":8,"text":"n3 opened n9 · What is the 2027 revenue outlook for Tarnwell Electric (TRNW)?","kind":"open","subj":"n9","by":"n3"}
+{"t":6.82,"ev":"node","id":"n9","request":{"task":"What is the 2027 revenue outlook for Tarnwell Electric (TRNW)?"},"opener":"n3"}
+{"t":6.83,"ev":"spawn","id":"n9","mode":"fresh"}
+{"t":6.83,"ev":"op","node":"n3","op":"openNode","args":{"request":{"task":"What is the 2027 margin outlook for Tarnwell Electric (TRNW)?"}}}
+{"t":6.83,"ev":"line","i":9,"text":"n3 opened n10 · What is the 2027 margin outlook for Tarnwell Electric (TRNW)?","kind":"open","subj":"n10","by":"n3"}
+{"t":6.83,"ev":"node","id":"n10","request":{"task":"What is the 2027 margin outlook for Tarnwell Electric (TRNW)?"},"opener":"n3"}
+{"t":6.84,"ev":"spawn","id":"n10","mode":"fresh"}
+{"t":6.84,"ev":"op","node":"n3","op":"await","args":{"node":"n9","after":0}}
+{"t":6.84,"ev":"op","node":"n3","op":"await","args":{"node":"n10","after":0}}
+{"t":6.97,"ev":"op","node":"n2","op":"openNode","args":{"request":{"task":"What is the 2027 revenue outlook for Voltaris Grid (VLTG)?"}}}
+{"t":6.97,"ev":"line","i":10,"text":"n2 opened n11 · What is the 2027 revenue outlook for Voltaris Grid (VLTG)?","kind":"open","subj":"n11","by":"n2"}
+{"t":6.97,"ev":"node","id":"n11","request":{"task":"What is the 2027 revenue outlook for Voltaris Grid (VLTG)?"},"opener":"n2"}
+{"t":6.98,"ev":"spawn","id":"n11","mode":"fresh"}
+{"t":6.98,"ev":"op","node":"n2","op":"openNode","args":{"request":{"task":"What is the 2027 margin outlook for Voltaris Grid (VLTG)?"}}}
+{"t":6.98,"ev":"line","i":11,"text":"n2 opened n12 · What is the 2027 margin outlook for Voltaris Grid (VLTG)?","kind":"open","subj":"n12","by":"n2"}
+{"t":6.98,"ev":"node","id":"n12","request":{"task":"What is the 2027 margin outlook for Voltaris Grid (VLTG)?"},"opener":"n2"}
+{"t":7,"ev":"spawn","id":"n12","mode":"fresh"}
+{"t":7.01,"ev":"op","node":"n2","op":"await","args":{"node":"n11","after":0}}
+{"t":7.01,"ev":"op","node":"n2","op":"await","args":{"node":"n12","after":0}}
+{"t":7.42,"ev":"op","node":"n5","op":"pending","args":{}}
+{"t":7.43,"ev":"op","node":"n5","op":"cell","args":{"chars":87}}
+{"t":7.93,"ev":"op","node":"n6","op":"openNode","args":{"request":{"task":"What is the 2027 revenue outlook for Kelby Switchgear (KLBS)? Give numbers and sources."}}}
+{"t":7.93,"ev":"line","i":12,"text":"n6 opened n13 · What is the 2027 revenue outlook for Kelby Switchgear (KLBS)? Give numbers and…","kind":"open","subj":"n13","by":"n6"}
+{"t":7.93,"ev":"node","id":"n13","request":{"task":"What is the 2027 revenue outlook for Kelby Switchgear (KLBS)? Give numbers and sources."},"opener":"n6"}
+{"t":7.95,"ev":"spawn","id":"n13","mode":"fresh"}
+{"t":7.95,"ev":"op","node":"n6","op":"openNode","args":{"request":{"task":"What is the 2027 margin outlook (gross/operating/EBITDA) for Kelby Switchgear (KLBS)? Give numbers and sources."}}}
+{"t":7.95,"ev":"line","i":13,"text":"n6 opened n14 · What is the 2027 margin outlook (gross/operating/EBITDA) for Kelby Switchgear (…","kind":"open","subj":"n14","by":"n6"}
+{"t":7.95,"ev":"node","id":"n14","request":{"task":"What is the 2027 margin outlook (gross/operating/EBITDA) for Kelby Switchgear (KLBS)? Give numbers and sources."},"opener":"n6"}
+{"t":7.97,"ev":"spawn","id":"n14","mode":"fresh"}
+{"t":7.97,"ev":"op","node":"n6","op":"await","args":{"node":"n13","after":0}}
+{"t":7.99,"ev":"op","node":"n6","op":"await","args":{"node":"n14","after":0}}
+{"t":9.18,"ev":"op","node":"n5","op":"world","args":{"fn":"doc","args":["ostm-revenue"]}}
+{"t":10.62,"ev":"op","node":"n5","op":"world","args":{"fn":"doc","args":["ostm-margins"]}}
+{"t":11.77,"ev":"op","node":"n8","op":"world","args":{"fn":"search","args":["Braxen Cable BRXC 2027 margin outlook"]}}
+{"t":11.99,"ev":"op","node":"n5","op":"pending","args":{}}
+{"t":11.99,"ev":"op","node":"n5","op":"cell","args":{"chars":72}}
+{"t":12.34,"ev":"op","node":"n7","op":"world","args":{"fn":"search","args":["Braxen Cable BRXC 2027 revenue"]}}
+{"t":12.98,"ev":"op","node":"n9","op":"world","args":{"fn":"search","args":["Tarnwell Electric TRNW 2027 revenue"]}}
+{"t":13.35,"ev":"op","node":"n11","op":"world","args":{"fn":"search","args":["Voltaris Grid VLTG revenue 2027"]}}
+{"t":13.44,"ev":"op","node":"n10","op":"world","args":{"fn":"search","args":["Tarnwell Electric TRNW 2027 margin outlook"]}}
+{"t":13.91,"ev":"op","node":"n13","op":"world","args":{"fn":"search","args":["Kelby Switchgear KLBS revenue 2027"]}}
+{"t":14.01,"ev":"op","node":"n12","op":"world","args":{"fn":"search","args":["Voltaris Grid VLTG 2027 margin outlook"]}}
+{"t":15.26,"ev":"op","node":"n9","op":"pending","args":{}}
+{"t":15.27,"ev":"op","node":"n9","op":"cell","args":{"chars":112}}
+{"t":15.52,"ev":"op","node":"n11","op":"pending","args":{}}
+{"t":15.52,"ev":"op","node":"n11","op":"cell","args":{"chars":100}}
+{"t":16.69,"ev":"op","node":"n7","op":"pending","args":{}}
+{"t":16.69,"ev":"op","node":"n7","op":"cell","args":{"chars":89}}
+{"t":16.86,"ev":"op","node":"n8","op":"pending","args":{}}
+{"t":16.87,"ev":"op","node":"n8","op":"cell","args":{"chars":106}}
+{"t":17.16,"ev":"op","node":"n11","op":"world","args":{"fn":"doc","args":["vltg-revenue"]}}
+{"t":17.52,"ev":"op","node":"n13","op":"pending","args":{}}
+{"t":17.52,"ev":"op","node":"n13","op":"cell","args":{"chars":103}}
+{"t":17.7,"ev":"op","node":"n12","op":"pending","args":{}}
+{"t":17.7,"ev":"op","node":"n12","op":"cell","args":{"chars":107}}
+{"t":18.09,"ev":"line","i":14,"text":"n5.r1 · **Ostrand Meters (OSTM) 2027 outlook**","kind":"result","subj":"n5","ref":"n5.r1"}
+{"t":18.1,"ev":"op","node":"n1","op":"pending","args":{}}
+{"t":18.1,"ev":"op","node":"n1","op":"cell","args":{"chars":82}}
+{"t":18.25,"ev":"op","node":"n10","op":"pending","args":{}}
+{"t":18.25,"ev":"op","node":"n10","op":"cell","args":{"chars":111}}
+{"t":18.48,"ev":"op","node":"n8","op":"world","args":{"fn":"doc","args":["brxc-margins"]}}
+{"t":19.32,"ev":"op","node":"n13","op":"world","args":{"fn":"doc","args":["klbs-revenue"]}}
+{"t":19.72,"ev":"op","node":"n12","op":"world","args":{"fn":"doc","args":["vltg-margins"]}}
+{"t":19.9,"ev":"op","node":"n10","op":"world","args":{"fn":"doc","args":["trnw-margins"]}}
+{"t":20.21,"ev":"op","node":"n1","op":"next","args":{}}
+{"t":20.23,"ev":"line","i":15,"text":"n9.r1 · Tarnwell Electric (TRNW) is expected to grow revenue about 6% in 2027, driven by price in…","kind":"result","subj":"n9","ref":"n9.r1"}
+{"t":20.29,"ev":"op","node":"n8","op":"pending","args":{}}
+{"t":20.29,"ev":"op","node":"n8","op":"cell","args":{"chars":54}}
+{"t":20.34,"ev":"line","i":16,"text":"n7.r1 · Braxen Cable (BRXC) is expected to grow revenue about 2% in 2027. Volumes are flat, so th…","kind":"result","subj":"n7","ref":"n7.r1"}
+{"t":21.17,"ev":"op","node":"n14","op":"world","args":{"fn":"search","args":["Kelby Switchgear KLBS 2027 margin outlook gross operating EBITDA"]}}
+{"t":21.8,"ev":"op","node":"n13","op":"pending","args":{}}
+{"t":21.8,"ev":"op","node":"n13","op":"cell","args":{"chars":54}}
+{"t":22.57,"ev":"op","node":"n11","op":"pending","args":{}}
+{"t":22.57,"ev":"op","node":"n11","op":"cell","args":{"chars":54}}
+{"t":23.36,"ev":"line","i":17,"text":"n8.r1 · Braxen Cable's 2027 margins look under pressure. Earnings are expected to be flat.","kind":"result","subj":"n8","ref":"n8.r1"}
+{"t":23.36,"ev":"op","node":"n4","op":"pending","args":{}}
+{"t":23.36,"ev":"op","node":"n4","op":"cell","args":{"chars":357}}
+{"t":24.19,"ev":"op","node":"n12","op":"pending","args":{}}
+{"t":24.19,"ev":"op","node":"n12","op":"cell","args":{"chars":45}}
+{"t":24.79,"ev":"op","node":"n4","op":"read","args":{"ref":"n7.r1","offset":0,"limit":8000}}
+{"t":24.79,"ev":"op","node":"n4","op":"read","args":{"ref":"n8.r1","offset":0,"limit":8000}}
+{"t":24.8,"ev":"op","node":"n4","op":"pending","args":{}}
+{"t":24.8,"ev":"op","node":"n4","op":"cell","args":{"chars":48}}
+{"t":24.84,"ev":"op","node":"n10","op":"pending","args":{}}
+{"t":24.84,"ev":"op","node":"n10","op":"cell","args":{"chars":45}}
+{"t":25.24,"ev":"line","i":18,"text":"n13.r1 · Kelby Switchgear (KLBS) 2027 revenue is expected to fall about 5%. The only source I foun…","kind":"result","subj":"n13","ref":"n13.r1"}
+{"t":25.74,"ev":"op","node":"n14","op":"pending","args":{}}
+{"t":25.74,"ev":"op","node":"n14","op":"cell","args":{"chars":141}}
+{"t":26.3,"ev":"line","i":19,"text":"n11.r1 · Voltaris Grid (VLTG) 2027 revenue outlook: management has reaffirmed guidance of C$4.2B.…","kind":"result","subj":"n11","ref":"n11.r1"}
+{"t":27.35,"ev":"line","i":20,"text":"n10.r1 · Tarnwell Electric (TRNW) is expected to improve its operating margin in 2027. The margin…","kind":"result","subj":"n10","ref":"n10.r1"}
+{"t":27.35,"ev":"op","node":"n3","op":"read","args":{"ref":"n9.r1","offset":0,"limit":8000}}
+{"t":27.36,"ev":"op","node":"n3","op":"read","args":{"ref":"n10.r1","offset":0,"limit":8000}}
+{"t":27.36,"ev":"op","node":"n3","op":"pending","args":{}}
+{"t":27.36,"ev":"op","node":"n3","op":"cell","args":{"chars":458}}
+{"t":27.97,"ev":"line","i":21,"text":"n12.r1 · Voltaris Grid (VLTG) is expected to have an operating margin of about 11% in 2027, flat o…","kind":"result","subj":"n12","ref":"n12.r1"}
+{"t":27.97,"ev":"op","node":"n2","op":"read","args":{"ref":"n11.r1","offset":0,"limit":8000}}
+{"t":27.97,"ev":"op","node":"n2","op":"read","args":{"ref":"n12.r1","offset":0,"limit":8000}}
+{"t":27.97,"ev":"op","node":"n2","op":"pending","args":{}}
+{"t":27.98,"ev":"op","node":"n2","op":"cell","args":{"chars":446}}
+{"t":28.71,"ev":"op","node":"n14","op":"world","args":{"fn":"doc","args":["klbs-margins"]}}
+{"t":29.69,"ev":"line","i":22,"text":"n4.r1 · **Braxen Cable (BRXC) 2027 outlook: revenue up about 2%, margins under pressure.** This r… · cites n7.r1, n8.r1","kind":"result","subj":"n4","ref":"n4.r1"}
+{"t":29.69,"ev":"op","node":"n1","op":"next","args":{}}
+{"t":29.85,"ev":"op","node":"n14","op":"world","args":{"fn":"doc","args":["klbs-revenue"]}}
+{"t":30.39,"ev":"line","i":23,"text":"n3.r1 · For 2027, Tarnwell Electric (TRNW) is expected to grow revenue about 6% and lift its oper…","kind":"result","subj":"n3","ref":"n3.r1"}
+{"t":30.4,"ev":"op","node":"n1","op":"next","args":{}}
+{"t":31.95,"ev":"line","i":24,"text":"n2.r1 · **Voltaris Grid (VLTG) 2027 outlook**","kind":"result","subj":"n2","ref":"n2.r1"}
+{"t":31.95,"ev":"op","node":"n1","op":"next","args":{}}
+{"t":33.83,"ev":"op","node":"n14","op":"pending","args":{}}
+{"t":33.83,"ev":"op","node":"n14","op":"cell","args":{"chars":73}}
+{"t":42.14,"ev":"line","i":25,"text":"n14.r1 · KLBS's 2027 operating margin outlook is about 8%. I found no figures for gross margin or…","kind":"result","subj":"n14","ref":"n14.r1"}
+{"t":42.14,"ev":"op","node":"n6","op":"read","args":{"ref":"n13.r1","offset":0,"limit":8000}}
+{"t":42.15,"ev":"op","node":"n6","op":"read","args":{"ref":"n14.r1","offset":0,"limit":8000}}
+{"t":42.15,"ev":"op","node":"n6","op":"pending","args":{}}
+{"t":42.15,"ev":"op","node":"n6","op":"cell","args":{"chars":536}}
+{"t":47.14,"ev":"line","i":26,"text":"n6.r1 · **Kelby Switchgear (KLBS) 2027 outlook: revenue down about 5%, operating margin about 8%.… · cites n13.r1, n14.r1","kind":"result","subj":"n6","ref":"n6.r1"}
+{"t":47.14,"ev":"op","node":"n1","op":"next","args":{}}
+{"t":557.16,"ev":"op","node":"n1","op":"next","args":{}}
+{"t":560.21,"ev":"op","node":"n1","op":"pending","args":{}}
+{"t":560.21,"ev":"op","node":"n1","op":"cell","args":{"chars":141}}
+{"t":562.26,"ev":"op","node":"n1","op":"read","args":{"ref":"n2.r1"}}
+{"t":562.26,"ev":"op","node":"n1","op":"read","args":{"ref":"n3.r1"}}
+{"t":562.26,"ev":"op","node":"n1","op":"read","args":{"ref":"n4.r1"}}
+{"t":562.27,"ev":"op","node":"n1","op":"read","args":{"ref":"n5.r1"}}
+{"t":562.27,"ev":"op","node":"n1","op":"read","args":{"ref":"n6.r1"}}
+{"t":562.27,"ev":"op","node":"n1","op":"pending","args":{}}
+{"t":562.27,"ev":"op","node":"n1","op":"cell","args":{"chars":147}}
+{"t":568.95,"ev":"line","i":27,"text":"n1.r1 · **2027 outlook for VLTX's five largest holdings**","kind":"result","subj":"n1","ref":"n1.r1"}
+{"t":568.95,"ev":"end","status":"answered","cost":0.2072259}
