@@ -78,6 +78,73 @@ From Stage 2 on, each workflow's final-call item counts as a judgment item and i
 | Seeds | 5 seeds |
 | Stage 4 | Dropped |
 
+## Stage 2: data reuse
+
+Stage 2 held delivery at `broadcast` and compared three conditions, 30 runs each:
+- `base`: Stage 1's broadcast
+- `identity`: identical world calls join or reuse
+- `guided`: `identity` plus the sharing paragraph
+
+The runs covered six workflows (the four short ones and two long variants) at 5 seeds. `base`'s 12 short-workflow runs for seeds 101–103 are Stage 1's broadcast runs, imported rather than rerun.
+
+The numbers are in [runs/stage2/report.md](runs/stage2/report.md) and [runs/stage2/timing.md](runs/stage2/timing.md).
+
+### Result
+
+**Call identity removes duplicate work at no cost to answers.**
+
+| Measure | `base` | `identity` | `guided` |
+|---|---|---|---|
+| Duplicate fetches per run | 3.4 | 0 | 0 |
+| Nodes fetching the slow series | 2.2 | 1.0 | 1.0 |
+| World calls per run | 22.8 | 18.2 | 19.7 |
+| Median cost per run | $0.101 | $0.084 | $0.085 |
+| Calls shared across branches per run | 0 | 1.8 | 1.9 |
+
+- Shared calls never needed a model decision: they happen inside the call.
+- The evidence grade is lower for `identity`: 0.63, against 0.76 for `base`. Paired by workflow and seed, the difference is −0.13, with a 95% CI of −0.27 to 0.00.
+- That gap does not track sharing. The 5 `identity` runs with no shared call at all fell further (−0.20) than the 25 runs with shared calls (−0.12).
+- The misses are in how the root wrote its answer, for example:
+  - stating orders and shipments separately without contrasting them
+  - compressing the children's outlooks, in a noise run with no shared calls
+
+**The sharing paragraph changes how results cite each other, not what gets published.**
+- Across 30 `guided` runs there were no checkpoints, no addressed checkpoints and no reopens. No guided cell even mentions publishing.
+- Cross-branch cites in results rose to 0.60 per run, from 0.40 under `identity` and 0.27 under `base`.
+- So the contradiction's branches cited each other more often:
+
+  | Workflow | `base` | `identity` | `guided` |
+  |---|---|---|---|
+  | Short contradiction | 1/5 | 2/5 | 3/5 |
+  | Long contradiction | 0/5 | 1/5 | 4/5 |
+
+- These cites are what put `guided` first by the stage rule: 25 of 55 checks, against 19 for `identity` and 8 for `base`.
+
+**No condition got a finding to the node whose question it answers.**
+- The shipments branch never explained the drop by the fire, in any contradiction run: 10 per condition, short and long.
+- The demand branch never stated the Pellham cut, in any cross-branch run: again 10 per condition.
+
+**In the long variants, the window is open, delivery happens, and nothing follows.**
+- **Long cross-branch.**
+  - The demand branch was still running when the financing branch read the Pellham release in 15 of 15 runs, with a median of 28 s left.
+  - A line naming Pellham reached a running demand node in 13 of 15 runs. It was either a financing result or a call-identity line such as `n6 joined n5.d5 · doc pellham-offering`.
+  - The demand nodes had cells left after those lines arrived, yet no demand node read the ref (cross-branch reads: 1 in 90 runs).
+  - Their results mention Pellham's plans, never its cut.
+- **Long contradiction.**
+  - The shipments branch was still running in 11 of 15 runs, with a median window of 8 s.
+  - No line naming the fire went out before it finished, because the disclosures branch published nothing until its result.
+- **What this means.** Once the windows open, delivery is not the bottleneck. Lines arrive, but a line that only points at a ref is not followed. Evidence crosses only when the line itself states the fact.
+
+### Decisions for Stage 3
+
+| Decision | Detail |
+|---|---|
+| Stage 2 winner | `guided` wins by the rule |
+| What Stage 3 varies | Data lines: whether each fetched document or series becomes a line whose text carries its content |
+| Design | A 2×2 of data lines × guidance. The `identity` and `guided` runs are imported from Stage 2, so only the two data-line conditions are new |
+| Budget | About $30.7 of the $60 cap is left |
+
+
 ### Cost
 
 | Item | Cost |

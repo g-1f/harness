@@ -1,0 +1,27 @@
+{
+ "workflow": "conflict-long",
+ "cond": {
+  "id": "base",
+  "delivery": "broadcast",
+  "broadcast": "lifecycle+cp",
+  "data": "publish",
+  "wake": "code"
+ },
+ "seed": 104,
+ "model": "claude-sonnet-5-5",
+ "status": "answered",
+ "wall": 107.44,
+ "cost": 0.1034,
+ "usage": {
+  "input": 38,
+  "output": 5417,
+  "cacheRead": 86796,
+  "cacheWrite": 10112
+ },
+ "nodes": 3,
+ "lines": 6,
+ "cells": 16,
+ "worldCalls": 38,
+ "reads": 2,
+ "answer": "**VLTG probably misses the C$4.2B 2027 guidance. I'd put the chance of meeting it at about 30%. My central estimate is C$3.7–4.0B, and the most likely outcome is a miss of 5–10%.** The two lines of evidence disagree, and the difference is how much weight to give the company's backlog versus industry data.\n\n**Company disclosures (n2).** These support about C$4.0–4.2B, so guidance is achievable but has little margin.\n- **Backlog:** Backlog was C$5.1B at H1 2026, about 1.2× guidance. Orders were up 11% and cancellations were below 1%.\n- **Q2 outage:** The Q2 dip to C$890M came from a nine-week fire at the Halbrook plant. Halbrook builds all of Voltaris's large power transformers. It restarted in August at full capacity.\n- **Recovery shipments:** About C$310M of delayed shipments are to be delivered on top of normal output, using a third shift. The recovery runs from Q4 2026 to Q2 2027. If it is spread evenly, only about C$210M lands in 2027, which gives roughly C$4.1B. That timing split is n2's inference, not a disclosure.\n\n**Industry statistics (n3).** These point to about C$3.4–3.7B, well below guidance.\n- **Industry shipments:** Q2 2026 shipments fell 4% year on year, the first decline in three years. They trail orders by about two quarters, so weakness should continue into early 2027.\n- **Voltaris's position:** Its shipments fell 9% and its share fell from 31% to 27%. All of the share loss was in large power transformers.\n- **Large power transformers:** Voltaris's shipments fell 38%, while Tarnwell rose 4%. Lead times of 70 weeks suggest customers are going elsewhere.\n- **Revenue gap:** The last four quarters sum to about C$3.74B, and guidance needs about 12.5% growth on that. n3 did not look at backlog, and its C$ range comes from scaling recent revenue rather than a model.\n\n**Reconciling them.**\n- **Why the two conflict:** The outage explains part of the Q2 shipment drop, which weakens n3's trend reading. The backlog may also include orders that are slow to ship, or customers may defect while lead times are long. That is why I don't treat the backlog as certain revenue.\n- **What the base case needs:** Even n2's own base case needs a C$3.9B base plus nearly all of the recovery shipments. That base is above the last four quarters' C$3.74B. It also assumes flat pricing, a third shift that has not yet been proven, and no further share loss in a shrinking market.\n- **Why I land below n2:** Each of those assumptions has more downside than upside.\n\n**What would change this.** Large-power-transformer shipments recovering in Q4 2026 and Q1 2027 would move me toward meeting guidance. So would evidence that the full C$310M falls in 2027. Further share loss, or slippage of the recovery shipments, would make a larger miss likely.\n\nFull detail is in n2.r1 and n3.r1."
+}

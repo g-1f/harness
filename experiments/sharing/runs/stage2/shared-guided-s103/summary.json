@@ -1,0 +1,28 @@
+{
+ "workflow": "shared",
+ "cond": {
+  "id": "guided",
+  "delivery": "broadcast",
+  "broadcast": "lifecycle+cp",
+  "data": "identity",
+  "wake": "code",
+  "guided": true
+ },
+ "seed": 103,
+ "model": "claude-sonnet-5-5",
+ "status": "answered",
+ "wall": 40.94,
+ "cost": 0.0743,
+ "usage": {
+  "input": 18,
+  "output": 3646,
+  "cacheRead": 36613,
+  "cacheWrite": 8527
+ },
+ "nodes": 3,
+ "lines": 10,
+ "cells": 6,
+ "worldCalls": 16,
+ "reads": 4,
+ "answer": "**Verdict: reasonably good, not urgent. Add moderately and favor at-the-money or slightly in-the-money strikes.** I haven't seen actual call premiums, strikes or spot, so this is a relative-value view, not a trade ticket.\n\n**For adding**\n- **Volatility looks cheap.** Jan-2028 implied vol is about 23.5–25.5%, with 24.0% at the money. Realized vol is 29–31% across 3-month, 6-month and 1-year windows. That is a discount of roughly 5–7 vol points. Skew is nearly flat, so upside strikes aren't expensive.\n- **The earnings case holds.** Consensus 2027 EPS growth is 14%, and estimates are up 3% over the past quarter. A 4% multiple de-rating would still leave roughly 9–10% price upside through 2027, if the 14% is delivered.\n\n**Against adding**\n- **Rate path.** Futures price about 50bp of CMA cuts, taking the policy rate from 4.50% to 4.00%. Governor Ashby's base case is one 25bp cut in 2027, and she said markets \"may be getting ahead of themselves.\" The factsheet says 50bp lower rates have lifted the basket P/E by about 1.5 points. So the 25bp gap is worth about 0.75 points, or roughly 4% of the 19x forward P/E. That is a mild drag, not a thesis-breaker.\n- **Concentration.** Voltaris and Tarnwell are 25% of the fund, so the earnings case rests on two names.\n- **Little cushion.** 19x is already a growth multiple. If backlog conversion slips and the CMA stays hawkish, both risks hit together.\n\n**Not checked**\n- Whether the 19x already embeds the market-implied rate path.\n- The 19x against its historical range.\n- The call premium against the roughly 4% policy cushion. Do this before sizing.\n- Realized vol is backward-looking, and implied vol can sit below it for good reasons.\n\nThe detail is in n2.r1 (valuation) and n3.r1 (option pricing)."
+}

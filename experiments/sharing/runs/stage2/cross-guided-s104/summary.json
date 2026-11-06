@@ -1,0 +1,28 @@
+{
+ "workflow": "cross",
+ "cond": {
+  "id": "guided",
+  "delivery": "broadcast",
+  "broadcast": "lifecycle+cp",
+  "data": "identity",
+  "wake": "code",
+  "guided": true
+ },
+ "seed": 104,
+ "model": "claude-sonnet-5-5",
+ "status": "answered",
+ "wall": 47.77,
+ "cost": 0.1114,
+ "usage": {
+  "input": 36,
+  "output": 4790,
+  "cacheRead": 73178,
+  "cacheWrite": 14034
+ },
+ "nodes": 6,
+ "lines": 16,
+ "cells": 12,
+ "worldCalls": 19,
+ "reads": 10,
+ "answer": "**Recommendation: don't add this month. Hold your current LEAPS and wait for a clearer signal.**\n\n- **Price is neutral.** VLTX implied volatility is 27%, against a 2-year median of 26%. Skew is flat. The LEAPS aren't cheap, so price gives no reason to add (n4).\n- **Demand is mixed.** Utility capex plans for 2027 are up (Pellham +18%, Norvane +12%). Data-centre grid connection requests are expected to grow 9% in 2027, slower than in 2026 (n2).\n- **Financing is the main risk, and it's concentrated in Pellham.**\n  - Utilities make up 62% of VLTX orders. Pellham is 35% of that and Norvane is 21%.\n  - Pellham withdrew its C$2.4B share offering. It now says it will cut transformer orders by about 40% and defer two substation programmes \"until financing improves.\"\n  - The 18% capex plan therefore looks unreliable. That plan is what the demand case for VLTX rests on.\n  - Norvane looks fine. It priced a C$1.1B bond comfortably.\n  - Debt is open but costs more, with spreads 30bp wider in Q3. Equity is mostly closed (n3).\n\n**What would change this:**\n- Pellham relaunches its equity raise on better terms, or finances through debt, and restores the deferred orders.\n- Implied volatility falls back below its median.\n\n**Limits of the evidence:**\n- I had no strike-level premiums, liquidity or term-structure data, and no comparison of implied with realized volatility.\n- I had no order backlog or equipment pricing data.\n- I found no bond, leverage or rating data for Pellham, so I can't say whether debt could replace its withdrawn equity raise.\n- Everything rests on a few short documents.\n\nSources: n2.r1, n3.r1, n4.r1."
+}

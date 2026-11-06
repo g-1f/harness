@@ -1,0 +1,27 @@
+{
+ "workflow": "conflict-long",
+ "cond": {
+  "id": "base",
+  "delivery": "broadcast",
+  "broadcast": "lifecycle+cp",
+  "data": "publish",
+  "wake": "code"
+ },
+ "seed": 105,
+ "model": "claude-sonnet-5-5",
+ "status": "answered",
+ "wall": 113.82,
+ "cost": 0.0976,
+ "usage": {
+  "input": 34,
+  "output": 4935,
+  "cacheRead": 76898,
+  "cacheWrite": 10116
+ },
+ "nodes": 3,
+ "lines": 6,
+ "cells": 14,
+ "worldCalls": 37,
+ "reads": 2,
+ "answer": "**Verdict: roughly a coin flip. My central estimate is C$4.0–4.2B, so a small miss is slightly more likely than a clean hit.**\n\nThe two lines of evidence pointed in opposite directions, and I think the company-side view is the better-grounded one.\n\n- **Company disclosures (n2, supportive):**\n  - Backlog is C$5.1B, about 1.2 times guidance, and H1 2026 orders rose 11%. Cancellations are below 1%.\n  - Guidance is about C$3.9B of normal run-rate revenue plus about C$0.3B of delayed shipments recovered after the outage. That matches the roughly C$310M of recovery deliveries scheduled between Q4 2026 and Q2 2027, which customers have accepted.\n  - The pre-outage quarterly revenue of 960–980 (C$M) annualises to about C$3.85–3.9B, in line with that base.\n- **Industry data (n3, bearish):**\n  - Q2 2026 shipments fell 9% against an industry decline of 4%, and Voltaris's share fell from 31% to 27%.\n  - Large power transformers fell 38%, and n3 projects C$3.6–3.9B for 2027.\n- **Why I side with the company-side view:** n3 treated the Q2 drop in large transformers as structural share loss. A fire stopped the Halbrook plant, which builds all of Voltaris's large power transformers, for nine weeks in Q2. It restarted in August at full capacity. The drop in large units and the share loss are therefore mostly a one-off outage, and the delayed deliveries are still in the backlog. n3 itself flagged backlog as the main caveat.\n- **What still limits the estimate:**\n  - Industry shipments are softening, and n3 found no 2027 industry forecast.\n  - The recovery needs a third shift at Halbrook to run well.\n  - Guidance assumes flat pricing, so there is no price cushion.\n  - Not all of the backlog converts to revenue within 2027.\n  - n2 did not check how the industry decline bears on Voltaris, and n3's 2027 figure is its own extrapolation from Q2 2026 data.\n\nFull results are in n2.r1 and n3.r1."
+}

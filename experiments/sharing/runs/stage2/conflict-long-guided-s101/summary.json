@@ -1,0 +1,28 @@
+{
+ "workflow": "conflict-long",
+ "cond": {
+  "id": "guided",
+  "delivery": "broadcast",
+  "broadcast": "lifecycle+cp",
+  "data": "identity",
+  "wake": "code",
+  "guided": true
+ },
+ "seed": 101,
+ "model": "claude-sonnet-5-5",
+ "status": "answered",
+ "wall": 92.71,
+ "cost": 0.08,
+ "usage": {
+  "input": 30,
+  "output": 3889,
+  "cacheRead": 67489,
+  "cacheWrite": 8575
+ },
+ "nodes": 3,
+ "lines": 7,
+ "cells": 12,
+ "worldCalls": 17,
+ "reads": 2,
+ "answer": "**Probably not. I'd put the chance of reaching C$4.2B in 2027 at about 25–30%, and expect revenue of roughly C$3.8–4.1B.**\n\nThe two lines of evidence disagree. Voltaris's own disclosures, covered by n2, make the guide look just achievable. Industry shipment data, covered by n3, point well below it.\n\n**Company disclosures (n2.r1)**\n- **Backlog:** It is C$5.1B against the C$4.2B guide, and cancellations are under 1%.\n- **Outage and recovery:** A fire stopped the Halbrook plant, which builds all of Voltaris's large power transformers, for nine weeks in Q2 2026. About C$310M of delayed shipments is due between Q4 2026 and Q2 2027, supported by a third shift at Halbrook.\n- **What the guide needs:** It is roughly C$3.9B at the normal run rate plus C$0.3B of recovery. That means about C$975M a quarter, the top of the recent range of C$905M to C$980M (excluding the C$890M outage quarter), and the whole recovery landing in 2027.\n- **Risk:** Part of the recovery will land in Q4 2026, outside 2027. n2 estimates that cuts about C$100M, to roughly C$4.1B. Its overall range is C$3.9–4.2B.\n\n**Industry statistics (n3.r1)**\n- **Industry:** Shipments fell 4% year on year in Q2 2026, the first decline in three years. They typically trail orders by about two quarters, so the weakness should carry into early 2027.\n- **Voltaris:** Its shipments fell 9% in Q2, so it is losing share.\n- **Revenue base:** The last four quarters total about C$3.7B. Reaching C$4.2B needs roughly 12% growth on that, or about 18% over the Q2 run rate.\n- **Range:** n3 estimates C$3.4–3.8B. That rests on thin evidence: three quarters of industry data and one quarter of maker-level data. n3 couldn't retrieve the product-class table.\n\n**Reconciling them**\n- n3's estimate does not credit the backlog or the one-off recovery shipments, so I weight it less.\n- n2's backlog coverage is thinner than it looks. Some of the C$5.1B is delayed work rather than new work, and the guide assumes everything goes right.\n- Weak industry volumes and share loss argue against the top of n2's range. A pricing increase could offset that, but I haven't seen evidence of one.\n\n**What to watch:** Q4 2026 and Q1 2027 revenue. If quarterly revenue isn't back near C$1B by then, the guide will probably be missed."
+}

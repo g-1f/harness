@@ -1,0 +1,28 @@
+{
+ "workflow": "cross-long",
+ "cond": {
+  "id": "guided",
+  "delivery": "broadcast",
+  "broadcast": "lifecycle+cp",
+  "data": "identity",
+  "wake": "code",
+  "guided": true
+ },
+ "seed": 103,
+ "model": "claude-sonnet-5-5",
+ "status": "answered",
+ "wall": 68.5,
+ "cost": 0.1815,
+ "usage": {
+  "input": 56,
+  "output": 7446,
+  "cacheRead": 119716,
+  "cacheWrite": 23734
+ },
+ "nodes": 8,
+ "lines": 23,
+ "cells": 20,
+ "worldCalls": 32,
+ "reads": 11,
+ "answer": "**Recommendation: don't add in full this month. If you want more exposure, add a small starter position and size the rest after Pellham's Q1 2027 tender.**\n\n**Pricing is neutral.** VLTX implied volatility is 27%, against a 2-year median of 26%. Skew is flat. The term structure is nearly flat: 26% for Jan-2027, 27% for Jan-2028 and 27.5% for Jan-2029. So pricing gives no reason to add now or to wait. I only had a snapshot of IV, so I didn't check realised volatility, absolute premium or the price of the underlying.\n\n**Demand supports the thesis.**\n- Pellham plans 2027 capex up 18%, with a C$900M transformer tender due to award in Q1 2027.\n- Norvane plans capex up 12%, with a C$450M tender due in Q2 2027.\n- VLTX won 60% of the last tender round.\n- Data-centre grid connection requests are expected to grow 9% in 2027, which is slower than in 2026. The connection queue is backed up, with an average wait of 26 months.\n- The utility evidence covers only two utilities, and it is capital plans and tenders, not awarded orders. Nobody checked actual VLTX orders or lead times.\n\n**Funding is the main risk, and it is concentrated at Pellham.**\n- Utility bond spreads widened from 130bp in Q1 2026 to 165bp in Q3. Debt is still open: Norvane priced a C$1.1B bond comfortably.\n- Equity is largely shut. Pellham pulled its C$2.4B share offering on 14 October.\n- Pellham is cutting 2027 transformer orders by about 40%, resizing its Q1 tender and deferring two substation programmes \"until financing improves\".\n- Pellham is VLTX's biggest tender, and the reduced tender lands in Q1 2027. Orders there could undershoot what the headline 18% capex growth implies.\n- The funding evidence is thin: two equity data points from one source, and no data on leverage or ratings headroom.\n\n**Why a small add at most.** The long-run demand story is intact, and the options are fairly priced. But the nearest catalyst is a tender that has just been cut, and spreads are still widening. Options priced at normal vol don't compensate for that near-term event risk.\n\n**What would change this.**\n- Add more if the Pellham financing is resolved (a new equity deal or a debt raise) and the tender is restored, or if the Q1 award goes to VLTX at a reasonable size.\n- Hold off if spreads go well past 165bp or Pellham defers further.\n- If you add, favour Jan-2028 or later expiries. The Jan-2027 contract expires around the Q1 tender, and the 2028 and 2029 contracts cost only about 1 to 1.5 vol points more.\n\nThe sub-findings are in n2.r1, n3.r1 and n4.r1."
+}

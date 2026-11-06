@@ -1,0 +1,27 @@
+{
+ "workflow": "conflict",
+ "cond": {
+  "id": "identity",
+  "delivery": "broadcast",
+  "broadcast": "lifecycle+cp",
+  "data": "identity",
+  "wake": "code"
+ },
+ "seed": 104,
+ "model": "claude-sonnet-5-5",
+ "status": "answered",
+ "wall": 39.07,
+ "cost": 0.0649,
+ "usage": {
+  "input": 18,
+  "output": 3265,
+  "cacheRead": 34244,
+  "cacheWrite": 7195
+ },
+ "nodes": 3,
+ "lines": 7,
+ "cells": 6,
+ "worldCalls": 12,
+ "reads": 2,
+ "answer": "**Probably not, though it's close to a toss-up. I'd put the chance of reaching C$4.2B in 2027 at about 35–40%.** My central estimate is C$3.8–4.0B, a miss of roughly 5–10%.\n\nThe two lines of evidence disagree:\n\n- **Company disclosures (n2):** These make C$4.2B plausible but with little cushion. n2 put the chance of meeting guidance slightly above even.\n  - Backlog is C$5.1B, about 1.21× the guidance, and H1 2026 orders rose 11%.\n  - The Halbrook plant, offline nine weeks in Q2 after a fire, restarted in August. Management expects to recover the lost shipments by mid-2027, which n2 estimates adds roughly C$90–100M.\n  - Quarterly revenue was C$905M, 960M, 980M and 890M from 2025Q3 to 2026Q2, which totals C$3.735B. Hitting guidance needs about 12% growth on that total.\n  - Not all of the backlog will convert within 2027, so the cushion is thinner than it looks.\n- **Industry data (n3):** These point well below guidance, with a central estimate of C$3.5–3.7B.\n  - Industry shipments fell 4% in Q2 2026, the first decline in three years. Voltaris shipments fell 9%, the steepest drop among large makers.\n  - Voltaris's share of shipments fell from 31% to 27%, and the Q2 revenue run-rate is C$3.56B a year. Guidance needs about C$1.05B a quarter.\n  - n3 had no 2026 order data, so it could not test whether the weakness is temporary.\n\nI weighted the two by how much each can show. Backlog and orders are leading indicators and the Halbrook outage explains part of the Q2 drop, so I put the outcome above n3's C$3.5–3.7B. But the share loss is real, and the guidance has no margin for it. It needs the company to regain share and return to growth.\n\nThe main caveats are that both estimates rest on one quarter of weak data and on management's own statements. I found no independent check of how fast the backlog converts to revenue. Evidence that would change this view includes Q3 results, whether Halbrook stays at full capacity, and 2026 order conversion."
+}

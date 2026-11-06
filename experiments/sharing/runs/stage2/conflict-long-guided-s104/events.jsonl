@@ -1,0 +1,76 @@
+{"t":0,"ev":"run","workflow":"conflict-long","cond":{"id":"guided","delivery":"broadcast","broadcast":"lifecycle+cp","data":"identity","wake":"code","guided":true},"seed":104,"model":"claude-sonnet-5-5"}
+{"t":0,"ev":"line","i":0,"text":"the run opened n1 · Will Voltaris Grid (VLTG) meet its 2027 revenue guidance of C$4.2B?","kind":"open","subj":"n1","by":null}
+{"t":0,"ev":"node","id":"n1","request":{"task":"Will Voltaris Grid (VLTG) meet its 2027 revenue guidance of C$4.2B?"},"opener":null}
+{"t":0,"ev":"line","i":1,"text":"n1 opened n2 · What do Voltaris's own disclosures, its orders and backlog and its operations,…","kind":"open","subj":"n2","by":"n1"}
+{"t":0,"ev":"node","id":"n2","request":{"task":"What do Voltaris's own disclosures, its orders and backlog and its operations, imply for its 2027 revenue?"},"opener":"n1"}
+{"t":0,"ev":"line","i":2,"text":"n1 opened n3 · What do industry statistics, shipments and market share, imply for Voltaris's 2…","kind":"open","subj":"n3","by":"n1"}
+{"t":0,"ev":"node","id":"n3","request":{"task":"What do industry statistics, shipments and market share, imply for Voltaris's 2027 revenue?"},"opener":"n1"}
+{"t":0,"ev":"spawn","id":"n1","mode":"fresh"}
+{"t":0.01,"ev":"spawn","id":"n2","mode":"fresh"}
+{"t":0.02,"ev":"spawn","id":"n3","mode":"fresh"}
+{"t":3.08,"ev":"op","node":"n2","op":"world","args":{"fn":"search","args":["Voltaris Grid backlog orders revenue guidance 2027"]}}
+{"t":4.6,"ev":"op","node":"n1","op":"versions","args":{"node":"n2"}}
+{"t":4.6,"ev":"op","node":"n1","op":"versions","args":{"node":"n3"}}
+{"t":4.6,"ev":"op","node":"n1","op":"await","args":{"node":"n2","after":0}}
+{"t":4.61,"ev":"op","node":"n1","op":"await","args":{"node":"n3","after":0}}
+{"t":6.43,"ev":"op","node":"n3","op":"world","args":{"fn":"search","args":["Voltaris Grid market share"]}}
+{"t":6.43,"ev":"op","node":"n3","op":"world","args":{"fn":"search","args":["transformer shipments industry"]}}
+{"t":6.43,"ev":"op","node":"n3","op":"world","args":{"fn":"search","args":["grid equipment market growth 2027"]}}
+{"t":6.43,"ev":"op","node":"n3","op":"world","args":{"fn":"search","args":["Voltaris revenue"]}}
+{"t":6.62,"ev":"op","node":"n2","op":"pending","args":{}}
+{"t":6.62,"ev":"op","node":"n2","op":"cell","args":{"chars":128}}
+{"t":7.92,"ev":"op","node":"n2","op":"world","args":{"fn":"doc","args":["vltg-orders-h1"]}}
+{"t":7.93,"ev":"op","node":"n2","op":"world","args":{"fn":"series","args":["vltg_quarterly"]}}
+{"t":12.63,"ev":"op","node":"n3","op":"pending","args":{}}
+{"t":12.63,"ev":"op","node":"n3","op":"cell","args":{"chars":350}}
+{"t":15.41,"ev":"op","node":"n3","op":"world","args":{"fn":"doc","args":["cea-shipments-q2"]}}
+{"t":15.42,"ev":"op","node":"n3","op":"world","args":{"fn":"series","args":["cea_shipments"]}}
+{"t":15.42,"ev":"op","node":"n3","op":"world","args":{"fn":"series","args":["vltg_quarterly"]}}
+{"t":15.42,"ev":"line","i":3,"text":"n3 joined n2.d3 · series vltg_quarterly","kind":"djoin","subj":"n2","by":"n3","ref":"n2.d3"}
+{"t":18.68,"ev":"op","node":"n2","op":"pending","args":{}}
+{"t":18.68,"ev":"op","node":"n2","op":"cell","args":{"chars":105}}
+{"t":20.22,"ev":"op","node":"n2","op":"world","args":{"fn":"search","args":["Voltaris Q2 operations update site disruption output"]}}
+{"t":24.14,"ev":"op","node":"n3","op":"pending","args":{}}
+{"t":24.14,"ev":"op","node":"n3","op":"cell","args":{"chars":142}}
+{"t":24.38,"ev":"op","node":"n2","op":"world","args":{"fn":"doc","args":["halbrook-fire"]}}
+{"t":27.58,"ev":"op","node":"n3","op":"world","args":{"fn":"search","args":["CEA maker table"]}}
+{"t":27.58,"ev":"op","node":"n3","op":"world","args":{"fn":"search","args":["maker market share transformer"]}}
+{"t":27.58,"ev":"op","node":"n3","op":"world","args":{"fn":"search","args":["Voltaris share of shipments"]}}
+{"t":32.23,"ev":"op","node":"n2","op":"pending","args":{}}
+{"t":32.23,"ev":"op","node":"n2","op":"cell","args":{"chars":162}}
+{"t":33.45,"ev":"op","node":"n2","op":"world","args":{"fn":"search","args":["Halbrook restart notice"]}}
+{"t":34.3,"ev":"op","node":"n3","op":"pending","args":{}}
+{"t":34.3,"ev":"op","node":"n3","op":"cell","args":{"chars":181}}
+{"t":35.38,"ev":"op","node":"n3","op":"world","args":{"fn":"doc","args":["cea-maker-table"]}}
+{"t":38.64,"ev":"op","node":"n3","op":"pending","args":{}}
+{"t":38.64,"ev":"op","node":"n3","op":"cell","args":{"chars":42}}
+{"t":39.74,"ev":"op","node":"n3","op":"world","args":{"fn":"doc","args":["cea-product-class"]}}
+{"t":40.06,"ev":"op","node":"n2","op":"world","args":{"fn":"doc","args":["halbrook-restart"]}}
+{"t":47.21,"ev":"op","node":"n2","op":"pending","args":{}}
+{"t":47.21,"ev":"op","node":"n2","op":"cell","args":{"chars":133}}
+{"t":47.31,"ev":"op","node":"n3","op":"pending","args":{}}
+{"t":47.32,"ev":"op","node":"n3","op":"cell","args":{"chars":44}}
+{"t":48.58,"ev":"op","node":"n2","op":"world","args":{"fn":"search","args":["delivery recovery plan"]}}
+{"t":50.69,"ev":"op","node":"n3","op":"world","args":{"fn":"doc","args":["cea-market-share"]}}
+{"t":52.5,"ev":"op","node":"n2","op":"world","args":{"fn":"doc","args":["vltg-recovery"]}}
+{"t":54.05,"ev":"op","node":"n3","op":"pending","args":{}}
+{"t":54.05,"ev":"op","node":"n3","op":"cell","args":{"chars":43}}
+{"t":55.53,"ev":"op","node":"n3","op":"world","args":{"fn":"doc","args":["cea-demand-survey"]}}
+{"t":56.85,"ev":"op","node":"n2","op":"pending","args":{}}
+{"t":56.85,"ev":"op","node":"n2","op":"cell","args":{"chars":132}}
+{"t":59.46,"ev":"op","node":"n2","op":"world","args":{"fn":"search","args":["Voltaris guidance statement reconciles 2027 target"]}}
+{"t":59.7,"ev":"op","node":"n3","op":"pending","args":{}}
+{"t":59.7,"ev":"op","node":"n3","op":"cell","args":{"chars":44}}
+{"t":63.76,"ev":"op","node":"n2","op":"world","args":{"fn":"doc","args":["vltg-guidance"]}}
+{"t":67.13,"ev":"line","i":4,"text":"n3.r1 · **Industry statistics point to Voltaris 2027 revenue of about C$3.6–3.9B. That is below t…","kind":"result","subj":"n3","ref":"n3.r1"}
+{"t":69.71,"ev":"op","node":"n2","op":"pending","args":{}}
+{"t":69.71,"ev":"op","node":"n2","op":"cell","args":{"chars":160}}
+{"t":81,"ev":"line","i":5,"text":"n2.r1 · **Voltaris's own disclosures support roughly C$4.0–4.2B for 2027. The C$4.2B guidance is… · cites n3.r1, n2.d2, n2.d3, n2.d5, n2.d7, n2.d9, n2.d11","kind":"result","subj":"n2","ref":"n2.r1"}
+{"t":81.01,"ev":"op","node":"n1","op":"read","args":{"ref":"n2.r1","offset":0,"limit":8000}}
+{"t":81.01,"ev":"op","node":"n1","op":"read","args":{"ref":"n3.r1","offset":0,"limit":8000}}
+{"t":81.01,"ev":"op","node":"n1","op":"read","args":{"ref":"n2.r1","offset":0,"limit":8000}}
+{"t":81.01,"ev":"op","node":"n1","op":"read","args":{"ref":"n3.r1","offset":0,"limit":8000}}
+{"t":81.01,"ev":"op","node":"n1","op":"pending","args":{}}
+{"t":81.01,"ev":"op","node":"n1","op":"cell","args":{"chars":182}}
+{"t":90.03,"ev":"line","i":6,"text":"n1.r1 · **Voltaris will probably land just short of C$4.2B in 2027, at roughly C$4.0–4.2B. I put… · cites n2.r1, n3.r1","kind":"result","subj":"n1","ref":"n1.r1"}
+{"t":90.03,"ev":"end","status":"answered","cost":0.09486550000000002}

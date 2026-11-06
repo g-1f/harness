@@ -1,0 +1,27 @@
+{
+ "workflow": "cross",
+ "cond": {
+  "id": "base",
+  "delivery": "broadcast",
+  "broadcast": "lifecycle+cp",
+  "data": "publish",
+  "wake": "code"
+ },
+ "seed": 104,
+ "model": "claude-sonnet-5-5",
+ "status": "answered",
+ "wall": 44.97,
+ "cost": 0.1413,
+ "usage": {
+  "input": 44,
+  "output": 6148,
+  "cacheRead": 79676,
+  "cacheWrite": 17934
+ },
+ "nodes": 8,
+ "lines": 16,
+ "cells": 14,
+ "worldCalls": 22,
+ "reads": 7,
+ "answer": "**Don't add this month. Hold your current position, or add only a small amount.**\n\n- **Demand:** Grid equipment demand looks like it's rising through 2027, but the evidence is thin.\n  - Pellham Power plans 2027 capex up 18% and Norvane Utilities up 12%.\n  - Data-centre grid connection requests are expected to grow 9% in 2027, which is slower than in 2026.\n  - These are planned figures. I found no confirmed orders or backlogs.\n- **Financing:** Debt is open, but equity isn't.\n  - Utility bond spreads widened 30bp to 165bp, and Norvane still priced a C$1.1B bond comfortably.\n  - Pellham withdrew a C$2.4B equity offering, and two other utility share offerings were cut back.\n  - Pellham says it will cut 2027 transformer orders by about 40% and defer two substation programmes.\n- **Concentration:** This hurts VLTX most.\n  - Utilities are 62% of VLTX's orders.\n  - Pellham is 35% of those utility orders, and Norvane is 21%.\n  - Pellham's cut hits the biggest customer, so I'd expect orders to come in below the headline demand.\n- **Pricing:** The LEAPS are fairly priced.\n  - Implied volatility is 27%, against a 2-year median of 26%.\n  - Skew is flat, so there's no pricing edge to justify adding.\n  - I didn't have strikes, expiries or premiums, so I can't judge a specific contract.\n\nThe demand story is positive but not confirmed, and the largest customer is cutting orders. The options are priced neutrally, so nothing offsets that risk. I'd revisit the position if Pellham's financing improves or confirmed orders show up. A pullback in implied volatility would also make adding more attractive.\n\nThe detail is in n2.r1 (demand), n3.r1 (financing) and n4.r1 (pricing)."
+}
