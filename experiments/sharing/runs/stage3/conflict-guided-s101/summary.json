@@ -1,0 +1,28 @@
+{
+ "workflow": "conflict",
+ "cond": {
+  "id": "guided",
+  "delivery": "broadcast",
+  "broadcast": "lifecycle+cp",
+  "data": "identity",
+  "wake": "code",
+  "guided": true
+ },
+ "seed": 101,
+ "model": "claude-sonnet-5-5",
+ "status": "answered",
+ "wall": 43.1,
+ "cost": 0.0666,
+ "usage": {
+  "input": 20,
+  "output": 3373,
+  "cacheRead": 41057,
+  "cacheWrite": 7181
+ },
+ "nodes": 3,
+ "lines": 7,
+ "cells": 7,
+ "worldCalls": 11,
+ "reads": 2,
+ "answer": "**Probably yes, but it's close. I put the chance of reaching C$4.2B at about 55%, with a likely range of C$3.9–4.3B.**\n\nThe two sub-analyses disagreed: n2 (company disclosures) said C$4.0–4.3B and n3 (industry data) said C$3.5–3.8B. One fact explains most of the gap.\n\n- **Fire at the Halbrook plant:** The plant is Voltaris's largest. A fire took it offline for nine weeks in Q2 2026, and it restarted at full capacity in August. This is the likely cause of the Q2 weakness n3 read as structural: shipments down 9%, share down from 31% to 27%, and revenue of C$890M. n3 did not know about the fire, so its run-rate extrapolation is biased low. That share loss should partly reverse as the plant ramps back up, though n3's data cannot confirm this.\n- **Backlog:** Backlog is C$5.1B, about 1.2 times the guidance. Cancellations are below 1% and H1 orders rose 11% year on year. This supports guidance, though not all of the backlog will convert to revenue in 2027.\n- **Underlying run-rate:** Q1 2026 revenue of C$980M annualises to about C$3.9B, and a normal Q2 would put the run-rate near C$4.0B. Reaching C$4.2B needs about 5% growth plus the lost shipments management expects to recover by mid-2027.\n\nn3's points that still apply:\n- **Industry:** Industry shipments fell 4% in Q2 2026, the first decline in three years, and they trail orders by about two quarters.\n- **Competitors:** Tarnwell and imports are gaining share.\n- **Share needed:** Guidance effectively requires Voltaris to win back most of its lost share.\n\nRisks to the guidance:\n- **Recovery timing:** The mid-2027 recovery date is management's own claim, with no independent support.\n- **Backlog conversion:** Backlog may convert more slowly than the 1.2x coverage implies.\n- **Plant disruption:** Another outage at Halbrook would hit hard.\n- **Thin data:** The analysis rests on four quarters of company revenue and one quarter of industry data.\n\nI didn't verify the fire's effect on share independently. The reconciliation above is my inference from the timing.\n\nSources: n2.r1 (disclosures, backlog, operations) and n3.r1 (industry and share data)."
+}

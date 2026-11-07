@@ -1,0 +1,28 @@
+{
+ "workflow": "conflict",
+ "cond": {
+  "id": "identity-data",
+  "delivery": "broadcast",
+  "broadcast": "lifecycle+cp",
+  "data": "identity",
+  "wake": "code",
+  "lines": "data"
+ },
+ "seed": 103,
+ "model": "claude-sonnet-5-5",
+ "status": "answered",
+ "wall": 41.04,
+ "cost": 0.1031,
+ "usage": {
+  "input": 20,
+  "output": 3204,
+  "cacheRead": 30254,
+  "cacheWrite": 16995
+ },
+ "nodes": 3,
+ "lines": 13,
+ "cells": 7,
+ "worldCalls": 10,
+ "reads": 2,
+ "answer": "**Probably not. I'd put the chance of meeting the C$4.2B 2027 guidance at about 35–40%. My central estimate is C$3.8–4.0B, a modest miss.**\n\nThe two lines of evidence disagree, and I haven't resolved that fully.\n\n**Needed growth:** Revenue over the last four quarters was about C$3.74B (905 + 960 + 980 + 890). Guidance needs about 12% growth on that, or roughly C$1.05B a quarter. That is about 18% above the Q2 2026 quarterly revenue of C$890M.\n\n**For meeting guidance (company disclosures, n2):**\n- H1 2026 orders rose 11% year on year.\n- Backlog is C$5.1B, about 1.21× cover of guidance. Cancellations are below 1%.\n- The Halbrook plant was offline for nine weeks after a fire. It restarted in August, and management expects to recover the lost shipments by mid-2027. Those deferred shipments should push revenue into 2027.\n\n**Against meeting guidance (industry data, n3):**\n- Industry transformer shipments fell 4% year on year in Q2, the first decline in three years.\n- Voltaris's shipments fell 9% in Q2. Its market share fell from 31% to 27%.\n- If the market stays flat and share stays near 27%, revenue would be roughly C$3.5–3.7B.\n\n**Why I lean toward a miss:**\n- **Backlog timing:** The backlog figure is management's own. Nothing disclosed shows how much is scheduled for delivery in 2027, and the cover is thin.\n- **Slippage risk:** Recovering the lost shipments needs Halbrook to run above normal throughput. Any slip pushes revenue into 2028.\n- **Share loss:** The loss happened while orders were growing, which suggests Voltaris is converting orders to shipments less well than rivals.\n- **Where the evidence helps:** Order growth is a real positive, because shipments typically trail orders by about two quarters. That is why I put the central estimate above the pure run-rate figure.\n\n**Confidence:** moderate to low. The market-share data covers only one quarter, and neither node modelled pricing or product mix.\n\n**What would change my view:** Delivery-timing detail on the backlog, Q3 and Q4 2026 revenue near or above C$1B, or market share stabilising at 27% or better.\n\nSources: n2.r1 (company disclosures) and n3.r1 (industry data)."
+}

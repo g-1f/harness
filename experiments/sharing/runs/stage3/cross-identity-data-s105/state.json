@@ -1,0 +1,1106 @@
+{
+ "nodes": [
+  {
+   "id": "n1",
+   "request": {
+    "task": "Should we add to our VLTX LEAPS this month?"
+   },
+   "opener": null,
+   "state": "completed",
+   "results": [
+    "n1.r1"
+   ],
+   "cps": [],
+   "holdersEver": [],
+   "states": [
+    [
+     0,
+     "running"
+    ],
+    [
+     3,
+     "waiting"
+    ],
+    [
+     32.63,
+     "running"
+    ],
+    [
+     38.19,
+     "completed"
+    ]
+   ],
+   "cost": 0.0160031,
+   "turns": 2,
+   "activations": 1,
+   "session": "37f09e27-ce6f-49fc-8111-0e3e4bd16e0b",
+   "from": null
+  },
+  {
+   "id": "n2",
+   "request": {
+    "task": "Is demand for grid equipment from Caldrian utilities and data centres rising through 2027?"
+   },
+   "opener": "n1",
+   "state": "completed",
+   "results": [
+    "n2.r1"
+   ],
+   "cps": [],
+   "holdersEver": [
+    "n1"
+   ],
+   "states": [
+    [
+     0,
+     "running"
+    ],
+    [
+     18.62,
+     "completed"
+    ]
+   ],
+   "cost": 0.0174184,
+   "turns": 3,
+   "activations": 1,
+   "session": "4b249729-901a-4fd8-8458-386a9b5c9e0b",
+   "from": null
+  },
+  {
+   "id": "n3",
+   "request": {
+    "task": "Can Caldrian utilities finance their 2027 capex plans, through debt markets and through equity markets?"
+   },
+   "opener": "n1",
+   "state": "completed",
+   "results": [
+    "n3.r1"
+   ],
+   "cps": [],
+   "holdersEver": [
+    "n1"
+   ],
+   "states": [
+    [
+     0,
+     "running"
+    ],
+    [
+     4.6,
+     "waiting"
+    ],
+    [
+     25.53,
+     "running"
+    ],
+    [
+     32.63,
+     "completed"
+    ]
+   ],
+   "cost": 0.026589799999999997,
+   "turns": 4,
+   "activations": 1,
+   "session": "d7301a24-41cb-4f0a-98ab-fc1487cc1394",
+   "from": null
+  },
+  {
+   "id": "n4",
+   "request": {
+    "task": "Are VLTX LEAPS attractively priced right now?"
+   },
+   "opener": "n1",
+   "state": "completed",
+   "results": [
+    "n4.r1"
+   ],
+   "cps": [],
+   "holdersEver": [
+    "n1"
+   ],
+   "states": [
+    [
+     0,
+     "running"
+    ],
+    [
+     26.81,
+     "completed"
+    ]
+   ],
+   "cost": 0.019215700000000002,
+   "turns": 3,
+   "activations": 1,
+   "session": "5bf216bd-ed30-4dd5-8eb8-7c6c892c4964",
+   "from": null
+  },
+  {
+   "id": "n5",
+   "request": {
+    "task": "Can Caldrian utilities finance their 2027 capex plans through debt markets? Assess capex size, debt market conditions, spreads, credit metrics."
+   },
+   "opener": "n3",
+   "state": "completed",
+   "results": [
+    "n5.r1"
+   ],
+   "cps": [],
+   "holdersEver": [
+    "n3"
+   ],
+   "states": [
+    [
+     4.58,
+     "running"
+    ],
+    [
+     24.99,
+     "completed"
+    ]
+   ],
+   "cost": 0.026619300000000002,
+   "turns": 3,
+   "activations": 1,
+   "session": "bb835d27-e5bd-433b-a55c-3f5122b49f79",
+   "from": null
+  },
+  {
+   "id": "n6",
+   "request": {
+    "task": "Can Caldrian utilities finance their 2027 capex plans through equity markets? Assess equity needs, valuations, issuance windows, market conditions."
+   },
+   "opener": "n3",
+   "state": "completed",
+   "results": [
+    "n6.r1"
+   ],
+   "cps": [],
+   "holdersEver": [
+    "n3"
+   ],
+   "states": [
+    [
+     4.59,
+     "running"
+    ],
+    [
+     25.53,
+     "completed"
+    ]
+   ],
+   "cost": 0.025236500000000002,
+   "turns": 3,
+   "activations": 1,
+   "session": "2481566e-a6e3-4b07-a32d-5c02f130b482",
+   "from": null
+  }
+ ],
+ "lines": [
+  {
+   "i": 0,
+   "t": 0,
+   "text": "the run opened n1 · Should we add to our VLTX LEAPS this month?",
+   "kind": "open",
+   "subj": "n1",
+   "by": null
+  },
+  {
+   "i": 1,
+   "t": 0,
+   "text": "n1 opened n2 · Is demand for grid equipment from Caldrian utilities and data centres rising th…",
+   "kind": "open",
+   "subj": "n2",
+   "by": "n1"
+  },
+  {
+   "i": 2,
+   "t": 0,
+   "text": "n1 opened n3 · Can Caldrian utilities finance their 2027 capex plans, through debt markets and…",
+   "kind": "open",
+   "subj": "n3",
+   "by": "n1"
+  },
+  {
+   "i": 3,
+   "t": 0,
+   "text": "n1 opened n4 · Are VLTX LEAPS attractively priced right now?",
+   "kind": "open",
+   "subj": "n4",
+   "by": "n1"
+  },
+  {
+   "i": 4,
+   "t": 4.58,
+   "text": "n3 opened n5 · Can Caldrian utilities finance their 2027 capex plans through debt markets? Ass…",
+   "kind": "open",
+   "subj": "n5",
+   "by": "n3"
+  },
+  {
+   "i": 5,
+   "t": 4.59,
+   "text": "n3 opened n6 · Can Caldrian utilities finance their 2027 capex plans through equity markets? A…",
+   "kind": "open",
+   "subj": "n6",
+   "by": "n3"
+  },
+  {
+   "i": 6,
+   "t": 13.42,
+   "text": "n2.d4 · doc utility-capex-2027 · Caldrian utilities: 2027 capital plans: Pellham Power plans 2027 capital spending up 18%, Norvane Utilities up 12%, mostly substations and transformers.",
+   "kind": "data",
+   "subj": "n2",
+   "ref": "n2.d4"
+  },
+  {
+   "i": 7,
+   "t": 14.98,
+   "text": "n2.d5 · doc datacentre-demand · Data-centre grid connections outlook: Data-centre grid connection requests in Caldria are expected to grow 9% in 2027, a slower pace than 2026 as power availab…",
+   "kind": "data",
+   "subj": "n2",
+   "ref": "n2.d5"
+  },
+  {
+   "i": 8,
+   "t": 16.74,
+   "text": "n5 reused n2.d4 · doc utility-capex-2027",
+   "kind": "dreuse",
+   "subj": "n2",
+   "by": "n5",
+   "ref": "n2.d4"
+  },
+  {
+   "i": 9,
+   "t": 17.36,
+   "text": "n4.d3 · doc vltx-leaps · VLTX LEAPS pricing snapshot: VLTX LEAPS implied volatility is 27%, close to its 2-year median of 26%.",
+   "kind": "data",
+   "subj": "n4",
+   "ref": "n4.d3"
+  },
+  {
+   "i": 10,
+   "t": 17.92,
+   "text": "n6 joined n5.d6 · doc pellham-offering",
+   "kind": "djoin",
+   "subj": "n5",
+   "by": "n6",
+   "ref": "n5.d6"
+  },
+  {
+   "i": 11,
+   "t": 17.93,
+   "text": "n6 reused n2.d4 · doc utility-capex-2027",
+   "kind": "dreuse",
+   "subj": "n2",
+   "by": "n6",
+   "ref": "n2.d4"
+  },
+  {
+   "i": 12,
+   "t": 17.93,
+   "text": "n6 joined n5.d5 · doc utility-credit",
+   "kind": "djoin",
+   "subj": "n5",
+   "by": "n6",
+   "ref": "n5.d5"
+  },
+  {
+   "i": 13,
+   "t": 18.62,
+   "text": "n2.r1 · **Yes, demand is rising through 2027, but data-centre demand is growing more slowly than…",
+   "kind": "result",
+   "subj": "n2",
+   "ref": "n2.r1"
+  },
+  {
+   "i": 14,
+   "t": 19.48,
+   "text": "n5.d6 · doc pellham-offering · Pellham Power withdraws equity offering, scales back procurement: Pellham Power withdrew its planned C$2.4B equity offering after investor demand fell short.",
+   "kind": "data",
+   "subj": "n5",
+   "ref": "n5.d6"
+  },
+  {
+   "i": 15,
+   "t": 19.71,
+   "text": "n5.d5 · doc utility-credit · Caldrian utility credit conditions, Q3 2026: Utility bond spreads widened 30bp in Q3 to 165bp.",
+   "kind": "data",
+   "subj": "n5",
+   "ref": "n5.d5"
+  },
+  {
+   "i": 16,
+   "t": 21.4,
+   "text": "n4.d4 · series vltx_iv_history · VLTX LEAPS implied vol history (implied vol): latest 2026 0.27",
+   "kind": "data",
+   "subj": "n4",
+   "ref": "n4.d4"
+  },
+  {
+   "i": 17,
+   "t": 24.99,
+   "text": "n5.r1 · **Partly yes. Debt markets are open, but they aren't covering the full 2027 plans.** Norv…",
+   "kind": "result",
+   "subj": "n5",
+   "ref": "n5.r1"
+  },
+  {
+   "i": 18,
+   "t": 25.53,
+   "text": "n6.r1 · **Mostly no. Equity markets are not currently a reliable way to fund the 2027 capex plans…",
+   "kind": "result",
+   "subj": "n6",
+   "ref": "n6.r1"
+  },
+  {
+   "i": 19,
+   "t": 26.81,
+   "text": "n4.r1 · VLTX LEAPS look fairly priced, not cheap. The only evidence I found is a short pricing sn…",
+   "kind": "result",
+   "subj": "n4",
+   "ref": "n4.r1"
+  },
+  {
+   "i": 20,
+   "t": 32.63,
+   "text": "n3.r1 · **Only partly. Debt is open to Caldrian utilities, but equity is not, so the full 2027 pl… · cites n5.r1, n6.r1",
+   "kind": "result",
+   "subj": "n3",
+   "ref": "n3.r1"
+  },
+  {
+   "i": 21,
+   "t": 38.19,
+   "text": "n1.r1 · **Don't add this month. Hold your current position and revisit later.** · cites n2.r1, n3.r1, n4.r1",
+   "kind": "result",
+   "subj": "n1",
+   "ref": "n1.r1"
+  }
+ ],
+ "artifacts": {
+  "n2.d3": {
+   "node": "n2",
+   "kind": "data",
+   "fn": "search",
+   "args": [
+    "grid equipment orders transformers Caldria backlog"
+   ],
+   "content": "{\"docs\":[{\"id\":\"utility-capex-2027\",\"title\":\"Caldrian utilities: 2027 capital plans\",\"snippet\":\"Pellham Power plans 2027 capital spending up 18%, Norvane Utilities up 12%, mostly substations and transformers. Pellham is the largest sing…\"},{\"id\":\"vltx-order-mix\",\"title\":\"VLTX holdings: customer mix\",\"snippet\":\"Utilities account for 62% of VLTX holdings' orders. Pellham Power alone is 35% of utility orders; Norvane is 21%.\"}],\"series\":[]}",
+   "t": 5.34
+  },
+  "n2.d1": {
+   "node": "n2",
+   "kind": "data",
+   "fn": "search",
+   "args": [
+    "Caldrian utilities grid capex 2027"
+   ],
+   "content": "{\"docs\":[{\"id\":\"utility-capex-2027\",\"title\":\"Caldrian utilities: 2027 capital plans\",\"snippet\":\"Pellham Power plans 2027 capital spending up 18%, Norvane Utilities up 12%, mostly substations and transformers. Pellham is the largest sing…\"},{\"id\":\"utility-credit\",\"title\":\"Caldrian utility credit conditions, Q3 2026\",\"snippet\":\"Utility bond spreads widened 30bp in Q3 to 165bp. Norvane priced a C$1.1B bond comfortably. Equity markets have been less receptive: two uti…\"}],\"series\":[]}",
+   "t": 7.09
+  },
+  "n4.d1": {
+   "node": "n4",
+   "kind": "data",
+   "fn": "search",
+   "args": [
+    "VLTX LEAPS implied volatility options"
+   ],
+   "content": "{\"docs\":[{\"id\":\"vltx-leaps\",\"title\":\"VLTX LEAPS pricing snapshot\",\"snippet\":\"VLTX LEAPS implied volatility is 27%, close to its 2-year median of 26%. Skew is flat.\"},{\"id\":\"vltx-order-mix\",\"title\":\"VLTX holdings: customer mix\",\"snippet\":\"Utilities account for 62% of VLTX holdings' orders. Pellham Power alone is 35% of utility orders; Norvane is 21%.\"}],\"series\":[{\"series\":\"vltx_iv_history\",\"desc\":\"VLTX LEAPS implied vol history\"}]}",
+   "t": 7.45
+  },
+  "n2.d2": {
+   "node": "n2",
+   "kind": "data",
+   "fn": "search",
+   "args": [
+    "Caldrian data centre power demand"
+   ],
+   "content": "{\"docs\":[{\"id\":\"utility-capex-2027\",\"title\":\"Caldrian utilities: 2027 capital plans\",\"snippet\":\"Pellham Power plans 2027 capital spending up 18%, Norvane Utilities up 12%, mostly substations and transformers. Pellham is the largest sing…\"},{\"id\":\"datacentre-demand\",\"title\":\"Data-centre grid connections outlook\",\"snippet\":\"Data-centre grid connection requests in Caldria are expected to grow 9% in 2027, a slower pace than 2026 as power availability limits new si…\"}],\"series\":[]}",
+   "t": 8.03
+  },
+  "n4.d2": {
+   "node": "n4",
+   "kind": "data",
+   "fn": "search",
+   "args": [
+    "VLTX"
+   ],
+   "content": "{\"docs\":[{\"id\":\"vltx-order-mix\",\"title\":\"VLTX holdings: customer mix\",\"snippet\":\"Utilities account for 62% of VLTX holdings' orders. Pellham Power alone is 35% of utility orders; Norvane is 21%.\"},{\"id\":\"vltx-leaps\",\"title\":\"VLTX LEAPS pricing snapshot\",\"snippet\":\"VLTX LEAPS implied volatility is 27%, close to its 2-year median of 26%. Skew is flat.\"}],\"series\":[{\"series\":\"vltx_iv_history\",\"desc\":\"VLTX LEAPS implied vol history\"}]}",
+   "t": 9.68
+  },
+  "n6.d3": {
+   "node": "n6",
+   "kind": "data",
+   "fn": "search",
+   "args": [
+    "Caldrian utility valuations P/E"
+   ],
+   "content": "{\"docs\":[{\"id\":\"utility-capex-2027\",\"title\":\"Caldrian utilities: 2027 capital plans\",\"snippet\":\"Pellham Power plans 2027 capital spending up 18%, Norvane Utilities up 12%, mostly substations and transformers. Pellham is the largest sing…\"}],\"series\":[]}",
+   "t": 11.93
+  },
+  "n5.d3": {
+   "node": "n5",
+   "kind": "data",
+   "fn": "search",
+   "args": [
+    "Caldrian credit metrics FFO debt utilities"
+   ],
+   "content": "{\"docs\":[{\"id\":\"utility-credit\",\"title\":\"Caldrian utility credit conditions, Q3 2026\",\"snippet\":\"Utility bond spreads widened 30bp in Q3 to 165bp. Norvane priced a C$1.1B bond comfortably. Equity markets have been less receptive: two uti…\"},{\"id\":\"utility-capex-2027\",\"title\":\"Caldrian utilities: 2027 capital plans\",\"snippet\":\"Pellham Power plans 2027 capital spending up 18%, Norvane Utilities up 12%, mostly substations and transformers. Pellham is the largest sing…\"},{\"id\":\"pellham-offering\",\"title\":\"Pellham Power withdraws equity offering, scales back procurement\",\"snippet\":\"Pellham Power withdrew its planned C$2.4B equity offering after investor demand fell short. The company said it will cut 2027 transformer or…\"}],\"series\":[]}",
+   "t": 12.73
+  },
+  "n2.d4": {
+   "node": "n2",
+   "kind": "data",
+   "fn": "doc",
+   "args": [
+    "utility-capex-2027"
+   ],
+   "content": "{\"id\":\"utility-capex-2027\",\"title\":\"Caldrian utilities: 2027 capital plans\",\"body\":\"Pellham Power plans 2027 capital spending up 18%, Norvane Utilities up 12%, mostly substations and transformers. Pellham is the largest single buyer of grid equipment in Caldria.\"}",
+   "t": 13.42
+  },
+  "n5.d4": {
+   "node": "n5",
+   "kind": "data",
+   "fn": "search",
+   "args": [
+    "Caldrian debt market issuance"
+   ],
+   "content": "{\"docs\":[{\"id\":\"pellham-offering\",\"title\":\"Pellham Power withdraws equity offering, scales back procurement\",\"snippet\":\"Pellham Power withdrew its planned C$2.4B equity offering after investor demand fell short. The company said it will cut 2027 transformer or…\"},{\"id\":\"utility-credit\",\"title\":\"Caldrian utility credit conditions, Q3 2026\",\"snippet\":\"Utility bond spreads widened 30bp in Q3 to 165bp. Norvane priced a C$1.1B bond comfortably. Equity markets have been less receptive: two uti…\"}],\"series\":[]}",
+   "t": 13.67
+  },
+  "n5.d2": {
+   "node": "n5",
+   "kind": "data",
+   "fn": "search",
+   "args": [
+    "Caldrian utility bond spreads"
+   ],
+   "content": "{\"docs\":[{\"id\":\"utility-capex-2027\",\"title\":\"Caldrian utilities: 2027 capital plans\",\"snippet\":\"Pellham Power plans 2027 capital spending up 18%, Norvane Utilities up 12%, mostly substations and transformers. Pellham is the largest sing…\"},{\"id\":\"pellham-offering\",\"title\":\"Pellham Power withdraws equity offering, scales back procurement\",\"snippet\":\"Pellham Power withdrew its planned C$2.4B equity offering after investor demand fell short. The company said it will cut 2027 transformer or…\"},{\"id\":\"utility-credit\",\"title\":\"Caldrian utility credit conditions, Q3 2026\",\"snippet\":\"Utility bond spreads widened 30bp in Q3 to 165bp. Norvane priced a C$1.1B bond comfortably. Equity markets have been less receptive: two uti…\"}],\"series\":[]}",
+   "t": 14.03
+  },
+  "n6.d2": {
+   "node": "n6",
+   "kind": "data",
+   "fn": "search",
+   "args": [
+    "Caldrian utilities capex 2027 equity needs"
+   ],
+   "content": "{\"docs\":[{\"id\":\"utility-capex-2027\",\"title\":\"Caldrian utilities: 2027 capital plans\",\"snippet\":\"Pellham Power plans 2027 capital spending up 18%, Norvane Utilities up 12%, mostly substations and transformers. Pellham is the largest sing…\"},{\"id\":\"pellham-offering\",\"title\":\"Pellham Power withdraws equity offering, scales back procurement\",\"snippet\":\"Pellham Power withdrew its planned C$2.4B equity offering after investor demand fell short. The company said it will cut 2027 transformer or…\"},{\"id\":\"utility-credit\",\"title\":\"Caldrian utility credit conditions, Q3 2026\",\"snippet\":\"Utility bond spreads widened 30bp in Q3 to 165bp. Norvane priced a C$1.1B bond comfortably. Equity markets have been less receptive: two uti…\"}],\"series\":[]}",
+   "t": 14.2
+  },
+  "n6.d4": {
+   "node": "n6",
+   "kind": "data",
+   "fn": "search",
+   "args": [
+    "Caldrian equity market conditions"
+   ],
+   "content": "{\"docs\":[{\"id\":\"pellham-offering\",\"title\":\"Pellham Power withdraws equity offering, scales back procurement\",\"snippet\":\"Pellham Power withdrew its planned C$2.4B equity offering after investor demand fell short. The company said it will cut 2027 transformer or…\"}],\"series\":[]}",
+   "t": 14.65
+  },
+  "n2.d5": {
+   "node": "n2",
+   "kind": "data",
+   "fn": "doc",
+   "args": [
+    "datacentre-demand"
+   ],
+   "content": "{\"id\":\"datacentre-demand\",\"title\":\"Data-centre grid connections outlook\",\"body\":\"Data-centre grid connection requests in Caldria are expected to grow 9% in 2027, a slower pace than 2026 as power availability limits new sites.\"}",
+   "t": 14.98
+  },
+  "n5.d1": {
+   "node": "n5",
+   "kind": "data",
+   "fn": "search",
+   "args": [
+    "Caldrian utilities capex 2027"
+   ],
+   "content": "{\"docs\":[{\"id\":\"utility-capex-2027\",\"title\":\"Caldrian utilities: 2027 capital plans\",\"snippet\":\"Pellham Power plans 2027 capital spending up 18%, Norvane Utilities up 12%, mostly substations and transformers. Pellham is the largest sing…\"},{\"id\":\"utility-credit\",\"title\":\"Caldrian utility credit conditions, Q3 2026\",\"snippet\":\"Utility bond spreads widened 30bp in Q3 to 165bp. Norvane priced a C$1.1B bond comfortably. Equity markets have been less receptive: two uti…\"}],\"series\":[]}",
+   "t": 15.15
+  },
+  "n6.d1": {
+   "node": "n6",
+   "kind": "data",
+   "fn": "search",
+   "args": [
+    "Caldrian utilities equity issuance"
+   ],
+   "content": "{\"docs\":[{\"id\":\"pellham-offering\",\"title\":\"Pellham Power withdraws equity offering, scales back procurement\",\"snippet\":\"Pellham Power withdrew its planned C$2.4B equity offering after investor demand fell short. The company said it will cut 2027 transformer or…\"},{\"id\":\"utility-capex-2027\",\"title\":\"Caldrian utilities: 2027 capital plans\",\"snippet\":\"Pellham Power plans 2027 capital spending up 18%, Norvane Utilities up 12%, mostly substations and transformers. Pellham is the largest sing…\"},{\"id\":\"utility-credit\",\"title\":\"Caldrian utility credit conditions, Q3 2026\",\"snippet\":\"Utility bond spreads widened 30bp in Q3 to 165bp. Norvane priced a C$1.1B bond comfortably. Equity markets have been less receptive: two uti…\"}],\"series\":[]}",
+   "t": 16.61
+  },
+  "n4.d3": {
+   "node": "n4",
+   "kind": "data",
+   "fn": "doc",
+   "args": [
+    "vltx-leaps"
+   ],
+   "content": "{\"id\":\"vltx-leaps\",\"title\":\"VLTX LEAPS pricing snapshot\",\"body\":\"VLTX LEAPS implied volatility is 27%, close to its 2-year median of 26%. Skew is flat.\"}",
+   "t": 17.36
+  },
+  "n2.r1": {
+   "node": "n2",
+   "kind": "result",
+   "content": "**Yes, demand is rising through 2027, but data-centre demand is growing more slowly than before.**\n\n- **Utilities:** Pellham Power plans 2027 capital spending up 18%. Norvane Utilities plans an increase of 12%. Most of that spending is on substations and transformers, which is grid equipment. Pellham is the largest single buyer of grid equipment in Caldria (source: utility-capex-2027).\n- **Data centres:** Grid connection requests are expected to grow 9% in 2027. That is slower than in 2026, because power availability limits new sites (source: datacentre-demand). Demand is still growing, but the pace is slowing.\n- **Relevance to VLTX:** Utilities account for 62% of VLTX holdings' orders. Pellham is 35% of those utility orders and Norvane is 21%. Together they make up 56% of utility orders, so VLTX is exposed to these two customers and to Pellham most of all (source: vltx-order-mix).\n- **Caveat:** These are planned budgets, not confirmed orders. Whether the utilities can finance the plans is a separate question that node n3 is covering. Utility bond spreads widened 30bp in Q3 2026 to 165bp, and equity markets have been less receptive to utilities.",
+   "cites": [],
+   "invalid": [],
+   "t": 18.62
+  },
+  "n5.d6": {
+   "node": "n5",
+   "kind": "data",
+   "fn": "doc",
+   "args": [
+    "pellham-offering"
+   ],
+   "content": "{\"id\":\"pellham-offering\",\"title\":\"Pellham Power withdraws equity offering, scales back procurement\",\"body\":\"Pellham Power withdrew its planned C$2.4B equity offering after investor demand fell short. The company said it will cut 2027 transformer orders by about 40% and defer two substation programmes until financing improves.\"}",
+   "t": 19.48
+  },
+  "n5.d5": {
+   "node": "n5",
+   "kind": "data",
+   "fn": "doc",
+   "args": [
+    "utility-credit"
+   ],
+   "content": "{\"id\":\"utility-credit\",\"title\":\"Caldrian utility credit conditions, Q3 2026\",\"body\":\"Utility bond spreads widened 30bp in Q3 to 165bp. Norvane priced a C$1.1B bond comfortably. Equity markets have been less receptive: two utility share offerings were cut back in size.\"}",
+   "t": 19.71
+  },
+  "n4.d4": {
+   "node": "n4",
+   "kind": "data",
+   "fn": "series",
+   "args": [
+    "vltx_iv_history"
+   ],
+   "content": "{\"name\":\"vltx_iv_history\",\"unit\":\"implied vol\",\"desc\":\"VLTX LEAPS implied vol history\",\"points\":[[\"2024\",0.24],[\"2025\",0.26],[\"2026\",0.27]]}",
+   "t": 21.4
+  },
+  "n5.r1": {
+   "node": "n5",
+   "kind": "result",
+   "content": "**Partly yes. Debt markets are open, but they aren't covering the full 2027 plans.** Norvane can fund itself in debt. Pellham has already cut its programme because it can't raise equity.\n\n- **Capex size:** Pellham plans 2027 capital spending up 18% and Norvane up 12%. Most of it is substations and transformers. No capex amounts in C$ or credit-metric figures (leverage, FFO/debt) turned up in my search, so the size of the funding gap is unquantified.\n- **Debt market conditions:** Debt is accessible. Norvane priced a C$1.1B bond \"comfortably\" in Q3 2026.\n- **Spreads:** Utility bond spreads widened 30bp in Q3 to 165bp. That is higher funding cost, but not a shut market.\n- **Equity is the weak point:** Two utility share offerings were cut back in Q3. Pellham then withdrew its C$2.4B equity offering after demand fell short. Pellham said it will cut 2027 transformer orders by about 40% and defer two substation programmes until financing improves.\n- **Credit metrics:** I found none, so I can't say whether more debt would strain ratings. Pellham's equity raise was likely meant to protect its balance sheet. Replacing it with debt alone would probably push leverage up, which is my inference rather than a finding.\n\n**Conclusion:** Debt can plausibly fund Norvane's +12%. For Pellham, the largest single buyer of grid equipment in Caldria, debt has not filled the gap so far, so its 2027 spending is being cut. Grid-equipment demand from Pellham is therefore at risk, even though Norvane's looks intact. The answer would change if Pellham issued large debt or its credit metrics were shown to have room.",
+   "cites": [],
+   "invalid": [],
+   "t": 24.99
+  },
+  "n6.r1": {
+   "node": "n6",
+   "kind": "result",
+   "content": "**Mostly no. Equity markets are not currently a reliable way to fund the 2027 capex plans, at least for the most stretched issuer, Pellham.** The evidence is thin. I found only three documents and no valuation or P/E data.\n\n- **Capex pressure:** Pellham plans 2027 capital spending up 18%. Norvane plans a 12% increase. Most of it goes to substations and transformers. Pellham is the largest single buyer of grid equipment in Caldria. (utility-capex-2027)\n- **Equity window:** It is weak. Pellham withdrew its planned C$2.4B equity offering after investor demand fell short. Two utility share offerings were also cut back in size. (pellham-offering, utility-credit)\n- **Consequence of the failed raise:** Pellham says it will cut 2027 transformer orders by about 40% and defer two substation programmes until financing improves. So the equity gap is already reducing capex, which means the funding shortfall is real and not just a risk.\n- **Debt as the alternative:** The debt market is open but getting more expensive. Bond spreads widened 30bp in Q3 to 165bp. Norvane priced a C$1.1B bond comfortably. Utilities with better access, like Norvane, can lean on debt. A heavier reliance on debt raises leverage and credit pressure.\n- **Valuations:** The failed and downsized deals suggest investors are unwilling to pay the prices issuers wanted. I have no multiples or yield data to quantify that.\n- **Issuance windows:** None is evident now. A reopening would depend on better sentiment, a lower issue size, or alternative structures such as hybrids, asset sales or partner capital. These are my suggestions and are not in the sources.\n\n**Conclusion:** Pellham's 2027 plan is not fully financeable through equity now. Expect deferrals, and about 40% fewer transformer orders, unless the window reopens. Norvane looks better placed because it can use debt. This is a negative for grid-equipment demand from Pellham.",
+   "cites": [],
+   "invalid": [],
+   "t": 25.53
+  },
+  "n4.r1": {
+   "node": "n4",
+   "kind": "result",
+   "content": "VLTX LEAPS look fairly priced, not cheap. The only evidence I found is a short pricing snapshot and a three-point implied-vol series. It doesn't include the strike, the expiry, the option premium or a comparison with realised volatility.\n\n- **Implied volatility:** LEAPS IV is 27%, against a 2-year median of 26%. That is about one point above the median. The series rises from 24% in 2024 to 26% in 2025 and 27% in 2026.\n- **Skew:** It is flat, so downside protection isn't being priced at a premium. Nor is there a discount on upside calls.\n- **Verdict:** Vol is neither cheap nor expensive, so you get no pricing edge from buying now. The decision rests on your view of the stock, not on how the options are priced.\n\n**Risks to the underlying (from other nodes' findings, not option pricing):**\n- Utilities account for 62% of VLTX holdings' orders. Pellham Power is 35% of that and Norvane is 21%, so the order book is concentrated.\n- Pellham withdrew its C$2.4B equity offering and scaled back procurement.\n- Utility bond spreads widened 30bp to 165bp in Q3.\n- Data-centre connection growth is expected to slow to 9% in 2027.\n- Pellham plans 2027 capex up 18% and Norvane up 12%, which supports demand.\n\nConcentrated customers and tighter financing for those customers could hurt VLTX, yet IV is only slightly above its median. The market doesn't seem to be charging extra for that risk. That helps a long-vol position a little, but only if you think the risk is underpriced.\n\nIf you add this month, size it for the customer-concentration and financing risks. Before committing, check the actual premium, breakeven and expiry against your target move.",
+   "cites": [],
+   "invalid": [],
+   "t": 26.81
+  },
+  "n3.r1": {
+   "node": "n3",
+   "kind": "result",
+   "content": "**Only partly. Debt is open to Caldrian utilities, but equity is not, so the full 2027 plans can't be financed. The evidence is thin.**\n\n- **Plans:** Pellham Power plans 2027 capex up 18% and Norvane Utilities up 12%, mostly substations and transformers. I found no C$ capex totals, so the size of the funding gap isn't quantified.\n- **Debt, open but costlier:** Norvane priced a C$1.1B bond comfortably in Q3 2026. Utility bond spreads widened 30bp in Q3 to 165bp. I found no leverage or FFO/debt figures, so I can't say how much more debt the utilities can take on without ratings pressure.\n- **Equity, weak:** Pellham withdrew its planned C$2.4B equity offering after demand fell short. Two other utility share offerings were cut back in Q3. I found no valuation data and no sign that the issuance window is reopening.\n- **Result:** Pellham says it will cut 2027 transformer orders by about 40% and defer two substation programmes until financing improves. So the shortfall is already reducing spending.\n- **Who is affected:** Norvane looks fundable mainly through debt. Pellham is the one that can't fully fund its plan. It is also the largest single buyer of grid equipment in Caldria, so this is a negative for grid-equipment demand.\n\n**What would change this:** a large Pellham debt deal, credit metrics showing room for more debt, or the equity window reopening. Hybrids, asset sales or partner capital are possible alternatives. They are my suggestions and aren't in the sources.\n\nThis draws on the debt sub-assessment (n5.r1) and the equity sub-assessment (n6.r1).",
+   "cites": [
+    "n5.r1",
+    "n6.r1"
+   ],
+   "invalid": [],
+   "t": 32.63
+  },
+  "n1.r1": {
+   "node": "n1",
+   "kind": "result",
+   "content": "**Don't add this month. Hold your current position and revisit later.**\n\n- **Demand: supportive, but slowing at the margin.**\n  - Utility capex plans for 2027 are up: Pellham Power +18% and Norvane Utilities +12%, mostly substations and transformers.\n  - Data-centre grid connection requests are expected to grow 9% in 2027, slower than in 2026 because power availability is limiting them.\n  - Demand is still rising, so the thesis holds.\n- **Financing: a real risk to the capex plans.**\n  - Debt markets are open, but utility bond spreads widened 30bp in Q3 to 165bp.\n  - Equity is largely shut. Pellham withdrew its C$2.4B equity offering after investor demand fell short, and scaled back procurement.\n  - The full 2027 plans can't be funded as written, so some orders may slip or shrink. The evidence here is thin.\n- **Pricing: fair, not cheap.**\n  - VLTX LEAPS implied volatility is 27%, against a 2-year median of 26%.\n  - There is no pricing edge to justify adding.\n  - The only evidence on price was a short snapshot and a three-point implied-vol series. It didn't include the VLTX stock price or strikes, so I haven't assessed those.\n\nDemand is positive, financing is a risk, and the options aren't cheap. That doesn't make a case for adding now.\n\nI'd reconsider if one of these changes:\n- Implied vol falls well below its median.\n- Utility equity or debt financing improves.\n- Order or procurement news confirms the 2027 capex plans are intact.\n\nThe full reasoning is in the three sub-analyses: n2.r1 (demand), n3.r1 (financing) and n4.r1 (pricing).",
+   "cites": [
+    "n2.r1",
+    "n3.r1",
+    "n4.r1"
+   ],
+   "invalid": [],
+   "t": 38.19
+  }
+ },
+ "edges": [
+  {
+   "kind": "call",
+   "disp": "started",
+   "from": "n1",
+   "to": "n2",
+   "t": 0,
+   "released": 18.62
+  },
+  {
+   "kind": "call",
+   "disp": "started",
+   "from": "n1",
+   "to": "n3",
+   "t": 0,
+   "released": 32.63
+  },
+  {
+   "kind": "call",
+   "disp": "started",
+   "from": "n1",
+   "to": "n4",
+   "t": 0,
+   "released": 26.81
+  },
+  {
+   "kind": "call",
+   "disp": "started",
+   "from": "n3",
+   "to": "n5",
+   "t": 4.58,
+   "released": 24.99
+  },
+  {
+   "kind": "call",
+   "disp": "started",
+   "from": "n3",
+   "to": "n6",
+   "t": 4.59,
+   "released": 25.53
+  },
+  {
+   "kind": "data",
+   "disp": "reused",
+   "from": "n5",
+   "to": "n2",
+   "ref": "n2.d4",
+   "t": 16.74
+  },
+  {
+   "kind": "data",
+   "disp": "joined",
+   "from": "n6",
+   "to": "n5",
+   "ref": "n5.d6",
+   "t": 17.92
+  },
+  {
+   "kind": "data",
+   "disp": "reused",
+   "from": "n6",
+   "to": "n2",
+   "ref": "n2.d4",
+   "t": 17.93
+  },
+  {
+   "kind": "data",
+   "disp": "joined",
+   "from": "n6",
+   "to": "n5",
+   "ref": "n5.d5",
+   "t": 17.93
+  },
+  {
+   "kind": "cite",
+   "from": "n5",
+   "to": "n3",
+   "ref": "n3.r1",
+   "t": 32.63
+  },
+  {
+   "kind": "cite",
+   "from": "n6",
+   "to": "n3",
+   "ref": "n3.r1",
+   "t": 32.63
+  },
+  {
+   "kind": "cite",
+   "from": "n2",
+   "to": "n1",
+   "ref": "n1.r1",
+   "t": 38.19
+  },
+  {
+   "kind": "cite",
+   "from": "n3",
+   "to": "n1",
+   "ref": "n1.r1",
+   "t": 38.19
+  },
+  {
+   "kind": "cite",
+   "from": "n4",
+   "to": "n1",
+   "ref": "n1.r1",
+   "t": 38.19
+  }
+ ],
+ "reads": [
+  {
+   "node": "n3",
+   "ref": "n5.r1",
+   "t": 25.54
+  },
+  {
+   "node": "n3",
+   "ref": "n6.r1",
+   "t": 25.54
+  },
+  {
+   "node": "n3",
+   "ref": "n5.r1",
+   "t": 26.74
+  },
+  {
+   "node": "n3",
+   "ref": "n6.r1",
+   "t": 26.74
+  },
+  {
+   "node": "n3",
+   "ref": "n5.r1",
+   "t": 27.96
+  },
+  {
+   "node": "n3",
+   "ref": "n6.r1",
+   "t": 27.96
+  }
+ ],
+ "worldCalls": [
+  {
+   "node": "n2",
+   "fn": "search",
+   "args": [
+    "grid equipment orders transformers Caldria backlog"
+   ],
+   "ms": 1420,
+   "t": 5.34,
+   "ref": "n2.d3"
+  },
+  {
+   "node": "n2",
+   "fn": "search",
+   "args": [
+    "Caldrian utilities grid capex 2027"
+   ],
+   "ms": 3177,
+   "t": 7.09,
+   "ref": "n2.d1"
+  },
+  {
+   "node": "n4",
+   "fn": "search",
+   "args": [
+    "VLTX LEAPS implied volatility options"
+   ],
+   "ms": 4122,
+   "t": 7.45,
+   "ref": "n4.d1"
+  },
+  {
+   "node": "n2",
+   "fn": "search",
+   "args": [
+    "Caldrian data centre power demand"
+   ],
+   "ms": 4112,
+   "t": 8.03,
+   "ref": "n2.d2"
+  },
+  {
+   "node": "n4",
+   "fn": "search",
+   "args": [
+    "VLTX"
+   ],
+   "ms": 2205,
+   "t": 9.68,
+   "ref": "n4.d2"
+  },
+  {
+   "node": "n6",
+   "fn": "search",
+   "args": [
+    "Caldrian utility valuations P/E"
+   ],
+   "ms": 1161,
+   "t": 11.93,
+   "ref": "n6.d3"
+  },
+  {
+   "node": "n5",
+   "fn": "search",
+   "args": [
+    "Caldrian credit metrics FFO debt utilities"
+   ],
+   "ms": 1682,
+   "t": 12.73,
+   "ref": "n5.d3"
+  },
+  {
+   "node": "n2",
+   "fn": "doc",
+   "args": [
+    "utility-capex-2027"
+   ],
+   "ms": 3967,
+   "t": 13.42,
+   "ref": "n2.d4"
+  },
+  {
+   "node": "n5",
+   "fn": "search",
+   "args": [
+    "Caldrian debt market issuance"
+   ],
+   "ms": 2619,
+   "t": 13.67,
+   "ref": "n5.d4"
+  },
+  {
+   "node": "n5",
+   "fn": "search",
+   "args": [
+    "Caldrian utility bond spreads"
+   ],
+   "ms": 2979,
+   "t": 14.03,
+   "ref": "n5.d2"
+  },
+  {
+   "node": "n6",
+   "fn": "search",
+   "args": [
+    "Caldrian utilities capex 2027 equity needs"
+   ],
+   "ms": 3435,
+   "t": 14.2,
+   "ref": "n6.d2"
+  },
+  {
+   "node": "n6",
+   "fn": "search",
+   "args": [
+    "Caldrian equity market conditions"
+   ],
+   "ms": 3889,
+   "t": 14.65,
+   "ref": "n6.d4"
+  },
+  {
+   "node": "n2",
+   "fn": "doc",
+   "args": [
+    "datacentre-demand"
+   ],
+   "ms": 5528,
+   "t": 14.98,
+   "ref": "n2.d5"
+  },
+  {
+   "node": "n5",
+   "fn": "search",
+   "args": [
+    "Caldrian utilities capex 2027"
+   ],
+   "ms": 4099,
+   "t": 15.15,
+   "ref": "n5.d1"
+  },
+  {
+   "node": "n6",
+   "fn": "search",
+   "args": [
+    "Caldrian utilities equity issuance"
+   ],
+   "ms": 5843,
+   "t": 16.61,
+   "ref": "n6.d1"
+  },
+  {
+   "node": "n5",
+   "fn": "doc",
+   "args": [
+    "utility-capex-2027"
+   ],
+   "ms": 0,
+   "t": 16.74,
+   "shared": "reused",
+   "ref": "n2.d4",
+   "from": "n2"
+  },
+  {
+   "node": "n4",
+   "fn": "doc",
+   "args": [
+    "vltx-leaps"
+   ],
+   "ms": 5821,
+   "t": 17.36,
+   "ref": "n4.d3"
+  },
+  {
+   "node": "n6",
+   "fn": "doc",
+   "args": [
+    "utility-capex-2027"
+   ],
+   "ms": 0,
+   "t": 17.93,
+   "shared": "reused",
+   "ref": "n2.d4",
+   "from": "n2"
+  },
+  {
+   "node": "n5",
+   "fn": "doc",
+   "args": [
+    "pellham-offering"
+   ],
+   "ms": 2731,
+   "t": 19.48,
+   "ref": "n5.d6"
+  },
+  {
+   "node": "n6",
+   "fn": "doc",
+   "args": [
+    "pellham-offering"
+   ],
+   "ms": 1561,
+   "t": 19.48,
+   "shared": "joined",
+   "ref": "n5.d6",
+   "from": "n5"
+  },
+  {
+   "node": "n5",
+   "fn": "doc",
+   "args": [
+    "utility-credit"
+   ],
+   "ms": 2964,
+   "t": 19.71,
+   "ref": "n5.d5"
+  },
+  {
+   "node": "n6",
+   "fn": "doc",
+   "args": [
+    "utility-credit"
+   ],
+   "ms": 1785,
+   "t": 19.71,
+   "shared": "joined",
+   "ref": "n5.d5",
+   "from": "n5"
+  },
+  {
+   "node": "n4",
+   "fn": "series",
+   "args": [
+    "vltx_iv_history"
+   ],
+   "ms": 4040,
+   "t": 21.4,
+   "ref": "n4.d4"
+  }
+ ],
+ "cells": [
+  {
+   "node": "n2",
+   "t": 8.05,
+   "code": "// Single judgment: grid equipment demand from Caldrian utilities and data centres through 2027. Answer directly.\nconst qs=[\"Caldrian utilities grid capex 2027\",\"Caldrian data centre power demand\",\"grid equipment orders transformers Caldria backlog\"];\nconst rs=await Promise.all(qs.map(q=>world.search(q)));\nreturn rs.map(r=>({d:r.docs.map(d=>d.id+\" | \"+d.title+\" | \"+d.snippet),s:r.series}));",
+   "output": "[\n {\n  \"d\": [\n   \"utility-capex-2027 | Caldrian utilities: 2027 capital plans | Pellham Power plans 2027 capital spending up 18%, Norvane Utilities up 12%, mostly substations and transformers. Pellham is the largest sing…\",\n   \"utility-credit | Caldrian utility credit conditions, Q3 2026 | Utility bond spreads widened 30bp in Q3 to 165bp. Norvane priced a C$1.1B bond comfortably. Equity markets have been less receptive: two uti…\"\n  ],\n  \"s\": []\n },\n {\n  \"d\": [\n   \"utility-capex-2027 | Caldrian utilities: 2027 capital plans | Pellham Power plans 2027 capital spending up 18%, Norvane Utilities up 12%, mostly substations and transformers. Pellham is the largest sing…\",\n   \"datacentre-demand | Data-centre grid connections outlook | Data-centre grid connection requests in Caldria are expected to grow 9% in 2027, a slower pace than 2026 as power availability limits new si…\"\n  ],\n  \"s\": []\n },\n {\n  \"d\": [\n   \"utility-capex-2027 | Caldrian utilities: 2027 capital plans | Pellham Power plans 2027 capital spending up 18%, Norvane Utilities up 12%, mostly substations and transformers. Pellham is the largest sing…\",\n   \"vltx-order-mix | VLTX holdings: customer mix | Utilities account for 62% of VLTX holdings' orders. Pellham Power alone is 35% of utility orders; Norvane is 21%.\"\n  ],\n  \"s\": []\n }\n]",
+   "ms": 4157,
+   "error": null
+  },
+  {
+   "node": "n4",
+   "t": 9.68,
+   "code": "// Single judgment: are VLTX LEAPS attractively priced. Answer directly.\nconst r=await world.search(\"VLTX LEAPS implied volatility options\");\nconst r2=await world.search(\"VLTX\");\nreturn {r,r2}",
+   "output": "{\n \"r\": {\n  \"docs\": [\n   {\n    \"id\": \"vltx-leaps\",\n    \"title\": \"VLTX LEAPS pricing snapshot\",\n    \"snippet\": \"VLTX LEAPS implied volatility is 27%, close to its 2-year median of 26%. Skew is flat.\"\n   },\n   {\n    \"id\": \"vltx-order-mix\",\n    \"title\": \"VLTX holdings: customer mix\",\n    \"snippet\": \"Utilities account for 62% of VLTX holdings' orders. Pellham Power alone is 35% of utility orders; Norvane is 21%.\"\n   }\n  ],\n  \"series\": [\n   {\n    \"series\": \"vltx_iv_history\",\n    \"desc\": \"VLTX LEAPS implied vol history\"\n   }\n  ],\n  \"ref\": \"n4.d1\"\n },\n \"r2\": {\n  \"docs\": [\n   {\n    \"id\": \"vltx-order-mix\",\n    \"title\": \"VLTX holdings: customer mix\",\n    \"snippet\": \"Utilities account for 62% of VLTX holdings' orders. Pellham Power alone is 35% of utility orders; Norvane is 21%.\"\n   },\n   {\n    \"id\": \"vltx-leaps\",\n    \"title\": \"VLTX LEAPS pricing snapshot\",\n    \"snippet\": \"VLTX LEAPS implied volatility is 27%, close to its 2-year median of 26%. Skew is flat.\"\n   }\n  ],\n  \"series\": [\n   {\n    \"series\": \"vltx_iv_history\",\n    \"desc\": \"VLTX LEAPS implied vol history\"\n   }\n  ],\n  \"ref\": \"n4.d2\"\n }\n}",
+   "ms": 6354,
+   "error": null
+  },
+  {
+   "node": "n2",
+   "t": 14.99,
+   "code": "const ids=[\"utility-capex-2027\",\"datacentre-demand\"];return await Promise.all(ids.map(i=>world.doc(i)));",
+   "output": "[\n {\n  \"id\": \"utility-capex-2027\",\n  \"title\": \"Caldrian utilities: 2027 capital plans\",\n  \"body\": \"Pellham Power plans 2027 capital spending up 18%, Norvane Utilities up 12%, mostly substations and transformers. Pellham is the largest single buyer of grid equipment in Caldria.\",\n  \"ref\": \"n2.d4\"\n },\n {\n  \"id\": \"datacentre-demand\",\n  \"title\": \"Data-centre grid connections outlook\",\n  \"body\": \"Data-centre grid connection requests in Caldria are expected to grow 9% in 2027, a slower pace than 2026 as power availability limits new sites.\",\n  \"ref\": \"n2.d5\"\n }\n]",
+   "ms": 5537,
+   "error": null
+  },
+  {
+   "node": "n5",
+   "t": 15.15,
+   "code": "// Single judgment: can Caldrian utilities fund 2027 capex via debt. Answer directly.\nconst qs=[\"Caldrian utilities capex 2027\",\"Caldrian utility bond spreads\",\"Caldrian credit metrics FFO debt utilities\",\"Caldrian debt market issuance\"];\nconst r=await Promise.all(qs.map(q=>world.search(q)));\nreturn r.map(x=>({d:x.docs.map(d=>d.id+\" | \"+d.title+\" | \"+d.snippet),s:x.series}));",
+   "output": "[\n {\n  \"d\": [\n   \"utility-capex-2027 | Caldrian utilities: 2027 capital plans | Pellham Power plans 2027 capital spending up 18%, Norvane Utilities up 12%, mostly substations and transformers. Pellham is the largest sing…\",\n   \"utility-credit | Caldrian utility credit conditions, Q3 2026 | Utility bond spreads widened 30bp in Q3 to 165bp. Norvane priced a C$1.1B bond comfortably. Equity markets have been less receptive: two uti…\"\n  ],\n  \"s\": []\n },\n {\n  \"d\": [\n   \"utility-capex-2027 | Caldrian utilities: 2027 capital plans | Pellham Power plans 2027 capital spending up 18%, Norvane Utilities up 12%, mostly substations and transformers. Pellham is the largest sing…\",\n   \"pellham-offering | Pellham Power withdraws equity offering, scales back procurement | Pellham Power withdrew its planned C$2.4B equity offering after investor demand fell short. The company said it will cut 2027 transformer or…\",\n   \"utility-credit | Caldrian utility credit conditions, Q3 2026 | Utility bond spreads widened 30bp in Q3 to 165bp. Norvane priced a C$1.1B bond comfortably. Equity markets have been less receptive: two uti…\"\n  ],\n  \"s\": []\n },\n {\n  \"d\": [\n   \"utility-credit | Caldrian utility credit conditions, Q3 2026 | Utility bond spreads widened 30bp in Q3 to 165bp. Norvane priced a C$1.1B bond comfortably. Equity markets have been less receptive: two uti…\",\n   \"utility-capex-2027 | Caldrian utilities: 2027 capital plans | Pellham Power plans 2027 capital spending up 18%, Norvane Utilities up 12%, mostly substations and transformers. Pellham is the largest sing…\",\n   \"pellham-offering | Pellham Power withdraws equity offering, scales back procurement | Pellham Power withdrew its planned C$2.4B equity offering after investor demand fell short. The company said it will cut 2027 transformer or…\"\n  ],\n  \"s\": []\n },\n {\n  \"d\": [\n   \"pellham-offering | Pellham Power withdraws equity offering, scales back procurement | Pellham Power withdrew its planned C$2.4B equity offering after investor demand fell short. The company said it will cut 2027 transformer or…\",\n   \"utility-credit | Caldrian utility credit conditions, Q3 2026 | Utility bond spreads widened 30bp in Q3 to 165bp. Norvane priced a C$1.1B bond comfortably. Equity markets have been less receptive: two uti…\"\n  ],\n  \"s\": []\n }\n]",
+   "ms": 4115,
+   "error": null
+  },
+  {
+   "node": "n6",
+   "t": 16.61,
+   "code": "// Single judgment: equity financing capacity. Answer directly.\nconst qs=[\"Caldrian utilities equity issuance\",\"Caldrian utilities capex 2027 equity needs\",\"Caldrian utility valuations P/E\",\"Caldrian equity market conditions\"];\nconst rs=await Promise.all(qs.map(q=>world.search(q)));\nreturn rs.map(r=>({d:r.docs.map(d=>d.id+\" | \"+d.title+\" | \"+d.snippet),s:r.series}));",
+   "output": "[\n {\n  \"d\": [\n   \"pellham-offering | Pellham Power withdraws equity offering, scales back procurement | Pellham Power withdrew its planned C$2.4B equity offering after investor demand fell short. The company said it will cut 2027 transformer or…\",\n   \"utility-capex-2027 | Caldrian utilities: 2027 capital plans | Pellham Power plans 2027 capital spending up 18%, Norvane Utilities up 12%, mostly substations and transformers. Pellham is the largest sing…\",\n   \"utility-credit | Caldrian utility credit conditions, Q3 2026 | Utility bond spreads widened 30bp in Q3 to 165bp. Norvane priced a C$1.1B bond comfortably. Equity markets have been less receptive: two uti…\"\n  ],\n  \"s\": []\n },\n {\n  \"d\": [\n   \"utility-capex-2027 | Caldrian utilities: 2027 capital plans | Pellham Power plans 2027 capital spending up 18%, Norvane Utilities up 12%, mostly substations and transformers. Pellham is the largest sing…\",\n   \"pellham-offering | Pellham Power withdraws equity offering, scales back procurement | Pellham Power withdrew its planned C$2.4B equity offering after investor demand fell short. The company said it will cut 2027 transformer or…\",\n   \"utility-credit | Caldrian utility credit conditions, Q3 2026 | Utility bond spreads widened 30bp in Q3 to 165bp. Norvane priced a C$1.1B bond comfortably. Equity markets have been less receptive: two uti…\"\n  ],\n  \"s\": []\n },\n {\n  \"d\": [\n   \"utility-capex-2027 | Caldrian utilities: 2027 capital plans | Pellham Power plans 2027 capital spending up 18%, Norvane Utilities up 12%, mostly substations and transformers. Pellham is the largest sing…\"\n  ],\n  \"s\": []\n },\n {\n  \"d\": [\n   \"pellham-offering | Pellham Power withdraws equity offering, scales back procurement | Pellham Power withdrew its planned C$2.4B equity offering after investor demand fell short. The company said it will cut 2027 transformer or…\"\n  ],\n  \"s\": []\n }\n]",
+   "ms": 5856,
+   "error": null
+  },
+  {
+   "node": "n6",
+   "t": 19.71,
+   "code": "return await Promise.all([\"pellham-offering\",\"utility-capex-2027\",\"utility-credit\"].map(async i=>(await world.doc(i)).body));",
+   "output": "[\n \"Pellham Power withdrew its planned C$2.4B equity offering after investor demand fell short. The company said it will cut 2027 transformer orders by about 40% and defer two substation programmes until financing improves.\",\n \"Pellham Power plans 2027 capital spending up 18%, Norvane Utilities up 12%, mostly substations and transformers. Pellham is the largest single buyer of grid equipment in Caldria.\",\n \"Utility bond spreads widened 30bp in Q3 to 165bp. Norvane priced a C$1.1B bond comfortably. Equity markets have been less receptive: two utility share offerings were cut back in size.\"\n]",
+   "ms": 1791,
+   "error": null
+  },
+  {
+   "node": "n5",
+   "t": 19.72,
+   "code": "const ids=[\"utility-capex-2027\",\"utility-credit\",\"pellham-offering\"];\nreturn (await Promise.all(ids.map(i=>world.doc(i)))).map(d=>d.title+\"\\n\"+d.body);",
+   "output": "[\n \"Caldrian utilities: 2027 capital plans\\nPellham Power plans 2027 capital spending up 18%, Norvane Utilities up 12%, mostly substations and transformers. Pellham is the largest single buyer of grid equipment in Caldria.\",\n \"Caldrian utility credit conditions, Q3 2026\\nUtility bond spreads widened 30bp in Q3 to 165bp. Norvane priced a C$1.1B bond comfortably. Equity markets have been less receptive: two utility share offerings were cut back in size.\",\n \"Pellham Power withdraws equity offering, scales back procurement\\nPellham Power withdrew its planned C$2.4B equity offering after investor demand fell short. The company said it will cut 2027 transformer orders by about 40% and defer two substation programmes until financing improves.\"\n]",
+   "ms": 2978,
+   "error": null
+  },
+  {
+   "node": "n4",
+   "t": 21.41,
+   "code": "const d=await world.doc(\"vltx-leaps\");const s=await world.series(\"vltx_iv_history\");return {d,n:s.points.length,last:s.points.slice(-5),unit:s.unit}",
+   "output": "{\n \"d\": {\n  \"id\": \"vltx-leaps\",\n  \"title\": \"VLTX LEAPS pricing snapshot\",\n  \"body\": \"VLTX LEAPS implied volatility is 27%, close to its 2-year median of 26%. Skew is flat.\",\n  \"ref\": \"n4.d3\"\n },\n \"n\": 3,\n \"last\": [\n  [\n   \"2024\",\n   0.24\n  ],\n  [\n   \"2025\",\n   0.26\n  ],\n  [\n   \"2026\",\n   0.27\n  ]\n ],\n \"unit\": \"implied vol\"\n}",
+   "ms": 9870,
+   "error": null
+  },
+  {
+   "node": "n3",
+   "t": 25.54,
+   "code": "// J1: Can Caldrian utilities finance 2027 capex via debt markets?\n// J2: Can Caldrian utilities finance 2027 capex via equity markets?\nglobalThis.a=nodes.open({task:\"Can Caldrian utilities finance their 2027 capex plans through debt markets? Assess capex size, debt market conditions, spreads, credit metrics.\"});\nglobalThis.b=nodes.open({task:\"Can Caldrian utilities finance their 2027 capex plans through equity markets? Assess equity needs, valuations, issuance windows, market conditions.\"});\nconst [x,y]=await Promise.all([a.result(),b.result()]);\nreturn [read(x.ref),read(y.ref)];",
+   "output": "[\n {},\n {}\n]",
+   "ms": 20981,
+   "error": null
+  },
+  {
+   "node": "n3",
+   "t": 26.75,
+   "code": "return [read(\"n5.r1\"),read(\"n6.r1\")]",
+   "output": "[\n {},\n {}\n]",
+   "ms": 6,
+   "error": null
+  },
+  {
+   "node": "n3",
+   "t": 27.96,
+   "code": "const r=[await tools.readArtifact({ref:\"n5.r1\"}),await tools.readArtifact({ref:\"n6.r1\"})];return r.map(x=>x.text)",
+   "output": "[\n \"**Partly yes. Debt markets are open, but they aren't covering the full 2027 plans.** Norvane can fund itself in debt. Pellham has already cut its programme because it can't raise equity.\\n\\n- **Capex size:** Pellham plans 2027 capital spending up 18% and Norvane up 12%. Most of it is substations and transformers. No capex amounts in C$ or credit-metric figures (leverage, FFO/debt) turned up in my search, so the size of the funding gap is unquantified.\\n- **Debt market conditions:** Debt is accessible. Norvane priced a C$1.1B bond \\\"comfortably\\\" in Q3 2026.\\n- **Spreads:** Utility bond spreads widened 30bp in Q3 to 165bp. That is higher funding cost, but not a shut market.\\n- **Equity is the weak point:** Two utility share offerings were cut back in Q3. Pellham then withdrew its C$2.4B equity offering after demand fell short. Pellham said it will cut 2027 transformer orders by about 40% and defer two substation programmes until financing improves.\\n- **Credit metrics:** I found none, so I can't say whether more debt would strain ratings. Pellham's equity raise was likely meant to protect its balance sheet. Replacing it with debt alone would probably push leverage up, which is my inference rather than a finding.\\n\\n**Conclusion:** Debt can plausibly fund Norvane's +12%. For Pellham, the largest single buyer of grid equipment in Caldria, debt has not filled the gap so far, so its 2027 spending is being cut. Grid-equipment demand from Pellham is therefore at risk, even though Norvane's looks intact. The answer would change if Pellham issued large debt or its credit metrics were shown to have room.\",\n \"**Mostly no. Equity markets are not currently a reliable way to fund the 2027 capex plans, at least for the most stretched issuer, Pellham.** The evidence is thin. I found only three documents and no valuation or P/E data.\\n\\n- **Capex pressure:** Pellham plans 2027 capital spending up 18%. Norvane plans a 12% increase. Most of it goes to substations and transformers. Pellham is the largest single buyer of grid equipment in Caldria. (utility-capex-2027)\\n- **Equity window:** It is weak. Pellham withdrew its planned C$2.4B equity offering after investor demand fell short. Two utility share offerings were also cut back in size. (pellham-offering, utility-credit)\\n- **Consequence of the failed raise:** Pellham says it will cut 2027 transformer orders by about 40% and defer two substation programmes until financing improves. So the equity gap is already reducing capex, which means the funding shortfall is real and not just a risk.\\n- **Debt as the alternative:** The debt market is open but getting more expensive. Bond spreads widened 30bp in Q3 to 165bp. Norvane priced a C$1.1B bond comfortably. Utilities with better access, like Norvane, can lean on debt. A heavier reliance on debt raises leverage and credit pressure.\\n- **Valuations:** The failed and downsized deals suggest investors are unwilling to pay the prices issuers wanted. I have no multiples or yield data to quantify that.\\n- **Issuance windows:** None is evident now. A reopening would depend on better sentiment, a lower issue size, or alternative structures such as hybrids, asset sales or partner capital. These are my suggestions and are not in the sources.\\n\\n**Conclusion:** Pellham's 2027 plan is not fully financeable through equity now. Expect deferrals, and about 40% fewer transformer orders, unless the window reopens. Norvane looks better placed because it can use debt. This is a negative for grid-equipment demand from Pellham.\"\n]",
+   "ms": 4,
+   "error": null
+  },
+  {
+   "node": "n1",
+   "t": 32.63,
+   "code": "const r=[];for(let i=0;i<3;i++){}\nconst out=await Promise.all([\"n2\",\"n3\",\"n4\"].map(n=>nodes.handle(n).result()));return out;",
+   "output": "[\n {\n  \"node\": \"n2\",\n  \"ref\": \"n2.r1\",\n  \"line\": \"**Yes, demand is rising through 2027, but data-centre demand is growing more slowly than before.**\",\n  \"status\": \"completed\"\n },\n {\n  \"node\": \"n3\",\n  \"ref\": \"n3.r1\",\n  \"line\": \"**Only partly. Debt is open to Caldrian utilities, but equity is not, so the full 2027 plans can't be financed. The evidence is thin.**\",\n  \"status\": \"completed\"\n },\n {\n  \"node\": \"n4\",\n  \"ref\": \"n4.r1\",\n  \"line\": \"VLTX LEAPS look fairly priced, not cheap. The only evidence I found is a short pricing snapshot and a three-point implied-vol series. It doesn't include the st…\",\n  \"status\": \"completed\"\n }\n]",
+   "ms": 29641,
+   "error": null
+  }
+ ]
+}

@@ -1,0 +1,28 @@
+{
+ "workflow": "cross",
+ "cond": {
+  "id": "guided",
+  "delivery": "broadcast",
+  "broadcast": "lifecycle+cp",
+  "data": "identity",
+  "wake": "code",
+  "guided": true
+ },
+ "seed": 105,
+ "model": "claude-sonnet-5-5",
+ "status": "answered",
+ "wall": 45.77,
+ "cost": 0.129,
+ "usage": {
+  "input": 36,
+  "output": 5277,
+  "cacheRead": 72924,
+  "cacheWrite": 17221
+ },
+ "nodes": 6,
+ "lines": 17,
+ "cells": 12,
+ "worldCalls": 23,
+ "reads": 5,
+ "answer": "**Recommendation: don't add this month. Hold your current position and wait for a trigger.**\n\n- **Pricing gives no reason to add.** VLTX LEAPS look fairly priced (n4). Implied volatility is 27% against a 2-year median of 26%, and skew is flat. You aren't getting a discount, so the case has to rest on fundamentals.\n- **Fundamentals are mixed, and the main risk falls on VLTX's biggest customer.**\n  - Demand for grid equipment should keep rising through 2027 (n2). Pellham plans 2027 capex up 18% and Norvane up 12%. Data-centre connection requests are expected to grow 9%, slower than in 2026.\n  - Financing may not support those plans (n3). Equity markets are largely shut. Pellham withdrew its C$2.4B equity raise, and it is cutting 2027 transformer orders by about 40% and deferring two substation programmes. Debt is open mainly for stronger issuers such as Norvane, which priced a C$1.1B bond comfortably.\n  - VLTX is concentrated in these customers (n2). Utilities are 62% of orders, Pellham is 35% of utility orders, and Norvane is 21%. So Pellham's cutbacks hit VLTX directly, and Norvane's healthier funding only partly offsets that.\n  - A LEAPS position is a long-dated bet, so a near-term order hit from Pellham matters even if the long-run demand story holds.\n\n**What would change this to \"add\":**\n- A successful utility equity raise, especially by Pellham.\n- Bond spreads tightening from the current 165bp, which widened 30bp in Q3.\n- Pellham reinstating its deferred programmes.\n\n**Gaps in the evidence:**\n- I had no data on VLTX's price, strikes, premiums, IV percentile, order backlog or lead times.\n- The financing evidence is thin: a few short documents with no leverage or rating data.\n- I haven't looked at specific contracts, so check actual strikes and premiums before trading.\n\nSources: n2.r1, n3.r1, n4.r1."
+}

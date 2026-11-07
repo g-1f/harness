@@ -1,0 +1,29 @@
+{
+ "workflow": "conflict-long",
+ "cond": {
+  "id": "guided-data",
+  "delivery": "broadcast",
+  "broadcast": "lifecycle+cp",
+  "data": "identity",
+  "wake": "code",
+  "guided": true,
+  "lines": "data"
+ },
+ "seed": 101,
+ "model": "claude-sonnet-5-5",
+ "status": "answered",
+ "wall": 74.44,
+ "cost": 0.0747,
+ "usage": {
+  "input": 28,
+  "output": 3740,
+  "cacheRead": 63938,
+  "cacheWrite": 7725
+ },
+ "nodes": 3,
+ "lines": 15,
+ "cells": 11,
+ "worldCalls": 18,
+ "reads": 0,
+ "answer": "**Probably not, but it's close.** I put VLTG's 2027 revenue at roughly C$3.9–4.2B, so C$4.2B is the top of the range and would need everything to go right. This rests on thin data and on the two child nodes' summaries (n2.r1, n3.r1). I didn't open the underlying documents myself.\n\n- **Company disclosures (n2):**\n  - Orders rose 11% year on year in H1 2026, led by utility and data-centre customers.\n  - A fire halted the Halbrook plant for nine weeks in Q2 2026. Halbrook builds all of Voltaris's large power transformers. It restarted in August at full capacity.\n  - About C$310M of delayed shipments are due between Q4 2026 and Q2 2027, on top of normal output. That recovery helps 2027 but isn't enough to guarantee the guidance.\n  - n2 puts 2027 revenue at about C$3.9–4.2B, so the guidance is possible but needs everything to go right.\n- **Industry data (n3):**\n  - Industry transformer shipments fell 4% year on year in Q2 2026, the first decline in three years.\n  - Voltaris shipments fell 9% in that quarter, the steepest decline among large makers. Tarnwell grew 4% and imports grew 11%.\n  - On this basis n3 puts 2027 revenue well below C$4.2B. It rests on two quarters of shipment growth and one quarter of share data.\n\nThe two views differ mainly on how much of the Halbrook outage was a one-off. The company's own figures treat it as temporary and recoverable. The industry data shows share loss to Tarnwell and imports, which may not reverse."
+}

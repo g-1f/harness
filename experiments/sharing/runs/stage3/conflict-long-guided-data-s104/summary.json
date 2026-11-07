@@ -1,0 +1,29 @@
+{
+ "workflow": "conflict-long",
+ "cond": {
+  "id": "guided-data",
+  "delivery": "broadcast",
+  "broadcast": "lifecycle+cp",
+  "data": "identity",
+  "wake": "code",
+  "guided": true,
+  "lines": "data"
+ },
+ "seed": 104,
+ "model": "claude-sonnet-5-5",
+ "status": "answered",
+ "wall": 58.28,
+ "cost": 0.0706,
+ "usage": {
+  "input": 24,
+  "output": 3246,
+  "cacheRead": 51682,
+  "cacheWrite": 8227
+ },
+ "nodes": 3,
+ "lines": 13,
+ "cells": 9,
+ "worldCalls": 13,
+ "reads": 2,
+ "answer": "**Verdict: Voltaris will probably reach C$4.2B, but it is not certain. I put it at about 55–60%, and a small miss in the C$4.0–4.2B range is the most likely way it fails.**\n\nThe two sub-analyses disagreed, and one of them missed a key fact:\n\n- **The industry-data case (n3.r1):** It saw Voltaris shipments fall 9% year on year in Q2 2026 and read that as lost market share. It did not know about the Halbrook fire. Halbrook builds all of Voltaris's large power transformers, and it was shut for nine weeks in Q2 (n2.d5). It restarted in August at full capacity (n2.d7). So the share loss looks like a one-off outage, not a lasting trend.\n- **The disclosures case (n2.r1):** Backlog was C$5.1B at H1 2026, about 1.2x the guidance. Orders rose 11% year on year, and cancellations were below 1%. Delayed orders should move into H2 2026 and 2027.\n\n**What 2027 needs:** About C$1.05B per quarter. The pre-fire level was C$980M in Q1 2026, which annualises to about C$3.9B. Guidance therefore needs roughly 7% growth above that level. The 11% order growth makes that plausible.\n\n**Why not higher confidence:**\n- Industry shipments fell 4% year on year in Q2 2026, the first decline in three years, so the market is not helping.\n- The claim that the backlog \"covers\" guidance is management's own.\n- Halbrook is the only source of large transformers, so any further stoppage would hit 2027 directly.\n- The industry-data case rested on thin evidence: three quarters of industry data and a maker table I only saw in part."
+}

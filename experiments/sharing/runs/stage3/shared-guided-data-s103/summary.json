@@ -1,0 +1,29 @@
+{
+ "workflow": "shared",
+ "cond": {
+  "id": "guided-data",
+  "delivery": "broadcast",
+  "broadcast": "lifecycle+cp",
+  "data": "identity",
+  "wake": "code",
+  "guided": true,
+  "lines": "data"
+ },
+ "seed": 103,
+ "model": "claude-sonnet-5-5",
+ "status": "answered",
+ "wall": 33.63,
+ "cost": 0.074,
+ "usage": {
+  "input": 18,
+  "output": 3102,
+  "cacheRead": 37721,
+  "cacheWrite": 9785
+ },
+ "nodes": 3,
+ "lines": 17,
+ "cells": 6,
+ "worldCalls": 14,
+ "reads": 4,
+ "answer": "**Verdict: reasonably good, but not urgent. Buy in stages, or wait for a pullback.**\n\nThis rests on two sub-analyses, one on valuation and one on option pricing. I haven't checked the actual premiums or breakevens, because the data has no call prices or strikes.\n\n**Valuation case (n2): intact.**\n- Consensus expects 14% EPS growth in 2027 for VLTX's holdings, and estimates rose 3% over the past quarter.\n- The basket trades at 19x forward P/E.\n- Rate futures imply about 50bp of CMA cuts by end-2027. Governor Ashby's base case is one 25bp cut, and she said markets \"may be getting ahead of themselves.\"\n- If markets reprice to one cut, the multiple could give back about 4%. That is smaller than the 14% earnings growth.\n- Voltaris and Tarnwell make up 25% of the fund, and n2 didn't check their individual estimates.\n\n**Option pricing (n3): looks cheap on volatility.**\n- Jan-2028 implied vol is about 24% at the money and 23.5% at 110% moneyness.\n- Realized vol is 29–31%, so you would be buying vol at roughly a 20% discount.\n- The discount shrinks if VLTX calms down, because realized vol looks backward.\n- Jan-2028 is the longest listed expiry, so the 2027 cuts have time to play out.\n\n**Timing risk.** The main near-term risk is a hawkish CMA repricing toward the one-cut view. That would hit the multiple before earnings could offset it. So I'd scale in rather than buy everything at once, and add more on any rate-driven dip.\n\n**Before buying:** check the actual premium and breakeven at your strike, and look at Voltaris and Tarnwell's estimates. This is analysis, not personalized financial advice."
+}

@@ -1,0 +1,27 @@
+{
+ "workflow": "conflict-long",
+ "cond": {
+  "id": "identity",
+  "delivery": "broadcast",
+  "broadcast": "lifecycle+cp",
+  "data": "identity",
+  "wake": "code"
+ },
+ "seed": 103,
+ "model": "claude-sonnet-5-5",
+ "status": "answered",
+ "wall": 93.88,
+ "cost": 0.0823,
+ "usage": {
+  "input": 28,
+  "output": 3941,
+  "cacheRead": 61782,
+  "cacheWrite": 9162
+ },
+ "nodes": 3,
+ "lines": 7,
+ "cells": 11,
+ "worldCalls": 18,
+ "reads": 2,
+ "answer": "**Verdict: it is more likely than not that VLTG roughly meets the C$4.2B guidance, but only narrowly. I put the odds at about 55%. My central estimate is C$4.0–4.2B, and a modest miss is the main risk.**\n\nThe two analyses disagreed, and I resolved it this way:\n\n- **Industry view (n3):** CEA data shows Voltaris shipments down 9% in Q2 2026, against −4% for the industry. n3 read that as share loss and projected C$3.6–3.9B.\n- **Company view (n2):** The 9% drop matches the nine-week Halbrook fire, which took out the plant that builds all of Voltaris's large power transformers. n3 did not account for the fire, so the share loss looks like a one-off outage. It is probably not a structural decline.\n- **Backlog:** The backlog is C$5.1B, about 1.2× the guidance. Orders were up 11% year on year and cancellations were under 1%. These are management figures.\n- **Recovery shipments:** About C$310M of delayed shipments are due between Q4 2026 and Q2 2027. Customers have accepted the new dates, and Halbrook restarted in August at full capacity.\n- **My arithmetic:** The pre-fire pace of about C$980M a quarter gives roughly C$3.9–4.0B for 2027. Adding the C$310M reaches about C$4.2–4.3B. The recovery plan says management's guidance reconciles these figures, but n2 did not see that statement.\n\n**Risks to the guidance:**\n- The recovery shipments are concentrated in H1 2027. H2 would then need about C$1.05B a quarter on organic growth alone.\n- Industry shipments fell 4% in Q2 2026, the first decline in three years, and growth had already slowed over the prior two quarters. Lagging orders could keep volumes weak into 2027.\n- The third shift at Halbrook is unproven.\n- Halbrook is a single point of failure for large power transformers.\n- n3's share view rests on one quarter of data and no market-share series. Voltaris's growth would also have to come mostly from price or mix rather than volume.\n\nEven if the fire explains the Q2 drop, Voltaris would still have to grow about 10% above its recent C$3.7B-a-year run rate. The guidance is achievable but has little margin.\n\nFull analyses are in n2.r1 and n3.r1."
+}

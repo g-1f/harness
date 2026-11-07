@@ -1,0 +1,215 @@
+imported stage2/conflict-identity-s101 as conflict-identity-s101
+imported stage2/shared-identity-s101 as shared-identity-s101
+imported stage2/noise-identity-s101 as noise-identity-s101
+imported stage2/cross-identity-s101 as cross-identity-s101
+imported stage2/conflict-long-identity-s101 as conflict-long-identity-s101
+imported stage2/cross-long-identity-s101 as cross-long-identity-s101
+imported stage2/shared-identity-s102 as shared-identity-s102
+imported stage2/conflict-identity-s102 as conflict-identity-s102
+imported stage2/cross-identity-s102 as cross-identity-s102
+imported stage2/noise-identity-s102 as noise-identity-s102
+imported stage2/conflict-long-identity-s102 as conflict-long-identity-s102
+imported stage2/cross-long-identity-s102 as cross-long-identity-s102
+imported stage2/shared-identity-s103 as shared-identity-s103
+imported stage2/conflict-identity-s103 as conflict-identity-s103
+imported stage2/cross-identity-s103 as cross-identity-s103
+imported stage2/noise-identity-s103 as noise-identity-s103
+imported stage2/conflict-long-identity-s103 as conflict-long-identity-s103
+imported stage2/shared-identity-s104 as shared-identity-s104
+imported stage2/cross-long-identity-s103 as cross-long-identity-s103
+imported stage2/conflict-identity-s104 as conflict-identity-s104
+imported stage2/cross-identity-s104 as cross-identity-s104
+imported stage2/noise-identity-s104 as noise-identity-s104
+imported stage2/conflict-long-identity-s104 as conflict-long-identity-s104
+imported stage2/shared-identity-s105 as shared-identity-s105
+imported stage2/cross-long-identity-s104 as cross-long-identity-s104
+imported stage2/conflict-identity-s105 as conflict-identity-s105
+imported stage2/cross-identity-s105 as cross-identity-s105
+imported stage2/noise-identity-s105 as noise-identity-s105
+imported stage2/conflict-long-identity-s105 as conflict-long-identity-s105
+imported stage2/cross-long-identity-s105 as cross-long-identity-s105
+imported stage2/conflict-guided-s101 as conflict-guided-s101
+imported stage2/shared-guided-s101 as shared-guided-s101
+imported stage2/noise-guided-s101 as noise-guided-s101
+imported stage2/cross-guided-s101 as cross-guided-s101
+imported stage2/conflict-long-guided-s101 as conflict-long-guided-s101
+imported stage2/cross-long-guided-s101 as cross-long-guided-s101
+imported stage2/shared-guided-s102 as shared-guided-s102
+imported stage2/conflict-guided-s102 as conflict-guided-s102
+imported stage2/cross-guided-s102 as cross-guided-s102
+imported stage2/noise-guided-s102 as noise-guided-s102
+imported stage2/conflict-long-guided-s102 as conflict-long-guided-s102
+imported stage2/shared-guided-s103 as shared-guided-s103
+imported stage2/cross-long-guided-s102 as cross-long-guided-s102
+imported stage2/conflict-guided-s103 as conflict-guided-s103
+imported stage2/cross-guided-s103 as cross-guided-s103
+imported stage2/noise-guided-s103 as noise-guided-s103
+imported stage2/conflict-long-guided-s103 as conflict-long-guided-s103
+imported stage2/cross-long-guided-s103 as cross-long-guided-s103
+imported stage2/shared-guided-s104 as shared-guided-s104
+imported stage2/conflict-guided-s104 as conflict-guided-s104
+imported stage2/cross-guided-s104 as cross-guided-s104
+imported stage2/noise-guided-s104 as noise-guided-s104
+imported stage2/conflict-long-guided-s104 as conflict-long-guided-s104
+imported stage2/cross-long-guided-s104 as cross-long-guided-s104
+imported stage2/shared-guided-s105 as shared-guided-s105
+imported stage2/conflict-guided-s105 as conflict-guided-s105
+imported stage2/cross-guided-s105 as cross-guided-s105
+imported stage2/noise-guided-s105 as noise-guided-s105
+imported stage2/conflict-long-guided-s105 as conflict-long-guided-s105
+imported stage2/cross-long-guided-s105 as cross-long-guided-s105
+stage3: 120 runs, 60 already done, $8.26 spent, cap $24
+ran conflict|guided-data|101 in 37s, $0.0666, answered
+ran conflict|identity-data|101 in 38s, $0.0758, answered
+ran shared|guided-data|101 in 38s, $0.0784, answered
+scored conflict|identity-data|101: grade 1/3, checks {"shipmentsBranchExplained":false,"branchesTalked":false}, total spent $8.37
+scored conflict|guided-data|101: grade 1/3, checks {"shipmentsBranchExplained":false,"branchesTalked":true}, total spent $8.47
+scored shared|guided-data|101: grade 3/4, checks {"fetchedOnce":true,"reused":true}, total spent $8.59
+ran shared|identity-data|101 in 55s, $0.1423, answered
+scored shared|identity-data|101: grade 1/4, checks {"fetchedOnce":true,"reused":true}, total spent $8.77
+ran noise|identity-data|101 in 35s, $0.1082, answered
+scored noise|identity-data|101: grade 5/5, checks {"noCrossTraffic":true}, total spent $8.90
+ran cross|identity-data|101 in 43s, $0.139, answered
+ran noise|guided-data|101 in 26s, $0.1006, answered
+ran cross|guided-data|101 in 46s, $0.1416, answered
+scored cross|identity-data|101: grade 4/4, checks {"demandBranchKnows":false,"findingCrossed":false}, total spent $9.07
+scored noise|guided-data|101: grade 5/5, checks {"noCrossTraffic":true}, total spent $9.19
+scored cross|guided-data|101: grade 4/4, checks {"demandBranchKnows":false,"findingCrossed":false}, total spent $9.36
+ran cross-long|guided-data|101 in 65s, $0.136, answered
+ran cross-long|identity-data|101 in 69s, $0.1448, answered
+scored cross-long|guided-data|101: grade 2/4, checks {"demandBranchKnows":false,"findingCrossed":true}, total spent $9.52
+ran conflict-long|guided-data|101 in 74s, $0.0747, answered
+scored cross-long|identity-data|101: grade 2/4, checks {"demandBranchKnows":false,"findingCrossed":false}, total spent $9.70
+ran conflict-long|identity-data|101 in 83s, $0.078, answered
+scored conflict-long|guided-data|101: grade 1/4, checks {"shipmentsBranchExplained":false,"branchesTalked":true}, total spent $9.81
+scored conflict-long|identity-data|101: grade 2/4, checks {"shipmentsBranchExplained":true,"branchesTalked":false}, total spent $9.92
+ran shared|guided-data|102 in 40s, $0.0758, answered
+ran conflict|guided-data|102 in 35s, $0.0659, answered
+ran conflict|identity-data|102 in 38s, $0.0752, answered
+ran shared|identity-data|102 in 49s, $0.0902, answered
+scored shared|guided-data|102: grade 3/4, checks {"fetchedOnce":true,"reused":true}, total spent $10.03
+scored conflict|guided-data|102: grade 2/3, checks {"shipmentsBranchExplained":false,"branchesTalked":true}, total spent $10.13
+scored conflict|identity-data|102: grade 2/3, checks {"shipmentsBranchExplained":false,"branchesTalked":true}, total spent $10.23
+scored shared|identity-data|102: grade 2/4, checks {"fetchedOnce":true,"reused":true}, total spent $10.36
+ran noise|identity-data|102 in 30s, $0.079, answered
+scored noise|identity-data|102: grade 4/5, checks {"noCrossTraffic":true}, total spent $10.46
+ran noise|guided-data|102 in 31s, $0.0832, answered
+ran cross|identity-data|102 in 41s, $0.1233, answered
+ran cross|guided-data|102 in 40s, $0.1121, answered
+scored cross|identity-data|102: grade 2/4, checks {"demandBranchKnows":false,"findingCrossed":false}, total spent $10.61
+scored cross|guided-data|102: grade 2/4, checks {"demandBranchKnows":false,"findingCrossed":false}, total spent $10.75
+scored noise|guided-data|102: grade 5/5, checks {"noCrossTraffic":true}, total spent $10.86
+ran cross-long|identity-data|102 in 55s, $0.1218, answered
+scored cross-long|identity-data|102: grade 2/4, checks {"demandBranchKnows":false,"findingCrossed":false}, total spent $11.01
+ran cross-long|guided-data|102 in 77s, $0.171, answered
+scored cross-long|guided-data|102: grade 2/4, checks {"demandBranchKnows":false,"findingCrossed":true}, total spent $11.21
+ran conflict-long|identity-data|102 in 97s, $0.0868, answered
+ran conflict-long|guided-data|102 in 93s, $0.0686, answered
+scored conflict-long|identity-data|102: grade 3/4, checks {"shipmentsBranchExplained":true,"branchesTalked":true}, total spent $11.33
+scored conflict-long|guided-data|102: grade 0/4, checks {"shipmentsBranchExplained":false,"branchesTalked":true}, total spent $11.44
+ran shared|identity-data|103 in 44s, $0.1184, answered
+scored shared|identity-data|103: grade 3/4, checks {"fetchedOnce":true,"reused":true}, total spent $11.59
+ran shared|guided-data|103 in 34s, $0.074, answered
+scored shared|guided-data|103: grade 3/4, checks {"fetchedOnce":true,"reused":true}, total spent $11.70
+ran cross|guided-data|103 in 2s, $0, usage limit
+voided cross|guided-data|103: usage limit; it runs again after the reset
+usage limit: waiting 213 min, until 2026-11-07T00:51:00.000Z
+node:fs:2430
+    return binding.writeFileUtf8(
+                   ^
+
+Error: ENOENT: no such file or directory, open '/home/claude/harness/experiments/sharing/runs/stage3/cross-guided-data-s103/nodes/n3.exits.jsonl'
+    at Object.writeFileSync (node:fs:2430:20)
+    at Object.appendFileSync (node:fs:2512:6)
+    at Run.onExit (file:///home/claude/harness/experiments/sharing/lib/run.mjs:185:8)
+    at ChildProcess.<anonymous> (file:///home/claude/harness/experiments/sharing/lib/run.mjs:164:35)
+    at ChildProcess.emit (node:events:519:28)
+    at maybeClose (node:internal/child_process:1101:16)
+    at ChildProcess._handle.onexit (node:internal/child_process:304:5) {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/home/claude/harness/experiments/sharing/runs/stage3/cross-guided-data-s103/nodes/n3.exits.jsonl'
+}
+
+Node.js v22.23.4
+stage3: 120 runs, 86 already done, $11.70 spent, cap $24
+ran conflict|identity-data|103 in 7s, $0, usage limit
+voided conflict|identity-data|103: usage limit; it runs again after the reset
+usage limit: waiting 212 min, until 2026-11-07T00:51:00.000Z
+ran conflict|guided-data|103 in 7s, $0, usage limit
+voided conflict|guided-data|103: usage limit; it runs again after the reset
+ran cross|identity-data|103 in 7s, $0, usage limit
+voided cross|identity-data|103: usage limit; it runs again after the reset
+ran cross|guided-data|103 in 7s, $0, usage limit
+voided cross|guided-data|103: usage limit; it runs again after the reset
+stage3: 120 runs, 86 already done, $11.70 spent, cap $24
+ran cross|identity-data|103 in 39s, $0.1634, answered
+ran conflict|guided-data|103 in 41s, $0.0911, answered
+ran cross|guided-data|103 in 41s, $0.1745, answered
+ran conflict|identity-data|103 in 41s, $0.1031, answered
+scored cross|identity-data|103: grade 2/4, checks {"demandBranchKnows":false,"findingCrossed":false}, total spent $11.88
+scored cross|guided-data|103: grade 2/4, checks {"demandBranchKnows":false,"findingCrossed":false}, total spent $12.08
+scored conflict|identity-data|103: grade 1/3, checks {"shipmentsBranchExplained":false,"branchesTalked":true}, total spent $12.22
+scored conflict|guided-data|103: grade 1/3, checks {"shipmentsBranchExplained":false,"branchesTalked":true}, total spent $12.34
+ran noise|guided-data|103 in 28s, $0.0992, answered
+ran noise|identity-data|103 in 36s, $0.1001, answered
+scored noise|guided-data|103: grade 4/5, checks {"noCrossTraffic":true}, total spent $12.47
+scored noise|identity-data|103: grade 5/5, checks {"noCrossTraffic":true}, total spent $12.60
+ran conflict-long|guided-data|103 in 59s, $0.0658, answered
+scored conflict-long|guided-data|103: grade 0/4, checks {"shipmentsBranchExplained":false,"branchesTalked":true}, total spent $12.70
+ran cross-long|identity-data|103 in 51s, $0.1347, answered
+scored cross-long|identity-data|103: grade 2/4, checks {"demandBranchKnows":true,"findingCrossed":false}, total spent $12.86
+ran cross-long|guided-data|103 in 52s, $0.1572, answered
+ran conflict-long|identity-data|103 in 92s, $0.0785, answered
+scored cross-long|guided-data|103: grade 2/4, checks {"demandBranchKnows":false,"findingCrossed":true}, total spent $13.05
+scored conflict-long|identity-data|103: grade 3/4, checks {"shipmentsBranchExplained":false,"branchesTalked":false}, total spent $13.17
+ran shared|identity-data|104 in 40s, $0.0932, answered
+scored shared|identity-data|104: grade 2/4, checks {"fetchedOnce":true,"reused":true}, total spent $13.30
+ran shared|guided-data|104 in 39s, $0.0902, answered
+ran conflict|identity-data|104 in 35s, $0.0664, answered
+scored shared|guided-data|104: grade 2/4, checks {"fetchedOnce":true,"reused":true}, total spent $13.42
+scored conflict|identity-data|104: grade 2/3, checks {"shipmentsBranchExplained":false,"branchesTalked":true}, total spent $13.52
+ran conflict|guided-data|104 in 44s, $0.0684, answered
+scored conflict|guided-data|104: grade 1/3, checks {"shipmentsBranchExplained":false,"branchesTalked":true}, total spent $13.63
+ran cross|identity-data|104 in 35s, $0.1413, answered
+scored cross|identity-data|104: grade 4/4, checks {"demandBranchKnows":false,"findingCrossed":false}, total spent $13.80
+ran noise|identity-data|104 in 31s, $0.0835, answered
+ran cross|guided-data|104 in 34s, $0.115, answered
+scored noise|identity-data|104: grade 5/5, checks {"noCrossTraffic":true}, total spent $13.91
+scored cross|guided-data|104: grade 2/4, checks {"demandBranchKnows":false,"findingCrossed":false}, total spent $14.05
+ran noise|guided-data|104 in 26s, $0.0816, answered
+scored noise|guided-data|104: grade 5/5, checks {"noCrossTraffic":true}, total spent $14.16
+ran cross-long|identity-data|104 in 49s, $0.1199, answered
+scored cross-long|identity-data|104: grade 2/4, checks {"demandBranchKnows":false,"findingCrossed":false}, total spent $14.31
+ran conflict-long|identity-data|104 in 69s, $0.0746, answered
+ran conflict-long|guided-data|104 in 58s, $0.0706, answered
+ran cross-long|guided-data|104 in 52s, $0.1244, answered
+scored conflict-long|identity-data|104: grade 2/4, checks {"shipmentsBranchExplained":false,"branchesTalked":true}, total spent $14.42
+scored cross-long|guided-data|104: grade 2/4, checks {"demandBranchKnows":true,"findingCrossed":false}, total spent $14.57
+scored conflict-long|guided-data|104: grade 3/4, checks {"shipmentsBranchExplained":false,"branchesTalked":true}, total spent $14.68
+ran shared|identity-data|105 in 36s, $0.0766, answered
+ran conflict|identity-data|105 in 31s, $0.0648, answered
+scored shared|identity-data|105: grade 1/4, checks {"fetchedOnce":true,"reused":true}, total spent $14.80
+ran shared|guided-data|105 in 38s, $0.0809, answered
+ran conflict|guided-data|105 in 34s, $0.0653, answered
+scored conflict|identity-data|105: grade 1/3, checks {"shipmentsBranchExplained":false,"branchesTalked":false}, total spent $14.89
+scored conflict|guided-data|105: grade 2/3, checks {"shipmentsBranchExplained":false,"branchesTalked":true}, total spent $14.98
+scored shared|guided-data|105: grade 2/4, checks {"fetchedOnce":true,"reused":true}, total spent $15.10
+ran noise|identity-data|105 in 29s, $0.0804, answered
+ran cross|guided-data|105 in 33s, $0.1077, answered
+scored noise|identity-data|105: grade 5/5, checks {"noCrossTraffic":true}, total spent $15.21
+ran noise|guided-data|105 in 26s, $0.0842, answered
+ran cross|identity-data|105 in 38s, $0.1311, answered
+scored cross|guided-data|105: grade 2/4, checks {"demandBranchKnows":false,"findingCrossed":false}, total spent $15.34
+scored cross|identity-data|105: grade 2/4, checks {"demandBranchKnows":false,"findingCrossed":false}, total spent $15.50
+scored noise|guided-data|105: grade 5/5, checks {"noCrossTraffic":true}, total spent $15.61
+ran conflict-long|identity-data|105 in 56s, $0.0679, answered
+scored conflict-long|identity-data|105: grade 0/4, checks {"shipmentsBranchExplained":false,"branchesTalked":false}, total spent $15.72
+ran cross-long|identity-data|105 in 60s, $0.1433, answered
+scored cross-long|identity-data|105: grade 3/4, checks {"demandBranchKnows":false,"findingCrossed":false}, total spent $15.89
+ran cross-long|guided-data|105 in 68s, $0.1594, answered
+scored cross-long|guided-data|105: grade 4/4, checks {"demandBranchKnows":false,"findingCrossed":false}, total spent $16.09
+ran conflict-long|guided-data|105 in 84s, $0.0764, answered
+scored conflict-long|guided-data|105: grade 2/4, checks {"shipmentsBranchExplained":true,"branchesTalked":true}, total spent $16.20
+stage3 finished: $16.20 spent

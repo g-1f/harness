@@ -1,0 +1,28 @@
+{
+ "workflow": "shared",
+ "cond": {
+  "id": "identity-data",
+  "delivery": "broadcast",
+  "broadcast": "lifecycle+cp",
+  "data": "identity",
+  "wake": "code",
+  "lines": "data"
+ },
+ "seed": 101,
+ "model": "claude-sonnet-5-5",
+ "status": "answered",
+ "wall": 55.35,
+ "cost": 0.1423,
+ "usage": {
+  "input": 32,
+  "output": 5486,
+  "cacheRead": 61548,
+  "cacheWrite": 20309
+ },
+ "nodes": 5,
+ "lines": 22,
+ "cells": 11,
+ "worldCalls": 16,
+ "reads": 11,
+ "answer": "**Verdict: it's a reasonable time to add, but only a modest one, and I'd size it small. I couldn't find any call premium data, so check the quote first.**\n\n**Why it leans yes**\n- **Valuation case:** it holds through 2027, but it rests on earnings, not rate cuts.\n  - Consensus expects 14% EPS growth for the holdings in 2027, and estimates have risen 3% over the past quarter.\n  - The weighted forward P/E is 19x. If the CMA delivers only one cut, the multiple could lose about 4%.\n  - That works out to roughly +9–10% for 2027 in a hold-or-de-rate case.\n- **Volatility:** Jan-2028 implied vol is about 24% at the money. Realized vol is 29–31% across the 3-month, 6-month and 1-year windows.\n  - That puts implied about 5–7 points below realized.\n  - Some of that gap is structural, because long-dated implied vol normally sits below spot realized vol. The calls are therefore less cheap than the gap suggests.\n  - Skew is mild: implied vol is 25.5% at the 90% strike and 23.5% at the 110% strike.\n\n**Why to be cautious**\n- **Rate path:** the CMA held at 4.50% in October. Governor Ashby's base case is one 25bp cut in 2027, and she said markets \"may be getting ahead of themselves.\"\n  - Futures price about 50bp of cuts by end-2027, with the first in Q2. That is about 25bp more dovish than the CMA.\n  - Most of the dovish upside is therefore already priced in. A hawkish surprise would hurt the multiple.\n- **Concentration:** backlog conversion rests on a few names, mainly Voltaris and Tarnwell.\n- **Data limits:**\n  - I found no premium or breakeven data, so I can't say whether the calls are cheap in dollar terms.\n  - The futures stop at 2027Q4, so I assumed rates stay flat into January 2028.\n  - The P/E sensitivity comes from a single historical figure on the factsheet.\n\n**Practical approach**\n- Compare the quoted premium and breakeven with the roughly 10% expected 2027 return. The breakeven should sit near or below what you think the holdings can deliver.\n- Consider scaling in. A hawkish CMA read in early 2027 could give a better entry.\n- Use the lower-skew, slightly out-of-the-money strikes if you want cheaper exposure.\n\nThis is not personalized financial advice."
+}

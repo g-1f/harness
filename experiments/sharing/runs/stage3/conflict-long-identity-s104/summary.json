@@ -1,0 +1,27 @@
+{
+ "workflow": "conflict-long",
+ "cond": {
+  "id": "identity",
+  "delivery": "broadcast",
+  "broadcast": "lifecycle+cp",
+  "data": "identity",
+  "wake": "code"
+ },
+ "seed": 104,
+ "model": "claude-sonnet-5-5",
+ "status": "answered",
+ "wall": 98.23,
+ "cost": 0.0783,
+ "usage": {
+  "input": 26,
+  "output": 3925,
+  "cacheRead": 57592,
+  "cacheWrite": 8309
+ },
+ "nodes": 3,
+ "lines": 7,
+ "cells": 10,
+ "worldCalls": 21,
+ "reads": 2,
+ "answer": "**Probably not. I expect 2027 revenue of about C$3.9–4.1B, a modest miss of roughly 2–7% against the C$4.2B guidance.** Confidence is moderate. Two independent lines of evidence both land below guidance, but they differ on how far.\n\n- **Company disclosures (n2):** These point to about C$4.0–4.1B.\n  - Backlog is C$5.1B, H1 2026 orders rose 11%, and cancellations were below 1%, so demand isn't the problem.\n  - The guidance is built from about C$3.9B of normal revenue plus about C$0.3B of shipments delayed by the Halbrook plant outage.\n  - That C$0.3B is scheduled for delivery between Q4 2026 and Q2 2027. Whatever lands in Q4 2026 counts toward 2026, so an even spread puts only about C$0.2B in 2027.\n  - That sums to about C$4.1B. The guidance can only be reached if the recovery shipments are pushed late into 2027.\n  - The even-spread assumption is n2's own, because the disclosures give no quarterly split.\n- **Industry data (n3):** These point to about C$3.6–3.9B, but this is a directional estimate.\n  - Industry shipments went from +3.1% year on year in Q4 2025 to +1.8% in Q1 2026 and −4% in Q2 2026. Shipments trail orders by about two quarters, so the weakness should carry into early 2027.\n  - Voltaris revenue over the last four quarters totals about C$3.74B. Guidance would need about 12% growth on that.\n  - The industry data set had no per-maker table, so Voltaris's market share is unknown. If its share is rising, this estimate could move up.\n\nThe two views disagree on how big the miss is. The company's own backlog and recovery plan make C$4.0–4.2B plausible. The industry slowdown argues for lower. I weight the company-specific evidence more, because it covers the specific timing of the recovery shipments, so I land at C$3.9–4.1B.\n\nThe main risks are another disruption at Halbrook, which builds all of Voltaris's large power transformers; pricing, which the guidance assumes stays flat; and the third shift at Halbrook underperforming. Backlog coverage is not the same as delivery timing, so the large backlog doesn't by itself make the guidance safe.\n\nThe full reasoning is in n2.r1 and n3.r1."
+}

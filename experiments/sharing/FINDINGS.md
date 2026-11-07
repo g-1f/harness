@@ -144,6 +144,56 @@ The numbers are in [runs/stage2/report.md](runs/stage2/report.md) and [runs/stag
 | Design | A 2×2 of data lines × guidance. The `identity` and `guided` runs are imported from Stage 2, so only the two data-line conditions are new |
 | Budget | About $30.7 of the $60 cap is left |
 
+## Stage 3: data lines
+
+Stage 3 was a 2×2 design: data lines × the sharing paragraph, with call identity under `broadcast` in all four conditions.
+
+- **Data lines:** each fetched document or series becomes a line carrying its first line.
+  - For a document, that's its title and first sentence, up to about 160 characters.
+  - For a series, it's its description and latest point.
+- **Runs:**
+  - `identity` and `guided` are Stage 2's runs, imported.
+  - `identity-data` and `guided-data` are new: 30 runs each.
+
+The numbers are in [runs/stage3/report.md](runs/stage3/report.md) and [runs/stage3/timing.md](runs/stage3/timing.md).
+
+### Result
+
+**Data lines are the first mechanism that got evidence to the node whose question it answers.**
+
+| Check | `identity` | `guided` | `identity-data` | `guided-data` |
+|---|---|---|---|---|
+| Long contradiction: shipments branch explains the drop | 0/5 | 0/5 | 2/5 | 1/5 |
+| Long cross-branch: demand branch states the Pellham news | 0/5 | 0/5 | 1/5 | 1/5 |
+| Long contradiction: branches cited each other | 1/5 | 4/5 | 2/5 | 5/5 |
+| Checks passed (stage rule) | 19/55 | 25/55 | 23/55 | **30/55** |
+
+**What carried the evidence.** In each case it was the line itself. No node read a data ref from another branch: cross-branch reads were 0 in both data conditions.
+
+- **The contradiction runs.** The line was the operations update's first sentence: "Production at the Halbrook plant, which builds all of Voltaris's large power transformers, was suspended…". It arrived in the same cell output as the shipments node's own unexplained drop.
+- **The cross-branch runs.**
+  - The demand branch learned that Pellham had withdrawn its offering. That came from the ratings watch list's first sentence, not from the 40% order cut. The issuance tracker that states the cut opens with "Two utility share offerings were cut back in size", so its line never carried the cut.
+  - The check counts the withdrawal, so these two passes are a weaker crossing than the contradiction's.
+- **The short workflows.** Nothing crossed. The windows are still a few seconds long.
+
+**Cost and noise.**
+- Data lines added about 8 lines per run and raised lines delivered per node from about 7 to about 12. Cost per run did not rise: $0.099–0.104 against $0.100–0.111.
+- The noise workflow still had no cross-branch traffic, and its evidence grade stayed high (0.96).
+- The evidence grade overall did not move beyond noise (0.61–0.72 across the four conditions).
+
+**What this means.** The text of a line decides what crosses. A line carries a finding only when the finding sits in the output's first line, and here that depended on how each document happened to be written.
+
+### Decisions for the follow-ups
+
+| Decision | Detail |
+|---|---|
+| Stage 3 winner | `guided-data`, by the rule |
+| Line content | A data line carries a one-line summary of each fetched output, written by a small model (Haiku 4.5) for readers of the run's question. It's compared with title plus first sentence. Summaries are computed once per document, since the world is static, and each line is delayed 1.5 s to stand in for the model call |
+| Root settles | The root alone gets a paragraph: when one child's result explains or contradicts another's, address the affected child with the finding, which reopens it, and wait for its new version |
+| Larger run | A new 8–12 node workflow with all three planted situations. Broadcasting every line is compared with a relevance filter that delivers a data line only to nodes whose task shares key terms with it |
+| Schedule | The follow-ups run back to back on the rule, within the $60 cap, with one report at the end |
+
+
 
 ### Cost
 

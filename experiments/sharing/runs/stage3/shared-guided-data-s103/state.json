@@ -1,0 +1,639 @@
+{
+ "nodes": [
+  {
+   "id": "n1",
+   "request": {
+    "task": "Is now a good time to add VLTX Jan-2028 calls?"
+   },
+   "opener": null,
+   "state": "completed",
+   "results": [
+    "n1.r1"
+   ],
+   "cps": [],
+   "holdersEver": [],
+   "states": [
+    [
+     0,
+     "running"
+    ],
+    [
+     3.09,
+     "waiting"
+    ],
+    [
+     26.44,
+     "running"
+    ],
+    [
+     33.63,
+     "completed"
+    ]
+   ],
+   "cost": 0.023876,
+   "turns": 3,
+   "activations": 1,
+   "session": "ae354911-bde4-4ee6-8643-1f2d98a78a79",
+   "from": null
+  },
+  {
+   "id": "n2",
+   "request": {
+    "task": "Is the valuation case for VLTX's holdings intact through 2027, given the expected CMA policy path and the holdings' earnings outlook?"
+   },
+   "opener": "n1",
+   "state": "completed",
+   "results": [
+    "n2.r1"
+   ],
+   "cps": [],
+   "holdersEver": [
+    "n1"
+   ],
+   "states": [
+    [
+     0,
+     "running"
+    ],
+    [
+     25.17,
+     "completed"
+    ]
+   ],
+   "cost": 0.023593000000000003,
+   "turns": 3,
+   "activations": 1,
+   "session": "7bc0e4b6-ccf2-4bfc-8ed8-437576fb2583",
+   "from": null
+  },
+  {
+   "id": "n3",
+   "request": {
+    "task": "Are VLTX Jan-2028 calls attractively priced, given the expected CMA policy path and VLTX volatility?"
+   },
+   "opener": "n1",
+   "state": "completed",
+   "results": [
+    "n3.r1"
+   ],
+   "cps": [],
+   "holdersEver": [
+    "n1"
+   ],
+   "states": [
+    [
+     0,
+     "running"
+    ],
+    [
+     26.44,
+     "completed"
+    ]
+   ],
+   "cost": 0.0264991,
+   "turns": 3,
+   "activations": 1,
+   "session": "8e09ad12-9d3f-4002-8a93-d35b97f11e27",
+   "from": null
+  }
+ ],
+ "lines": [
+  {
+   "i": 0,
+   "t": 0,
+   "text": "the run opened n1 · Is now a good time to add VLTX Jan-2028 calls?",
+   "kind": "open",
+   "subj": "n1",
+   "by": null
+  },
+  {
+   "i": 1,
+   "t": 0,
+   "text": "n1 opened n2 · Is the valuation case for VLTX's holdings intact through 2027, given the expect…",
+   "kind": "open",
+   "subj": "n2",
+   "by": "n1"
+  },
+  {
+   "i": 2,
+   "t": 0,
+   "text": "n1 opened n3 · Are VLTX Jan-2028 calls attractively priced, given the expected CMA policy path…",
+   "kind": "open",
+   "subj": "n3",
+   "by": "n1"
+  },
+  {
+   "i": 3,
+   "t": 7.89,
+   "text": "n2.d2 · doc vltx-factsheet · VLTX Caldria Grid Equipment ETF factsheet: VLTX holds 28 Caldrian grid-equipment makers.",
+   "kind": "data",
+   "subj": "n2",
+   "ref": "n2.d2"
+  },
+  {
+   "i": 4,
+   "t": 9.75,
+   "text": "n2.d3 · doc cma-minutes-oct · CMA policy meeting minutes, October 2026: The Caldrian Monetary Authority held the policy rate at 4.50%.",
+   "kind": "data",
+   "subj": "n2",
+   "ref": "n2.d3"
+  },
+  {
+   "i": 5,
+   "t": 10.86,
+   "text": "n2.d4 · doc cma-speech-ashby · Governor Ashby: \"one cut is our base case\": CMA Governor Ashby said on 28 October that one 25bp cut in 2027 is the Authority's base case and that markets \"may…",
+   "kind": "data",
+   "subj": "n2",
+   "ref": "n2.d4"
+  },
+  {
+   "i": 6,
+   "t": 10.93,
+   "text": "n3 reused n2.d4 · doc cma-speech-ashby",
+   "kind": "dreuse",
+   "subj": "n2",
+   "by": "n3",
+   "ref": "n2.d4"
+  },
+  {
+   "i": 7,
+   "t": 10.93,
+   "text": "n3 reused n2.d3 · doc cma-minutes-oct",
+   "kind": "dreuse",
+   "subj": "n2",
+   "by": "n3",
+   "ref": "n2.d3"
+  },
+  {
+   "i": 8,
+   "t": 11.5,
+   "text": "n2.d5 · doc vltx-earnings-2027 · VLTX holdings: 2027 earnings outlook: Consensus expects 2027 EPS growth of 14% for VLTX holdings, driven by backlog conversion at Voltaris and Tarnwell.",
+   "kind": "data",
+   "subj": "n2",
+   "ref": "n2.d5"
+  },
+  {
+   "i": 9,
+   "t": 11.5,
+   "text": "n2 joined n3.d4 · series cma_futures",
+   "kind": "djoin",
+   "subj": "n3",
+   "by": "n2",
+   "ref": "n3.d4"
+  },
+  {
+   "i": 10,
+   "t": 13.91,
+   "text": "n3.d3 · doc vltx-options-note · VLTX listed options: Jan-2028 chain overview: VLTX Jan-2028 options are the longest listed expiry.",
+   "kind": "data",
+   "subj": "n3",
+   "ref": "n3.d3"
+  },
+  {
+   "i": 11,
+   "t": 14.36,
+   "text": "n3.d6 · series vltx_rv · VLTX realized volatility (realized vol): latest 1y 0.29",
+   "kind": "data",
+   "subj": "n3",
+   "ref": "n3.d6"
+  },
+  {
+   "i": 12,
+   "t": 15.06,
+   "text": "n3.d5 · series vltx_iv · VLTX Jan-2028 implied vol by moneyness (implied vol, Jan-2028 expiry): latest 110% 0.235",
+   "kind": "data",
+   "subj": "n3",
+   "ref": "n3.d5"
+  },
+  {
+   "i": 13,
+   "t": 18.24,
+   "text": "n3.d4 · series cma_futures · CMA policy-rate futures (contract price by quarter): latest 2027Q4 96",
+   "kind": "data",
+   "subj": "n3",
+   "ref": "n3.d4"
+  },
+  {
+   "i": 14,
+   "t": 25.17,
+   "text": "n2.r1 · **Mostly intact, with a modest policy risk. The case rests on earnings, not on rate cuts.…",
+   "kind": "result",
+   "subj": "n2",
+   "ref": "n2.r1"
+  },
+  {
+   "i": 15,
+   "t": 26.44,
+   "text": "n3.r1 · **Verdict: the calls look reasonably to attractively priced on volatility, and the rate p…",
+   "kind": "result",
+   "subj": "n3",
+   "ref": "n3.r1"
+  },
+  {
+   "i": 16,
+   "t": 33.63,
+   "text": "n1.r1 · **Verdict: reasonably good, but not urgent. Buy in stages, or wait for a pullback.**",
+   "kind": "result",
+   "subj": "n1",
+   "ref": "n1.r1"
+  }
+ ],
+ "artifacts": {
+  "n2.d1": {
+   "node": "n2",
+   "kind": "data",
+   "fn": "search",
+   "args": [
+    "VLTX holdings valuation CMA policy earnings outlook"
+   ],
+   "content": "{\"docs\":[{\"id\":\"vltx-factsheet\",\"title\":\"VLTX Caldria Grid Equipment ETF factsheet\",\"snippet\":\"VLTX holds 28 Caldrian grid-equipment makers. Top holdings: Voltaris Grid 14%, Tarnwell Electric 11%, Braxen Cable 9%, Ostrand Meters 8%, Ke…\"},{\"id\":\"cma-minutes-oct\",\"title\":\"CMA policy meeting minutes, October 2026\",\"snippet\":\"The Caldrian Monetary Authority held the policy rate at 4.50%. Members noted inflation easing toward target and signalled that gradual reduc…\"},{\"id\":\"cma-speech-ashby\",\"title\":\"Governor Ashby: \\\"one cut is our base case\\\"\",\"snippet\":\"CMA Governor Ashby said on 28 October that one 25bp cut in 2027 is the Authority's base case and that markets \\\"may be getting ahead of thems…\"},{\"id\":\"vltx-earnings-2027\",\"title\":\"VLTX holdings: 2027 earnings outlook\",\"snippet\":\"Consensus expects 2027 EPS growth of 14% for VLTX holdings, driven by backlog conversion at Voltaris and Tarnwell. Estimates have risen 3% o…\"}],\"series\":[{\"series\":\"cma_futures\",\"desc\":\"CMA policy-rate futures\"},{\"series\":\"vltx_iv\",\"desc\":\"VLTX Jan-2028 implied vol by moneyness\"},{\"series\":\"vltx_rv\",\"desc\":\"VLTX realized volatility\"}]}",
+   "t": 5.17
+  },
+  "n3.d1": {
+   "node": "n3",
+   "kind": "data",
+   "fn": "search",
+   "args": [
+    "VLTX Jan-2028 calls implied volatility CMA policy"
+   ],
+   "content": "{\"docs\":[{\"id\":\"vltx-options-note\",\"title\":\"VLTX listed options: Jan-2028 chain overview\",\"snippet\":\"VLTX Jan-2028 options are the longest listed expiry. Implied volatility by strike is published as the vltx_iv series; realized volatility as…\"},{\"id\":\"cma-minutes-oct\",\"title\":\"CMA policy meeting minutes, October 2026\",\"snippet\":\"The Caldrian Monetary Authority held the policy rate at 4.50%. Members noted inflation easing toward target and signalled that gradual reduc…\"},{\"id\":\"cma-speech-ashby\",\"title\":\"Governor Ashby: \\\"one cut is our base case\\\"\",\"snippet\":\"CMA Governor Ashby said on 28 October that one 25bp cut in 2027 is the Authority's base case and that markets \\\"may be getting ahead of thems…\"},{\"id\":\"vltx-factsheet\",\"title\":\"VLTX Caldria Grid Equipment ETF factsheet\",\"snippet\":\"VLTX holds 28 Caldrian grid-equipment makers. Top holdings: Voltaris Grid 14%, Tarnwell Electric 11%, Braxen Cable 9%, Ostrand Meters 8%, Ke…\"}],\"series\":[{\"series\":\"cma_futures\",\"desc\":\"CMA policy-rate futures\"},{\"series\":\"vltx_iv\",\"desc\":\"VLTX Jan-2028 implied vol by moneyness\"},{\"series\":\"vltx_rv\",\"desc\":\"VLTX realized volatility\"}]}",
+   "t": 6.03
+  },
+  "n2.d2": {
+   "node": "n2",
+   "kind": "data",
+   "fn": "doc",
+   "args": [
+    "vltx-factsheet"
+   ],
+   "content": "{\"id\":\"vltx-factsheet\",\"title\":\"VLTX Caldria Grid Equipment ETF factsheet\",\"body\":\"VLTX holds 28 Caldrian grid-equipment makers. Top holdings: Voltaris Grid 14%, Tarnwell Electric 11%, Braxen Cable 9%, Ostrand Meters 8%, Kelby Switchgear 7%. Weighted forward P/E 19x. Holdings are long-duration growth names: a 50bp lower policy path historically lifts the basket P/E by about 1.5 points.\"}",
+   "t": 7.89
+  },
+  "n3.d2": {
+   "node": "n3",
+   "kind": "data",
+   "fn": "search",
+   "args": [
+    "VLTX options"
+   ],
+   "content": "{\"docs\":[{\"id\":\"vltx-options-note\",\"title\":\"VLTX listed options: Jan-2028 chain overview\",\"snippet\":\"VLTX Jan-2028 options are the longest listed expiry. Implied volatility by strike is published as the vltx_iv series; realized volatility as…\"},{\"id\":\"vltx-factsheet\",\"title\":\"VLTX Caldria Grid Equipment ETF factsheet\",\"snippet\":\"VLTX holds 28 Caldrian grid-equipment makers. Top holdings: Voltaris Grid 14%, Tarnwell Electric 11%, Braxen Cable 9%, Ostrand Meters 8%, Ke…\"}],\"series\":[{\"series\":\"vltx_iv\",\"desc\":\"VLTX Jan-2028 implied vol by moneyness\"},{\"series\":\"vltx_rv\",\"desc\":\"VLTX realized volatility\"}]}",
+   "t": 8.69
+  },
+  "n2.d3": {
+   "node": "n2",
+   "kind": "data",
+   "fn": "doc",
+   "args": [
+    "cma-minutes-oct"
+   ],
+   "content": "{\"id\":\"cma-minutes-oct\",\"title\":\"CMA policy meeting minutes, October 2026\",\"body\":\"The Caldrian Monetary Authority held the policy rate at 4.50%. Members noted inflation easing toward target and signalled that gradual reductions are possible over the next year if the labour market cools. The market-implied path is published daily as the cma_futures series (contract price = 100 - expected policy rate).\"}",
+   "t": 9.75
+  },
+  "n2.d4": {
+   "node": "n2",
+   "kind": "data",
+   "fn": "doc",
+   "args": [
+    "cma-speech-ashby"
+   ],
+   "content": "{\"id\":\"cma-speech-ashby\",\"title\":\"Governor Ashby: \\\"one cut is our base case\\\"\",\"body\":\"CMA Governor Ashby said on 28 October that one 25bp cut in 2027 is the Authority's base case and that markets \\\"may be getting ahead of themselves\\\" in pricing more. She added that the Authority does not target market pricing.\"}",
+   "t": 10.86
+  },
+  "n2.d5": {
+   "node": "n2",
+   "kind": "data",
+   "fn": "doc",
+   "args": [
+    "vltx-earnings-2027"
+   ],
+   "content": "{\"id\":\"vltx-earnings-2027\",\"title\":\"VLTX holdings: 2027 earnings outlook\",\"body\":\"Consensus expects 2027 EPS growth of 14% for VLTX holdings, driven by backlog conversion at Voltaris and Tarnwell. Estimates have risen 3% over the past quarter.\"}",
+   "t": 11.5
+  },
+  "n3.d3": {
+   "node": "n3",
+   "kind": "data",
+   "fn": "doc",
+   "args": [
+    "vltx-options-note"
+   ],
+   "content": "{\"id\":\"vltx-options-note\",\"title\":\"VLTX listed options: Jan-2028 chain overview\",\"body\":\"VLTX Jan-2028 options are the longest listed expiry. Implied volatility by strike is published as the vltx_iv series; realized volatility as vltx_rv. Long-dated call value is sensitive to the expected policy path through rho and through the forward.\"}",
+   "t": 13.91
+  },
+  "n3.d6": {
+   "node": "n3",
+   "kind": "data",
+   "fn": "series",
+   "args": [
+    "vltx_rv"
+   ],
+   "content": "{\"name\":\"vltx_rv\",\"unit\":\"realized vol\",\"desc\":\"VLTX realized volatility\",\"points\":[[\"3m\",0.31],[\"6m\",0.3],[\"1y\",0.29]]}",
+   "t": 14.36
+  },
+  "n3.d5": {
+   "node": "n3",
+   "kind": "data",
+   "fn": "series",
+   "args": [
+    "vltx_iv"
+   ],
+   "content": "{\"name\":\"vltx_iv\",\"unit\":\"implied vol, Jan-2028 expiry\",\"desc\":\"VLTX Jan-2028 implied vol by moneyness\",\"points\":[[\"90%\",0.255],[\"100%\",0.24],[\"110%\",0.235]]}",
+   "t": 15.06
+  },
+  "n3.d4": {
+   "node": "n3",
+   "kind": "data",
+   "fn": "series",
+   "args": [
+    "cma_futures"
+   ],
+   "content": "{\"name\":\"cma_futures\",\"unit\":\"contract price by quarter\",\"desc\":\"CMA policy-rate futures\",\"points\":[[\"2026Q4\",95.5],[\"2027Q1\",95.5],[\"2027Q2\",95.75],[\"2027Q3\",95.75],[\"2027Q4\",96]]}",
+   "t": 18.24
+  },
+  "n2.r1": {
+   "node": "n2",
+   "kind": "result",
+   "content": "**Mostly intact, with a modest policy risk. The case rests on earnings, not on rate cuts.**\n\n- **Market-implied path:** The cma_futures contracts imply a policy rate of 4.50% through 2027Q1. They then imply 4.25% in Q2 and Q3, and 4.00% in Q4. That is about 50bp of cuts by end-2027.\n- **CMA's own guidance:** Governor Ashby's base case is a single 25bp cut in 2027. She said markets \"may be getting ahead of themselves.\"\n- **Gap:** Markets price about 25bp more easing than the CMA signals.\n- **Valuation sensitivity:** The factsheet says a 50bp lower policy path historically lifts the basket P/E by about 1.5 points. The basket trades at 19x forward P/E.\n- **What the market has priced in:** That is roughly 1.5 points of multiple, or about 8%. If the CMA delivers only its one cut, about 0.75 points of that (about 4%) could unwind.\n- **Earnings outlook:** Consensus expects 2027 EPS growth of 14%, driven by backlog conversion at Voltaris and Tarnwell. Estimates rose 3% over the past quarter.\n- **Net effect:** 14% earnings growth outweighs a possible 4% multiple giveback. The 19x multiple would only need to hold, or compress modestly, for the basket to rise. Valuation at the basket level is therefore not stretched.\n\n**Caveats**\n- **Concentration:** Voltaris and Tarnwell are 25% of the fund. The backlog-conversion story depends on those two, and I did not check their individual estimates.\n- **Rate-sensitive multiple:** If the CMA turns hawkish, or cuts slip beyond 2027, the P/E sensitivity works against the fund. The 1.5-points-per-50bp figure is a historical average, not a guarantee.\n- **Source limits:** I used only the factsheet, the October CMA minutes, the Ashby speech, the earnings note and the futures series. I did not independently test the earnings consensus.\n\n**For the options question (n1, n3):** the fundamental case supports holding the position through 2027. The risk is a repricing of the CMA path, so entry timing matters. A hawkish repricing toward the CMA's one-cut view would hit the multiple before earnings could offset it.",
+   "cites": [],
+   "invalid": [],
+   "t": 25.17
+  },
+  "n3.r1": {
+   "node": "n3",
+   "kind": "result",
+   "content": "**Verdict: the calls look reasonably to attractively priced on volatility, and the rate path is mostly a modest tailwind, not a reason to buy.** The data doesn't include a call price, a strike or a premium, so I can't say whether any particular strike is cheap. I judged this only from implied volatility against realized volatility and from the rate path.\n\n**Volatility**\n- Jan-2028 implied vol is 25.5% at 90% moneyness, 24.0% at 100% and 23.5% at 110% (`vltx_iv`).\n- Realized vol is higher: 31% over 3 months, 30% over 6 months and 29% over 1 year (`vltx_rv`).\n- At the money, you are buying vol at about 24% when the ETF has been moving at 29–31%. That is a discount of roughly 5–7 vol points, or about 20%.\n- The skew is shallow and slightly inverted, so upside strikes (110%) are the cheapest at 23.5%.\n- The caveat is that realized vol is backward-looking. If VLTX calms down, the discount shrinks.\n\n**Rate path**\n- The CMA policy rate is 4.50%. The futures (contract price = 100 − expected policy rate) imply about 4.50% through 2027Q1, 4.25% in Q2–Q3 and 4.00% by 2027Q4. That is a cumulative 50bp of cuts.\n- Governor Ashby said on 28 October that her base case is one 25bp cut in 2027. She also said markets \"may be getting ahead of themselves.\"\n- If the Authority is right, the market is pricing about 25bp more easing than the CMA expects.\n- For a long-dated call, a lower rate path lowers the forward and so lowers call value, and that effect is small. Rates matter more through the ETF's equity valuation, where easing helps.\n- If the market reprices toward one cut, the hit to call value from rates is small (rho). The larger risk is a valuation hit to grid-equipment stocks if the 50bp of cuts is priced out.\n\n**Conclusion**\n- Volatility is the stronger argument for buying. Premium looks cheap relative to realized vol, especially on 100–110% strikes.\n- The rate path adds some event risk, because there is a gap between market pricing and the CMA's stated view.\n- The Jan-2028 expiry is the longest listed and leaves time for the 2027 cuts to play out.\n- Before buying, check the actual premium and breakeven at your chosen strike. Also check n2's work on whether the holdings' earnings case holds through 2027. It was not in the data I used, though the 14% consensus 2027 EPS growth line appeared in the stream.",
+   "cites": [],
+   "invalid": [],
+   "t": 26.44
+  },
+  "n1.r1": {
+   "node": "n1",
+   "kind": "result",
+   "content": "**Verdict: reasonably good, but not urgent. Buy in stages, or wait for a pullback.**\n\nThis rests on two sub-analyses, one on valuation and one on option pricing. I haven't checked the actual premiums or breakevens, because the data has no call prices or strikes.\n\n**Valuation case (n2): intact.**\n- Consensus expects 14% EPS growth in 2027 for VLTX's holdings, and estimates rose 3% over the past quarter.\n- The basket trades at 19x forward P/E.\n- Rate futures imply about 50bp of CMA cuts by end-2027. Governor Ashby's base case is one 25bp cut, and she said markets \"may be getting ahead of themselves.\"\n- If markets reprice to one cut, the multiple could give back about 4%. That is smaller than the 14% earnings growth.\n- Voltaris and Tarnwell make up 25% of the fund, and n2 didn't check their individual estimates.\n\n**Option pricing (n3): looks cheap on volatility.**\n- Jan-2028 implied vol is about 24% at the money and 23.5% at 110% moneyness.\n- Realized vol is 29–31%, so you would be buying vol at roughly a 20% discount.\n- The discount shrinks if VLTX calms down, because realized vol looks backward.\n- Jan-2028 is the longest listed expiry, so the 2027 cuts have time to play out.\n\n**Timing risk.** The main near-term risk is a hawkish CMA repricing toward the one-cut view. That would hit the multiple before earnings could offset it. So I'd scale in rather than buy everything at once, and add more on any rate-driven dip.\n\n**Before buying:** check the actual premium and breakeven at your strike, and look at Voltaris and Tarnwell's estimates. This is analysis, not personalized financial advice.",
+   "cites": [],
+   "invalid": [],
+   "t": 33.63
+  }
+ },
+ "edges": [
+  {
+   "kind": "call",
+   "disp": "started",
+   "from": "n1",
+   "to": "n2",
+   "t": 0,
+   "released": 25.17
+  },
+  {
+   "kind": "call",
+   "disp": "started",
+   "from": "n1",
+   "to": "n3",
+   "t": 0,
+   "released": 26.44
+  },
+  {
+   "kind": "data",
+   "disp": "reused",
+   "from": "n3",
+   "to": "n2",
+   "ref": "n2.d4",
+   "t": 10.93
+  },
+  {
+   "kind": "data",
+   "disp": "reused",
+   "from": "n3",
+   "to": "n2",
+   "ref": "n2.d3",
+   "t": 10.93
+  },
+  {
+   "kind": "data",
+   "disp": "joined",
+   "from": "n2",
+   "to": "n3",
+   "ref": "n3.d4",
+   "t": 11.5
+  }
+ ],
+ "reads": [
+  {
+   "node": "n1",
+   "ref": "n2.r1",
+   "t": 26.44
+  },
+  {
+   "node": "n1",
+   "ref": "n3.r1",
+   "t": 26.44
+  },
+  {
+   "node": "n1",
+   "ref": "n2.r1",
+   "t": 27.6
+  },
+  {
+   "node": "n1",
+   "ref": "n3.r1",
+   "t": 27.6
+  }
+ ],
+ "worldCalls": [
+  {
+   "node": "n2",
+   "fn": "search",
+   "args": [
+    "VLTX holdings valuation CMA policy earnings outlook"
+   ],
+   "ms": 1836,
+   "t": 5.17,
+   "ref": "n2.d1"
+  },
+  {
+   "node": "n3",
+   "fn": "search",
+   "args": [
+    "VLTX Jan-2028 calls implied volatility CMA policy"
+   ],
+   "ms": 2807,
+   "t": 6.03,
+   "ref": "n3.d1"
+  },
+  {
+   "node": "n2",
+   "fn": "doc",
+   "args": [
+    "vltx-factsheet"
+   ],
+   "ms": 1129,
+   "t": 7.89,
+   "ref": "n2.d2"
+  },
+  {
+   "node": "n3",
+   "fn": "search",
+   "args": [
+    "VLTX options"
+   ],
+   "ms": 2655,
+   "t": 8.69,
+   "ref": "n3.d2"
+  },
+  {
+   "node": "n2",
+   "fn": "doc",
+   "args": [
+    "cma-minutes-oct"
+   ],
+   "ms": 2997,
+   "t": 9.76,
+   "ref": "n2.d3"
+  },
+  {
+   "node": "n2",
+   "fn": "doc",
+   "args": [
+    "cma-speech-ashby"
+   ],
+   "ms": 4101,
+   "t": 10.86,
+   "ref": "n2.d4"
+  },
+  {
+   "node": "n3",
+   "fn": "doc",
+   "args": [
+    "cma-speech-ashby"
+   ],
+   "ms": 1,
+   "t": 10.93,
+   "shared": "reused",
+   "ref": "n2.d4",
+   "from": "n2"
+  },
+  {
+   "node": "n3",
+   "fn": "doc",
+   "args": [
+    "cma-minutes-oct"
+   ],
+   "ms": 0,
+   "t": 10.93,
+   "shared": "reused",
+   "ref": "n2.d3",
+   "from": "n2"
+  },
+  {
+   "node": "n2",
+   "fn": "doc",
+   "args": [
+    "vltx-earnings-2027"
+   ],
+   "ms": 4737,
+   "t": 11.5,
+   "ref": "n2.d5"
+  },
+  {
+   "node": "n3",
+   "fn": "doc",
+   "args": [
+    "vltx-options-note"
+   ],
+   "ms": 2985,
+   "t": 13.91,
+   "ref": "n3.d3"
+  },
+  {
+   "node": "n3",
+   "fn": "series",
+   "args": [
+    "vltx_rv"
+   ],
+   "ms": 3427,
+   "t": 14.36,
+   "ref": "n3.d6"
+  },
+  {
+   "node": "n3",
+   "fn": "series",
+   "args": [
+    "vltx_iv"
+   ],
+   "ms": 4132,
+   "t": 15.06,
+   "ref": "n3.d5"
+  },
+  {
+   "node": "n3",
+   "fn": "series",
+   "args": [
+    "cma_futures"
+   ],
+   "ms": 7315,
+   "t": 18.24,
+   "ref": "n3.d4"
+  },
+  {
+   "node": "n2",
+   "fn": "series",
+   "args": [
+    "cma_futures"
+   ],
+   "ms": 6743,
+   "t": 18.24,
+   "shared": "joined",
+   "ref": "n3.d4",
+   "from": "n3"
+  }
+ ],
+ "cells": [
+  {
+   "node": "n2",
+   "t": 5.17,
+   "code": "// Single judgment: answer directly.\nconst r=await world.search(\"VLTX holdings valuation CMA policy earnings outlook\");return r;",
+   "output": "{\n \"docs\": [\n  {\n   \"id\": \"vltx-factsheet\",\n   \"title\": \"VLTX Caldria Grid Equipment ETF factsheet\",\n   \"snippet\": \"VLTX holds 28 Caldrian grid-equipment makers. Top holdings: Voltaris Grid 14%, Tarnwell Electric 11%, Braxen Cable 9%, Ostrand Meters 8%, Ke…\"\n  },\n  {\n   \"id\": \"cma-minutes-oct\",\n   \"title\": \"CMA policy meeting minutes, October 2026\",\n   \"snippet\": \"The Caldrian Monetary Authority held the policy rate at 4.50%. Members noted inflation easing toward target and signalled that gradual reduc…\"\n  },\n  {\n   \"id\": \"cma-speech-ashby\",\n   \"title\": \"Governor Ashby: \\\"one cut is our base case\\\"\",\n   \"snippet\": \"CMA Governor Ashby said on 28 October that one 25bp cut in 2027 is the Authority's base case and that markets \\\"may be getting ahead of thems…\"\n  },\n  {\n   \"id\": \"vltx-earnings-2027\",\n   \"title\": \"VLTX holdings: 2027 earnings outlook\",\n   \"snippet\": \"Consensus expects 2027 EPS growth of 14% for VLTX holdings, driven by backlog conversion at Voltaris and Tarnwell. Estimates have risen 3% o…\"\n  }\n ],\n \"series\": [\n  {\n   \"series\": \"cma_futures\",\n   \"desc\": \"CMA policy-rate futures\"\n  },\n  {\n   \"series\": \"vltx_iv\",\n   \"desc\": \"VLTX Jan-2028 implied vol by moneyness\"\n  },\n  {\n   \"series\": \"vltx_rv\",\n   \"desc\": \"VLTX realized volatility\"\n  }\n ],\n \"ref\": \"n2.d1\"\n}",
+   "ms": 1848,
+   "error": null
+  },
+  {
+   "node": "n3",
+   "t": 8.7,
+   "code": "// Single judgment; answer directly.\nconst r=await world.search(\"VLTX Jan-2028 calls implied volatility CMA policy\");\nconst r2=await world.search(\"VLTX options\");\nreturn {r,r2}",
+   "output": "{\n \"r\": {\n  \"docs\": [\n   {\n    \"id\": \"vltx-options-note\",\n    \"title\": \"VLTX listed options: Jan-2028 chain overview\",\n    \"snippet\": \"VLTX Jan-2028 options are the longest listed expiry. Implied volatility by strike is published as the vltx_iv series; realized volatility as…\"\n   },\n   {\n    \"id\": \"cma-minutes-oct\",\n    \"title\": \"CMA policy meeting minutes, October 2026\",\n    \"snippet\": \"The Caldrian Monetary Authority held the policy rate at 4.50%. Members noted inflation easing toward target and signalled that gradual reduc…\"\n   },\n   {\n    \"id\": \"cma-speech-ashby\",\n    \"title\": \"Governor Ashby: \\\"one cut is our base case\\\"\",\n    \"snippet\": \"CMA Governor Ashby said on 28 October that one 25bp cut in 2027 is the Authority's base case and that markets \\\"may be getting ahead of thems…\"\n   },\n   {\n    \"id\": \"vltx-factsheet\",\n    \"title\": \"VLTX Caldria Grid Equipment ETF factsheet\",\n    \"snippet\": \"VLTX holds 28 Caldrian grid-equipment makers. Top holdings: Voltaris Grid 14%, Tarnwell Electric 11%, Braxen Cable 9%, Ostrand Meters 8%, Ke…\"\n   }\n  ],\n  \"series\": [\n   {\n    \"series\": \"cma_futures\",\n    \"desc\": \"CMA policy-rate futures\"\n   },\n   {\n    \"series\": \"vltx_iv\",\n    \"desc\": \"VLTX Jan-2028 implied vol by moneyness\"\n   },\n   {\n    \"series\": \"vltx_rv\",\n    \"desc\": \"VLTX realized volatility\"\n   }\n  ],\n  \"ref\": \"n3.d1\"\n },\n \"r2\": {\n  \"docs\": [\n   {\n    \"id\": \"vltx-options-note\",\n    \"title\": \"VLTX listed options: Jan-2028 chain overview\",\n    \"snippet\": \"VLTX Jan-2028 options are the longest listed expiry. Implied volatility by strike is published as the vltx_iv series; realized volatility as…\"\n   },\n   {\n    \"id\": \"vltx-factsheet\",\n    \"title\": \"VLTX Caldria Grid Equipment ETF factsheet\",\n    \"snippet\": \"VLTX holds 28 Caldrian grid-equipment makers. Top holdings: Voltaris Grid 14%, Tarnwell Electric 11%, Braxen Cable 9%, Ostrand Meters 8%, Ke…\"\n   }\n  ],\n  \"series\": [\n   {\n    \"series\": \"vltx_iv\",\n    \"desc\": \"VLTX Jan-2028 implied vol by moneyness\"\n   },\n   {\n    \"series\": \"vltx_rv\",\n    \"desc\": \"VLTX realized volatility\"\n   }\n  ],\n  \"ref\": \"n3.d2\"\n }\n}",
+   "ms": 5481,
+   "error": null
+  },
+  {
+   "node": "n3",
+   "t": 18.25,
+   "code": "const [a,b,c,d,e,f]=await Promise.all([world.doc(\"vltx-options-note\"),world.doc(\"cma-speech-ashby\"),world.series(\"cma_futures\"),world.series(\"vltx_iv\"),world.series(\"vltx_rv\"),world.doc(\"cma-minutes-oct\")]);\nreturn {a:a.body,b:b.body,f:f.body,c,d,e}",
+   "output": "{\n \"a\": \"VLTX Jan-2028 options are the longest listed expiry. Implied volatility by strike is published as the vltx_iv series; realized volatility as vltx_rv. Long-dated call value is sensitive to the expected policy path through rho and through the forward.\",\n \"b\": \"CMA Governor Ashby said on 28 October that one 25bp cut in 2027 is the Authority's base case and that markets \\\"may be getting ahead of themselves\\\" in pricing more. She added that the Authority does not target market pricing.\",\n \"f\": \"The Caldrian Monetary Authority held the policy rate at 4.50%. Members noted inflation easing toward target and signalled that gradual reductions are possible over the next year if the labour market cools. The market-implied path is published daily as the cma_futures series (contract price = 100 - expected policy rate).\",\n \"c\": {\n  \"name\": \"cma_futures\",\n  \"unit\": \"contract price by quarter\",\n  \"desc\": \"CMA policy-rate futures\",\n  \"points\": [\n   [\n    \"2026Q4\",\n    95.5\n   ],\n   [\n    \"2027Q1\",\n    95.5\n   ],\n   [\n    \"2027Q2\",\n    95.75\n   ],\n   [\n    \"2027Q3\",\n    95.75\n   ],\n   [\n    \"2027Q4\",\n    96\n   ]\n  ],\n  \"ref\": \"n3.d4\"\n },\n \"d\": {\n  \"name\": \"vltx_iv\",\n  \"unit\": \"implied vol, Jan-2028 expiry\",\n  \"desc\": \"VLTX Jan-2028 implied vol by moneyness\",\n  \"points\": [\n   [\n    \"90%\",\n    0.255\n   ],\n   [\n    \"100%\",\n    0.24\n   ],\n   [\n    \"110%\",\n    0.235\n   ]\n  ],\n  \"ref\": \"n3.d5\"\n },\n \"e\": {\n  \"name\": \"vltx_rv\",\n  \"unit\": \"realized vol\",\n  \"desc\": \"VLTX realized volatility\",\n  \"points\": [\n   [\n    \"3m\",\n    0.31\n   ],\n   [\n    \"6m\",\n    0.3\n   ],\n   [\n    \"1y\",\n    0.29\n   ]\n  ],\n  \"ref\": \"n3.d6\"\n }\n}",
+   "ms": 7322,
+   "error": null
+  },
+  {
+   "node": "n2",
+   "t": 18.25,
+   "code": "const ids=[\"vltx-factsheet\",\"cma-minutes-oct\",\"cma-speech-ashby\",\"vltx-earnings-2027\"];\nconst d=await Promise.all(ids.map(i=>world.doc(i)));\nconst s=await world.series(\"cma_futures\");\nreturn {d:d.map(x=>x.body),s}",
+   "output": "{\n \"d\": [\n  \"VLTX holds 28 Caldrian grid-equipment makers. Top holdings: Voltaris Grid 14%, Tarnwell Electric 11%, Braxen Cable 9%, Ostrand Meters 8%, Kelby Switchgear 7%. Weighted forward P/E 19x. Holdings are long-duration growth names: a 50bp lower policy path historically lifts the basket P/E by about 1.5 points.\",\n  \"The Caldrian Monetary Authority held the policy rate at 4.50%. Members noted inflation easing toward target and signalled that gradual reductions are possible over the next year if the labour market cools. The market-implied path is published daily as the cma_futures series (contract price = 100 - expected policy rate).\",\n  \"CMA Governor Ashby said on 28 October that one 25bp cut in 2027 is the Authority's base case and that markets \\\"may be getting ahead of themselves\\\" in pricing more. She added that the Authority does not target market pricing.\",\n  \"Consensus expects 2027 EPS growth of 14% for VLTX holdings, driven by backlog conversion at Voltaris and Tarnwell. Estimates have risen 3% over the past quarter.\"\n ],\n \"s\": {\n  \"name\": \"cma_futures\",\n  \"unit\": \"contract price by quarter\",\n  \"desc\": \"CMA policy-rate futures\",\n  \"points\": [\n   [\n    \"2026Q4\",\n    95.5\n   ],\n   [\n    \"2027Q1\",\n    95.5\n   ],\n   [\n    \"2027Q2\",\n    95.75\n   ],\n   [\n    \"2027Q3\",\n    95.75\n   ],\n   [\n    \"2027Q4\",\n    96\n   ]\n  ],\n  \"ref\": \"n3.d4\",\n  \"from\": \"n3\",\n  \"joined\": true\n }\n}",
+   "ms": 11490,
+   "error": null
+  },
+  {
+   "node": "n1",
+   "t": 26.45,
+   "code": "const r=await Promise.all([nodes.handle(\"n2\").result(),nodes.handle(\"n3\").result()]);return r.map(x=>x.line+\"\\n\"+read(x.ref));",
+   "output": "[\n \"**Mostly intact, with a modest policy risk. The case rests on earnings, not on rate cuts.**\\n[object Promise]\",\n \"**Verdict: the calls look reasonably to attractively priced on volatility, and the rate path is mostly a modest tailwind, not a reason to buy.** The data doesn…\\n[object Promise]\"\n]",
+   "ms": 23367,
+   "error": null
+  },
+  {
+   "node": "n1",
+   "t": 27.61,
+   "code": "return [await read(\"n2.r1\"),await read(\"n3.r1\")]",
+   "output": "[\n \"**Mostly intact, with a modest policy risk. The case rests on earnings, not on rate cuts.**\\n\\n- **Market-implied path:** The cma_futures contracts imply a policy rate of 4.50% through 2027Q1. They then imply 4.25% in Q2 and Q3, and 4.00% in Q4. That is about 50bp of cuts by end-2027.\\n- **CMA's own guidance:** Governor Ashby's base case is a single 25bp cut in 2027. She said markets \\\"may be getting ahead of themselves.\\\"\\n- **Gap:** Markets price about 25bp more easing than the CMA signals.\\n- **Valuation sensitivity:** The factsheet says a 50bp lower policy path historically lifts the basket P/E by about 1.5 points. The basket trades at 19x forward P/E.\\n- **What the market has priced in:** That is roughly 1.5 points of multiple, or about 8%. If the CMA delivers only its one cut, about 0.75 points of that (about 4%) could unwind.\\n- **Earnings outlook:** Consensus expects 2027 EPS growth of 14%, driven by backlog conversion at Voltaris and Tarnwell. Estimates rose 3% over the past quarter.\\n- **Net effect:** 14% earnings growth outweighs a possible 4% multiple giveback. The 19x multiple would only need to hold, or compress modestly, for the basket to rise. Valuation at the basket level is therefore not stretched.\\n\\n**Caveats**\\n- **Concentration:** Voltaris and Tarnwell are 25% of the fund. The backlog-conversion story depends on those two, and I did not check their individual estimates.\\n- **Rate-sensitive multiple:** If the CMA turns hawkish, or cuts slip beyond 2027, the P/E sensitivity works against the fund. The 1.5-points-per-50bp figure is a historical average, not a guarantee.\\n- **Source limits:** I used only the factsheet, the October CMA minutes, the Ashby speech, the earnings note and the futures series. I did not independently test the earnings consensus.\\n\\n**For the options question (n1, n3):** the fundamental case supports holding the position through 2027. The risk is a repricing of the CMA path, so entry timing matters. A hawkish repricing toward the CMA's one-cut view would hit the multiple before earnings could offset it.\",\n \"**Verdict: the calls look reasonably to attractively priced on volatility, and the rate path is mostly a modest tailwind, not a reason to buy.** The data doesn't include a call price, a strike or a premium, so I can't say whether any particular strike is cheap. I judged this only from implied volatility against realized volatility and from the rate path.\\n\\n**Volatility**\\n- Jan-2028 implied vol is 25.5% at 90% moneyness, 24.0% at 100% and 23.5% at 110% (`vltx_iv`).\\n- Realized vol is higher: 31% over 3 months, 30% over 6 months and 29% over 1 year (`vltx_rv`).\\n- At the money, you are buying vol at about 24% when the ETF has been moving at 29–31%. That is a discount of roughly 5–7 vol points, or about 20%.\\n- The skew is shallow and slightly inverted, so upside strikes (110%) are the cheapest at 23.5%.\\n- The caveat is that realized vol is backward-looking. If VLTX calms down, the discount shrinks.\\n\\n**Rate path**\\n- The CMA policy rate is 4.50%. The futures (contract price = 100 − expected policy rate) imply about 4.50% through 2027Q1, 4.25% in Q2–Q3 and 4.00% by 2027Q4. That is a cumulative 50bp of cuts.\\n- Governor Ashby said on 28 October that her base case is one 25bp cut in 2027. She also said markets \\\"may be getting ahead of themselves.\\\"\\n- If the Authority is right, the market is pricing about 25bp more easing than the CMA expects.\\n- For a long-dated call, a lower rate path lowers the forward and so lowers call value, and that effect is small. Rates matter more through the ETF's equity valuation, where easing helps.\\n- If the market reprices toward one cut, the hit to call value from rates is small (rho). The larger risk is a valuation hit to grid-equipment stocks if the 50bp of cuts is priced out.\\n\\n**Conclusion**\\n- Volatility is the stronger argument for buying. Premium looks cheap relative to realized vol, especially on 100–110% strikes.\\n- The rate path adds some event risk, because there is a gap between market pricing and the CMA's stated view.\\n- The Jan-2028 expiry is the longest listed and leaves time for the 2027 cuts to play out.\\n- Before buying, check the actual premium and breakeven at your chosen strike. Also check n2's work on whether the holdings' earnings case holds through 2027. It was not in the data I used, though the 14% consensus 2027 EPS growth line appeared in the stream.\"\n]",
+   "ms": 6,
+   "error": null
+  }
+ ]
+}

@@ -1,0 +1,29 @@
+{
+ "workflow": "conflict",
+ "cond": {
+  "id": "guided-data",
+  "delivery": "broadcast",
+  "broadcast": "lifecycle+cp",
+  "data": "identity",
+  "wake": "code",
+  "guided": true,
+  "lines": "data"
+ },
+ "seed": 103,
+ "model": "claude-sonnet-5-5",
+ "status": "answered",
+ "wall": 40.72,
+ "cost": 0.0911,
+ "usage": {
+  "input": 18,
+  "output": 2606,
+  "cacheRead": 26479,
+  "cacheWrite": 15590
+ },
+ "nodes": 3,
+ "lines": 13,
+ "cells": 6,
+ "worldCalls": 10,
+ "reads": 2,
+ "answer": "**Probably not. I put the chance of Voltaris hitting C$4.2B in 2027 at about 30–35%, with revenue most likely around C$3.7–4.0B.** This rests on two child analyses (n2 and n3) and the figures they pulled. I did not check the underlying documents myself.\n\n- **Run-rate:** Q2 2026 revenue was C$890M, which annualizes to about C$3.56B. Reaching C$4.2B needs roughly 18% growth over that run-rate.\n- **Company data, mildly supportive (n2):** H1 2026 orders rose 11% year on year, led by utility and data-centre customers. Q2 was also depressed by a nine-week outage at Halbrook, its largest plant, after a fire. n2 estimates C$3.9–4.2B, so guidance is reachable but with thin margin and timing risk.\n- **Industry data, negative (n3):** Industry transformer shipments fell 4% year on year in Q2 2026. Voltaris's share of Caldrian shipments fell from 31% to 27%, as Tarnwell and imports gained. n3 estimates C$3.5–3.8B.\n- **How I weighed them:** The fire explains part of the Q2 weakness, which is why I didn't take n3's lower range. But the share loss and the falling market are not fire effects. The orders growth is a good sign, but guidance still depends on a strong recovery and backlog conversion.\n\n**Verdict:** a miss of roughly 5–10% against guidance is more likely than a hit."
+}

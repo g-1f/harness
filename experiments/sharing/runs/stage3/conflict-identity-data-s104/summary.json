@@ -1,0 +1,28 @@
+{
+ "workflow": "conflict",
+ "cond": {
+  "id": "identity-data",
+  "delivery": "broadcast",
+  "broadcast": "lifecycle+cp",
+  "data": "identity",
+  "wake": "code",
+  "lines": "data"
+ },
+ "seed": 104,
+ "model": "claude-sonnet-5-5",
+ "status": "answered",
+ "wall": 34.84,
+ "cost": 0.0664,
+ "usage": {
+  "input": 22,
+  "output": 3037,
+  "cacheRead": 43588,
+  "cacheWrite": 7916
+ },
+ "nodes": 3,
+ "lines": 13,
+ "cells": 8,
+ "worldCalls": 11,
+ "reads": 4,
+ "answer": "**VLTG probably will not meet the C$4.2B guidance. It is more likely to land a bit short, at roughly C$3.8–4.1B.** That is a judgment call, because the two lines of evidence disagree.\n\n**Evidence for a miss**\n- **Revenue run rate:** The last four quarters sum to about C$3.74B. Q2 2026 was C$890M, which annualizes to about C$3.56B. C$4.2B needs about C$1.05B a quarter, which is 7% above the best recent quarter (Q1 2026 at C$980M).\n- **Shrinking market:** Industry transformer shipments fell 4% year on year in Q2 2026, the first decline in three years. Voltaris's own shipments fell 9%.\n- **Lost share:** Voltaris's share of Caldrian transformer shipments fell from 31% to 27%. If it holds at 27%, revenue stays near C$3.5–3.6B. Reaching C$4.2B would take a recovery to about 31%.\n\n**Evidence for a hit**\n- **Backlog:** Backlog is C$5.1B, about 1.21x the guidance, and cancellations are below 1%. H1 orders rose 11%.\n- **Fire recovery:** The Halbrook plant, its largest, was offline for nine weeks in Q2 after a fire. It restarted in August at full capacity. Management expects to recover the lost shipments by mid-2027.\n\n**Where I land**\n- **Order timing:** Orders lead shipments by about two quarters, so the order growth should support some rebound. Even a 10% lift over the Q2 run rate gives only about C$3.9B.\n- **Backlog gap:** The results release doesn't say how much of the C$5.1B is scheduled for 2027.\n- **Capacity:** Capacity is the constraint, because demand is already covered. Halbrook would need spare capacity for the catch-up volume.\n- **Price and mix:** I have no data on price or mix, which could add revenue beyond what volumes imply.\n\nSources: the two child nodes' results, n2.r1 (company disclosures) and n3.r1 (industry data)."
+}

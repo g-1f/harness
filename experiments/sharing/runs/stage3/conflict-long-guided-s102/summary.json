@@ -1,0 +1,28 @@
+{
+ "workflow": "conflict-long",
+ "cond": {
+  "id": "guided",
+  "delivery": "broadcast",
+  "broadcast": "lifecycle+cp",
+  "data": "identity",
+  "wake": "code",
+  "guided": true
+ },
+ "seed": 102,
+ "model": "claude-sonnet-5-5",
+ "status": "answered",
+ "wall": 98.41,
+ "cost": 0.1027,
+ "usage": {
+  "input": 36,
+  "output": 5214,
+  "cacheRead": 87402,
+  "cacheWrite": 10440
+ },
+ "nodes": 3,
+ "lines": 8,
+ "cells": 15,
+ "worldCalls": 32,
+ "reads": 4,
+ "answer": "**Probably not, though it will be close. I estimate 2027 revenue of about C$4.0–4.1B against the C$4.2B guidance, and about a 35% chance of meeting it.**\n\nMy two child nodes disagreed, and the gap comes down to one fact.\n\n- **Company disclosures (n2.r1):** Voltaris's own orders, backlog and operations point to about C$4.0–4.1B, within a plausible range of C$3.9–4.2B.\n  - Backlog is C$5.1B, orders were up 11% in the first half of 2026, and cancellations are below 1%. Demand is not the problem.\n  - Management builds the C$4.2B from about C$3.9B at the normal run rate plus about C$0.3B of shipments recovered from the Halbrook outage.\n  - Halbrook, the plant that builds all of Voltaris's large power transformers, shut for nine weeks in Q2 2026 after a fire. It restarted in August at full capacity.\n  - About C$310M of delayed shipments are due between Q4 2026 and Q2 2027. Part of that lands in 2026, so only about C$200M likely counts toward 2027.\n- **Industry statistics (n3.r1):** Industry data point to C$3.4–3.7B. Voltaris's Q2 shipments fell 9% year on year, its large-transformer shipments fell 38%, and its market share fell from 31% to 27%.\n\n**Reconciling them:** n3 treated the Q2 share loss and the large-transformer collapse as a lasting trend. The Halbrook shutdown explains both. Large units come only from that plant, so the fall in Q2 shipments looks like a one-off supply interruption, not lost customers. The 2026 backlog and customer acceptance of the revised delivery dates support this. I therefore give n3's C$3.4–3.7B little weight, because extrapolating a share lost to an outage is too bearish.\n\nn3 does add two real points:\n- Industry shipments fell 4% in Q2 2026, the first decline in three years, and they trail orders by about two quarters.\n- The C$3.9B run rate (about C$975M a quarter) needs the top of recent quarters to hold. The unaffected quarters were C$905M, C$960M and C$980M.\n\nReaching C$4.2B would need the recovery shipments to land almost entirely in 2027, the run rate to hold at about C$975M, and no further disruption at Halbrook."
+}

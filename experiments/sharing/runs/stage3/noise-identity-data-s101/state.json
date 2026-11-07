@@ -1,0 +1,890 @@
+{
+ "nodes": [
+  {
+   "id": "n1",
+   "request": {
+    "task": "Give a short 2027 outlook for each of VLTX's five largest holdings."
+   },
+   "opener": null,
+   "state": "completed",
+   "results": [
+    "n1.r1"
+   ],
+   "cps": [],
+   "holdersEver": [],
+   "states": [
+    [
+     0,
+     "running"
+    ],
+    [
+     10.34,
+     "waiting"
+    ],
+    [
+     24.13,
+     "running"
+    ],
+    [
+     24.14,
+     "waiting"
+    ],
+    [
+     25.51,
+     "running"
+    ],
+    [
+     34.64,
+     "completed"
+    ]
+   ],
+   "cost": 0.028350300000000002,
+   "turns": 3,
+   "activations": 1,
+   "session": "f556834b-b1e8-4f74-a230-596d081cb4bf",
+   "from": null
+  },
+  {
+   "id": "n2",
+   "request": {
+    "task": "What is the 2027 outlook for Voltaris Grid (VLTG), for revenue and for margins?"
+   },
+   "opener": "n1",
+   "state": "completed",
+   "results": [
+    "n2.r1"
+   ],
+   "cps": [],
+   "holdersEver": [
+    "n1"
+   ],
+   "states": [
+    [
+     0,
+     "running"
+    ],
+    [
+     24.13,
+     "completed"
+    ]
+   ],
+   "cost": 0.0180575,
+   "turns": 3,
+   "activations": 1,
+   "session": "03061ab1-13e4-4ad9-8b22-852b89bba085",
+   "from": null
+  },
+  {
+   "id": "n3",
+   "request": {
+    "task": "What is the 2027 outlook for Tarnwell Electric (TRNW), for revenue and for margins?"
+   },
+   "opener": "n1",
+   "state": "completed",
+   "results": [
+    "n3.r1"
+   ],
+   "cps": [],
+   "holdersEver": [
+    "n1"
+   ],
+   "states": [
+    [
+     0,
+     "running"
+    ],
+    [
+     14.01,
+     "completed"
+    ]
+   ],
+   "cost": 0.013513,
+   "turns": 2,
+   "activations": 1,
+   "session": "aa9b24bc-c5cc-4eae-8cb3-0a6830536407",
+   "from": null
+  },
+  {
+   "id": "n4",
+   "request": {
+    "task": "What is the 2027 outlook for Braxen Cable (BRXC), for revenue and for margins?"
+   },
+   "opener": "n1",
+   "state": "completed",
+   "results": [
+    "n4.r1"
+   ],
+   "cps": [],
+   "holdersEver": [
+    "n1"
+   ],
+   "states": [
+    [
+     0,
+     "running"
+    ],
+    [
+     25.51,
+     "completed"
+    ]
+   ],
+   "cost": 0.0167692,
+   "turns": 3,
+   "activations": 1,
+   "session": "8b6ff840-edfe-4af6-bccf-3f3e428710ae",
+   "from": null
+  },
+  {
+   "id": "n5",
+   "request": {
+    "task": "What is the 2027 outlook for Ostrand Meters (OSTM), for revenue and for margins?"
+   },
+   "opener": "n1",
+   "state": "completed",
+   "results": [
+    "n5.r1"
+   ],
+   "cps": [],
+   "holdersEver": [
+    "n1"
+   ],
+   "states": [
+    [
+     0,
+     "running"
+    ],
+    [
+     21.3,
+     "completed"
+    ]
+   ],
+   "cost": 0.0157641,
+   "turns": 3,
+   "activations": 1,
+   "session": "eaa28f0e-74af-45b2-888b-52138e364522",
+   "from": null
+  },
+  {
+   "id": "n6",
+   "request": {
+    "task": "What is the 2027 outlook for Kelby Switchgear (KLBS), for revenue and for margins?"
+   },
+   "opener": "n1",
+   "state": "completed",
+   "results": [
+    "n6.r1"
+   ],
+   "cps": [],
+   "holdersEver": [
+    "n1"
+   ],
+   "states": [
+    [
+     0,
+     "running"
+    ],
+    [
+     24.59,
+     "completed"
+    ]
+   ],
+   "cost": 0.0157622,
+   "turns": 3,
+   "activations": 1,
+   "session": "27c847c7-0f13-43ca-9eec-968393cc8aa3",
+   "from": null
+  }
+ ],
+ "lines": [
+  {
+   "i": 0,
+   "t": 0,
+   "text": "the run opened n1 · Give a short 2027 outlook for each of VLTX's five largest holdings.",
+   "kind": "open",
+   "subj": "n1",
+   "by": null
+  },
+  {
+   "i": 1,
+   "t": 0,
+   "text": "n1 opened n2 · What is the 2027 outlook for Voltaris Grid (VLTG), for revenue and for margins?",
+   "kind": "open",
+   "subj": "n2",
+   "by": "n1"
+  },
+  {
+   "i": 2,
+   "t": 0,
+   "text": "n1 opened n3 · What is the 2027 outlook for Tarnwell Electric (TRNW), for revenue and for marg…",
+   "kind": "open",
+   "subj": "n3",
+   "by": "n1"
+  },
+  {
+   "i": 3,
+   "t": 0,
+   "text": "n1 opened n4 · What is the 2027 outlook for Braxen Cable (BRXC), for revenue and for margins?",
+   "kind": "open",
+   "subj": "n4",
+   "by": "n1"
+  },
+  {
+   "i": 4,
+   "t": 0,
+   "text": "n1 opened n5 · What is the 2027 outlook for Ostrand Meters (OSTM), for revenue and for margins?",
+   "kind": "open",
+   "subj": "n5",
+   "by": "n1"
+  },
+  {
+   "i": 5,
+   "t": 0,
+   "text": "n1 opened n6 · What is the 2027 outlook for Kelby Switchgear (KLBS), for revenue and for margi…",
+   "kind": "open",
+   "subj": "n6",
+   "by": "n1"
+  },
+  {
+   "i": 6,
+   "t": 14.01,
+   "text": "n3.r1 · Tarnwell Electric (TRNW) 2027 outlook, from two search snippets. I didn't open the full d…",
+   "kind": "result",
+   "subj": "n3",
+   "ref": "n3.r1"
+  },
+  {
+   "i": 7,
+   "t": 14.31,
+   "text": "n5.d2 · doc ostm-revenue · Ostrand Meters: 2027 revenue: A smart-meter contract with Norvane Utilities adds about 20% to 2027 revenue.",
+   "kind": "data",
+   "subj": "n5",
+   "ref": "n5.d2"
+  },
+  {
+   "i": 8,
+   "t": 14.87,
+   "text": "n6.d2 · doc klbs-revenue · Kelby Switchgear: 2027 revenue: Losing share to Tarnwell in medium-voltage switchgear; 2027 revenue expected down 5%.",
+   "kind": "data",
+   "subj": "n6",
+   "ref": "n6.d2"
+  },
+  {
+   "i": 9,
+   "t": 15.39,
+   "text": "n5.d3 · doc ostm-margins · Ostrand Meters: margins: Margins dip one point in 2027 as the Norvane rollout ramps.",
+   "kind": "data",
+   "subj": "n5",
+   "ref": "n5.d3"
+  },
+  {
+   "i": 10,
+   "t": 16.95,
+   "text": "n4.d2 · doc brxc-revenue · Braxen Cable: 2027 revenue: Volumes flat; revenue up 2% in 2027 from pass-through pricing.",
+   "kind": "data",
+   "subj": "n4",
+   "ref": "n4.d2"
+  },
+  {
+   "i": 11,
+   "t": 18.46,
+   "text": "n2.d2 · doc vltg-revenue · Voltaris Grid: 2027 revenue: Backlog C$5.1B; management reaffirmed 2027 revenue guidance of C$4.2B.",
+   "kind": "data",
+   "subj": "n2",
+   "ref": "n2.d2"
+  },
+  {
+   "i": 12,
+   "t": 19.98,
+   "text": "n6.d3 · doc klbs-margins · Kelby Switchgear: margins: Restructuring holds operating margin at 8%.",
+   "kind": "data",
+   "subj": "n6",
+   "ref": "n6.d3"
+  },
+  {
+   "i": 13,
+   "t": 21.3,
+   "text": "n5.r1 · Ostrand Meters (OSTM) looks positive for 2027 revenue and slightly negative for margins.… · cites n5.d2, n5.d3",
+   "kind": "result",
+   "subj": "n5",
+   "ref": "n5.r1"
+  },
+  {
+   "i": 14,
+   "t": 21.58,
+   "text": "n2.d3 · doc vltg-margins · Voltaris Grid: margins: Operating margin expected near 11% in 2027, flat on 2026.",
+   "kind": "data",
+   "subj": "n2",
+   "ref": "n2.d3"
+  },
+  {
+   "i": 15,
+   "t": 21.74,
+   "text": "n4.d3 · doc brxc-margins · Braxen Cable: margins: Copper costs up 18% squeeze margins; 2027 earnings expected flat.",
+   "kind": "data",
+   "subj": "n4",
+   "ref": "n4.d3"
+  },
+  {
+   "i": 16,
+   "t": 24.13,
+   "text": "n2.r1 · Voltaris Grid (VLTG) 2027 outlook: revenue is guided at C$4.2B, and operating margin is e… · cites n2.d2, n2.d3",
+   "kind": "result",
+   "subj": "n2",
+   "ref": "n2.r1"
+  },
+  {
+   "i": 17,
+   "t": 24.59,
+   "text": "n6.r1 · Kelby Switchgear (KLBS) looks weak on revenue for 2027 and flat on margins.",
+   "kind": "result",
+   "subj": "n6",
+   "ref": "n6.r1"
+  },
+  {
+   "i": 18,
+   "t": 25.51,
+   "text": "n4.r1 · Braxen Cable (BRXC) looks flat to slightly up on revenue for 2027, with pressure on margi…",
+   "kind": "result",
+   "subj": "n4",
+   "ref": "n4.r1"
+  },
+  {
+   "i": 19,
+   "t": 34.64,
+   "text": "n1.r1 · These outlooks come from short source documents, two per company. Nobody confirmed that t…",
+   "kind": "result",
+   "subj": "n1",
+   "ref": "n1.r1"
+  }
+ ],
+ "artifacts": {
+  "n6.d1": {
+   "node": "n6",
+   "kind": "data",
+   "fn": "search",
+   "args": [
+    "Kelby Switchgear KLBS"
+   ],
+   "content": "{\"docs\":[{\"id\":\"klbs-revenue\",\"title\":\"Kelby Switchgear: 2027 revenue\",\"snippet\":\"Losing share to Tarnwell in medium-voltage switchgear; 2027 revenue expected down 5%.\"},{\"id\":\"klbs-margins\",\"title\":\"Kelby Switchgear: margins\",\"snippet\":\"Restructuring holds operating margin at 8%.\"}],\"series\":[]}",
+   "t": 8.73
+  },
+  "n2.d1": {
+   "node": "n2",
+   "kind": "data",
+   "fn": "search",
+   "args": [
+    "Voltaris Grid VLTG 2027 outlook revenue margin"
+   ],
+   "content": "{\"docs\":[{\"id\":\"vltg-revenue\",\"title\":\"Voltaris Grid: 2027 revenue\",\"snippet\":\"Backlog C$5.1B; management reaffirmed 2027 revenue guidance of C$4.2B.\"},{\"id\":\"vltg-margins\",\"title\":\"Voltaris Grid: margins\",\"snippet\":\"Operating margin expected near 11% in 2027, flat on 2026.\"},{\"id\":\"trnw-revenue\",\"title\":\"Tarnwell Electric: 2027 revenue\",\"snippet\":\"Revenue expected up 6% in 2027 on price increases.\"},{\"id\":\"trnw-margins\",\"title\":\"Tarnwell Electric: margins\",\"snippet\":\"Price increases lift operating margin to 14% in 2027 from 12%.\"}],\"series\":[]}",
+   "t": 9.72
+  },
+  "n5.d1": {
+   "node": "n5",
+   "kind": "data",
+   "fn": "search",
+   "args": [
+    "Ostrand Meters OSTM"
+   ],
+   "content": "{\"docs\":[{\"id\":\"ostm-revenue\",\"title\":\"Ostrand Meters: 2027 revenue\",\"snippet\":\"A smart-meter contract with Norvane Utilities adds about 20% to 2027 revenue.\"},{\"id\":\"ostm-margins\",\"title\":\"Ostrand Meters: margins\",\"snippet\":\"Margins dip one point in 2027 as the Norvane rollout ramps.\"}],\"series\":[]}",
+   "t": 10.72
+  },
+  "n4.d1": {
+   "node": "n4",
+   "kind": "data",
+   "fn": "search",
+   "args": [
+    "Braxen Cable BRXC"
+   ],
+   "content": "{\"docs\":[{\"id\":\"brxc-revenue\",\"title\":\"Braxen Cable: 2027 revenue\",\"snippet\":\"Volumes flat; revenue up 2% in 2027 from pass-through pricing.\"},{\"id\":\"brxc-margins\",\"title\":\"Braxen Cable: margins\",\"snippet\":\"Copper costs up 18% squeeze margins; 2027 earnings expected flat.\"}],\"series\":[]}",
+   "t": 11.44
+  },
+  "n3.d1": {
+   "node": "n3",
+   "kind": "data",
+   "fn": "search",
+   "args": [
+    "Tarnwell Electric TRNW 2027 outlook revenue margin"
+   ],
+   "content": "{\"docs\":[{\"id\":\"trnw-revenue\",\"title\":\"Tarnwell Electric: 2027 revenue\",\"snippet\":\"Revenue expected up 6% in 2027 on price increases.\"},{\"id\":\"trnw-margins\",\"title\":\"Tarnwell Electric: margins\",\"snippet\":\"Price increases lift operating margin to 14% in 2027 from 12%.\"},{\"id\":\"vltg-revenue\",\"title\":\"Voltaris Grid: 2027 revenue\",\"snippet\":\"Backlog C$5.1B; management reaffirmed 2027 revenue guidance of C$4.2B.\"},{\"id\":\"vltg-margins\",\"title\":\"Voltaris Grid: margins\",\"snippet\":\"Operating margin expected near 11% in 2027, flat on 2026.\"}],\"series\":[]}",
+   "t": 11.47
+  },
+  "n3.r1": {
+   "node": "n3",
+   "kind": "result",
+   "content": "Tarnwell Electric (TRNW) 2027 outlook, from two search snippets. I didn't open the full documents.\n\n- **Revenue:** Expected to grow 6% in 2027, driven by price increases. The snippet gives no revenue level in dollars and no volume outlook.\n- **Margins:** Operating margin is expected to rise to 14% in 2027 from 12%. Price increases are again the stated driver, so the margin gain depends on the pricing holding.\n\nThe sources are the \"Tarnwell Electric: 2027 revenue\" (`trnw-revenue`) and \"Tarnwell Electric: margins\" (`trnw-margins`) documents.",
+   "cites": [],
+   "invalid": [],
+   "t": 14.01
+  },
+  "n5.d2": {
+   "node": "n5",
+   "kind": "data",
+   "fn": "doc",
+   "args": [
+    "ostm-revenue"
+   ],
+   "content": "{\"id\":\"ostm-revenue\",\"title\":\"Ostrand Meters: 2027 revenue\",\"body\":\"A smart-meter contract with Norvane Utilities adds about 20% to 2027 revenue.\"}",
+   "t": 14.31
+  },
+  "n6.d2": {
+   "node": "n6",
+   "kind": "data",
+   "fn": "doc",
+   "args": [
+    "klbs-revenue"
+   ],
+   "content": "{\"id\":\"klbs-revenue\",\"title\":\"Kelby Switchgear: 2027 revenue\",\"body\":\"Losing share to Tarnwell in medium-voltage switchgear; 2027 revenue expected down 5%.\"}",
+   "t": 14.87
+  },
+  "n5.d3": {
+   "node": "n5",
+   "kind": "data",
+   "fn": "doc",
+   "args": [
+    "ostm-margins"
+   ],
+   "content": "{\"id\":\"ostm-margins\",\"title\":\"Ostrand Meters: margins\",\"body\":\"Margins dip one point in 2027 as the Norvane rollout ramps.\"}",
+   "t": 15.39
+  },
+  "n4.d2": {
+   "node": "n4",
+   "kind": "data",
+   "fn": "doc",
+   "args": [
+    "brxc-revenue"
+   ],
+   "content": "{\"id\":\"brxc-revenue\",\"title\":\"Braxen Cable: 2027 revenue\",\"body\":\"Volumes flat; revenue up 2% in 2027 from pass-through pricing.\"}",
+   "t": 16.95
+  },
+  "n2.d2": {
+   "node": "n2",
+   "kind": "data",
+   "fn": "doc",
+   "args": [
+    "vltg-revenue"
+   ],
+   "content": "{\"id\":\"vltg-revenue\",\"title\":\"Voltaris Grid: 2027 revenue\",\"body\":\"Backlog C$5.1B; management reaffirmed 2027 revenue guidance of C$4.2B.\"}",
+   "t": 18.46
+  },
+  "n6.d3": {
+   "node": "n6",
+   "kind": "data",
+   "fn": "doc",
+   "args": [
+    "klbs-margins"
+   ],
+   "content": "{\"id\":\"klbs-margins\",\"title\":\"Kelby Switchgear: margins\",\"body\":\"Restructuring holds operating margin at 8%.\"}",
+   "t": 19.98
+  },
+  "n5.r1": {
+   "node": "n5",
+   "kind": "result",
+   "content": "Ostrand Meters (OSTM) looks positive for 2027 revenue and slightly negative for margins. This rests on two short documents (n5.d2, n5.d3). I found no other sources, such as guidance or consensus figures.\n\n- **Revenue:** A smart-meter contract with Norvane Utilities adds about 20% to 2027 revenue. I couldn't tell whether that is 20% on top of the 2026 base or a 20% total increase, and the documents give no baseline growth figure.\n- **Margins:** Margins dip one point in 2027 as the Norvane rollout ramps. The documents don't say whether the dip is temporary.\n\nThe contract brings in new revenue, but the cost of ramping it up takes about a point off margins.",
+   "cites": [
+    "n5.d2",
+    "n5.d3"
+   ],
+   "invalid": [],
+   "t": 21.3
+  },
+  "n2.d3": {
+   "node": "n2",
+   "kind": "data",
+   "fn": "doc",
+   "args": [
+    "vltg-margins"
+   ],
+   "content": "{\"id\":\"vltg-margins\",\"title\":\"Voltaris Grid: margins\",\"body\":\"Operating margin expected near 11% in 2027, flat on 2026.\"}",
+   "t": 21.58
+  },
+  "n4.d3": {
+   "node": "n4",
+   "kind": "data",
+   "fn": "doc",
+   "args": [
+    "brxc-margins"
+   ],
+   "content": "{\"id\":\"brxc-margins\",\"title\":\"Braxen Cable: margins\",\"body\":\"Copper costs up 18% squeeze margins; 2027 earnings expected flat.\"}",
+   "t": 21.74
+  },
+  "n2.r1": {
+   "node": "n2",
+   "kind": "result",
+   "content": "Voltaris Grid (VLTG) 2027 outlook: revenue is guided at C$4.2B, and operating margin is expected to hold near 11%. This comes from two short documents, and I found nothing else on the company.\n\n- **Revenue:** Management reaffirmed 2027 revenue guidance of C$4.2B (n2.d2). Backlog is C$5.1B, which is above the guided revenue. The documents don't give a 2026 revenue figure, so I can't state a growth rate.\n- **Margins:** Operating margin is expected near 11% in 2027, flat on 2026 (n2.d3). Management expects no expansion or compression.\n\nThe outlook is steady and the guidance has been reaffirmed. The document gives no growth drivers and no margin risks.",
+   "cites": [
+    "n2.d2",
+    "n2.d3"
+   ],
+   "invalid": [],
+   "t": 24.13
+  },
+  "n6.r1": {
+   "node": "n6",
+   "kind": "result",
+   "content": "Kelby Switchgear (KLBS) looks weak on revenue for 2027 and flat on margins.\n\n- **Revenue:** I expect a decline of about 5%. KLBS is losing share to Tarnwell in medium-voltage switchgear.\n- **Margins:** I expect operating margin to hold at about 8%, because restructuring is supporting it.\n\nThis rests on two short source documents (`klbs-revenue` and `klbs-margins`). They give no baseline revenue figure, no margin trend, and no explanation of how restructuring holds the margin. The 8% is a level, not a change, so I can't say whether it is up or down from 2026.",
+   "cites": [],
+   "invalid": [],
+   "t": 24.59
+  },
+  "n4.r1": {
+   "node": "n4",
+   "kind": "result",
+   "content": "Braxen Cable (BRXC) looks flat to slightly up on revenue for 2027, with pressure on margins. This rests on two short source documents (brxc-revenue and brxc-margins), and neither gives a margin percentage or a dollar revenue figure.\n\n- **Revenue:** Revenue should grow about 2% in 2027. Volumes are flat, so the growth comes entirely from pass-through pricing.\n- **Margins:** Copper costs are up 18%, which squeezes margins. 2027 earnings are expected to be flat. Cost pass-through is covering the copper increase at the earnings level, but margins stay under pressure.",
+   "cites": [],
+   "invalid": [],
+   "t": 25.51
+  },
+  "n1.r1": {
+   "node": "n1",
+   "kind": "result",
+   "content": "These outlooks come from short source documents, two per company. Nobody confirmed that these five are VLTX's top holdings, so I took that from the task as given.\n\n1. **Voltaris Grid (VLTG): steady.**\n   - **Revenue:** Management reaffirmed 2027 guidance of C$4.2B, and the C$5.1B backlog is above that. The documents give no 2026 figure, so I can't state a growth rate.\n   - **Margins:** Operating margin should hold near 11%, flat on 2026.\n\n2. **Tarnwell Electric (TRNW): strongest of the five.**\n   - **Revenue:** Expected to grow 6%, driven by price increases.\n   - **Margins:** Operating margin should rise to 14% from 12%. That gain depends on the price increases holding. This outlook rests on search snippets only, because the full documents weren't opened.\n\n3. **Braxen Cable (BRXC): flat to slightly up.**\n   - **Revenue:** About +2%. Volumes are flat, so all of the growth is pass-through pricing.\n   - **Margins:** Copper costs are up 18%, which squeezes margins. Pass-through is expected to keep 2027 earnings flat.\n\n4. **Ostrand Meters (OSTM): growth with a small margin cost.**\n   - **Revenue:** A smart-meter contract with Norvane Utilities adds about 20% to 2027 revenue. The documents don't say whether that is on top of the 2026 base or a total increase.\n   - **Margins:** Down about one point as the Norvane rollout ramps. The documents don't say whether the dip is temporary.\n\n5. **Kelby Switchgear (KLBS): weakest of the five.**\n   - **Revenue:** Down about 5%, as it loses share to Tarnwell in medium-voltage switchgear.\n   - **Margins:** Operating margin holds at about 8%, supported by restructuring. The 8% is a level, so I can't say whether it is up or down from 2026.\n\nThe Tarnwell and Kelby outlooks are linked: Tarnwell's share gain is Kelby's loss.\n\nNone of the documents gave consensus figures, dollar revenue levels for most of these companies, or the holdings weights.",
+   "cites": [],
+   "invalid": [],
+   "t": 34.64
+  }
+ },
+ "edges": [
+  {
+   "kind": "call",
+   "disp": "started",
+   "from": "n1",
+   "to": "n2",
+   "t": 0,
+   "released": 24.13
+  },
+  {
+   "kind": "call",
+   "disp": "started",
+   "from": "n1",
+   "to": "n3",
+   "t": 0,
+   "released": 14.01
+  },
+  {
+   "kind": "call",
+   "disp": "started",
+   "from": "n1",
+   "to": "n4",
+   "t": 0,
+   "released": 25.51
+  },
+  {
+   "kind": "call",
+   "disp": "started",
+   "from": "n1",
+   "to": "n5",
+   "t": 0,
+   "released": 21.3
+  },
+  {
+   "kind": "call",
+   "disp": "started",
+   "from": "n1",
+   "to": "n6",
+   "t": 0,
+   "released": 24.59
+  },
+  {
+   "kind": "cite",
+   "from": "n5",
+   "to": "n5",
+   "ref": "n5.r1",
+   "t": 21.3
+  },
+  {
+   "kind": "cite",
+   "from": "n5",
+   "to": "n5",
+   "ref": "n5.r1",
+   "t": 21.3
+  },
+  {
+   "kind": "cite",
+   "from": "n2",
+   "to": "n2",
+   "ref": "n2.r1",
+   "t": 24.13
+  },
+  {
+   "kind": "cite",
+   "from": "n2",
+   "to": "n2",
+   "ref": "n2.r1",
+   "t": 24.13
+  }
+ ],
+ "reads": [
+  {
+   "node": "n1",
+   "ref": "n2.r1",
+   "t": 25.52
+  },
+  {
+   "node": "n1",
+   "ref": "n3.r1",
+   "t": 25.52
+  },
+  {
+   "node": "n1",
+   "ref": "n4.r1",
+   "t": 25.52
+  },
+  {
+   "node": "n1",
+   "ref": "n5.r1",
+   "t": 25.52
+  },
+  {
+   "node": "n1",
+   "ref": "n6.r1",
+   "t": 25.52
+  },
+  {
+   "node": "n1",
+   "ref": "n2.r1",
+   "t": 26.92
+  },
+  {
+   "node": "n1",
+   "ref": "n3.r1",
+   "t": 26.93
+  },
+  {
+   "node": "n1",
+   "ref": "n4.r1",
+   "t": 26.93
+  },
+  {
+   "node": "n1",
+   "ref": "n5.r1",
+   "t": 26.93
+  },
+  {
+   "node": "n1",
+   "ref": "n6.r1",
+   "t": 26.93
+  }
+ ],
+ "worldCalls": [
+  {
+   "node": "n6",
+   "fn": "search",
+   "args": [
+    "Kelby Switchgear KLBS"
+   ],
+   "ms": 2239,
+   "t": 8.73,
+   "ref": "n6.d1"
+  },
+  {
+   "node": "n2",
+   "fn": "search",
+   "args": [
+    "Voltaris Grid VLTG 2027 outlook revenue margin"
+   ],
+   "ms": 3185,
+   "t": 9.72,
+   "ref": "n2.d1"
+  },
+  {
+   "node": "n5",
+   "fn": "search",
+   "args": [
+    "Ostrand Meters OSTM"
+   ],
+   "ms": 4292,
+   "t": 10.72,
+   "ref": "n5.d1"
+  },
+  {
+   "node": "n4",
+   "fn": "search",
+   "args": [
+    "Braxen Cable BRXC"
+   ],
+   "ms": 4816,
+   "t": 11.44,
+   "ref": "n4.d1"
+  },
+  {
+   "node": "n3",
+   "fn": "search",
+   "args": [
+    "Tarnwell Electric TRNW 2027 outlook revenue margin"
+   ],
+   "ms": 5021,
+   "t": 11.47,
+   "ref": "n3.d1"
+  },
+  {
+   "node": "n5",
+   "fn": "doc",
+   "args": [
+    "ostm-revenue"
+   ],
+   "ms": 2355,
+   "t": 14.31,
+   "ref": "n5.d2"
+  },
+  {
+   "node": "n6",
+   "fn": "doc",
+   "args": [
+    "klbs-revenue"
+   ],
+   "ms": 5005,
+   "t": 14.87,
+   "ref": "n6.d2"
+  },
+  {
+   "node": "n5",
+   "fn": "doc",
+   "args": [
+    "ostm-margins"
+   ],
+   "ms": 1082,
+   "t": 15.39,
+   "ref": "n5.d3"
+  },
+  {
+   "node": "n4",
+   "fn": "doc",
+   "args": [
+    "brxc-revenue"
+   ],
+   "ms": 4396,
+   "t": 16.95,
+   "ref": "n4.d2"
+  },
+  {
+   "node": "n2",
+   "fn": "doc",
+   "args": [
+    "vltg-revenue"
+   ],
+   "ms": 3042,
+   "t": 18.46,
+   "ref": "n2.d2"
+  },
+  {
+   "node": "n6",
+   "fn": "doc",
+   "args": [
+    "klbs-margins"
+   ],
+   "ms": 5099,
+   "t": 19.98,
+   "ref": "n6.d3"
+  },
+  {
+   "node": "n2",
+   "fn": "doc",
+   "args": [
+    "vltg-margins"
+   ],
+   "ms": 3116,
+   "t": 21.58,
+   "ref": "n2.d3"
+  },
+  {
+   "node": "n4",
+   "fn": "doc",
+   "args": [
+    "brxc-margins"
+   ],
+   "ms": 4786,
+   "t": 21.74,
+   "ref": "n4.d3"
+  }
+ ],
+ "cells": [
+  {
+   "node": "n6",
+   "t": 8.74,
+   "code": "// single judgment: KLBS 2027 outlook\nconst r=await world.search(\"Kelby Switchgear KLBS\");\nreturn r",
+   "output": "{\n \"docs\": [\n  {\n   \"id\": \"klbs-revenue\",\n   \"title\": \"Kelby Switchgear: 2027 revenue\",\n   \"snippet\": \"Losing share to Tarnwell in medium-voltage switchgear; 2027 revenue expected down 5%.\"\n  },\n  {\n   \"id\": \"klbs-margins\",\n   \"title\": \"Kelby Switchgear: margins\",\n   \"snippet\": \"Restructuring holds operating margin at 8%.\"\n  }\n ],\n \"series\": [],\n \"ref\": \"n6.d1\"\n}",
+   "ms": 2260,
+   "error": null
+  },
+  {
+   "node": "n2",
+   "t": 9.72,
+   "code": "// Single judgment; answer directly.\nconst r=await world.search(\"Voltaris Grid VLTG 2027 outlook revenue margin\");return r;",
+   "output": "{\n \"docs\": [\n  {\n   \"id\": \"vltg-revenue\",\n   \"title\": \"Voltaris Grid: 2027 revenue\",\n   \"snippet\": \"Backlog C$5.1B; management reaffirmed 2027 revenue guidance of C$4.2B.\"\n  },\n  {\n   \"id\": \"vltg-margins\",\n   \"title\": \"Voltaris Grid: margins\",\n   \"snippet\": \"Operating margin expected near 11% in 2027, flat on 2026.\"\n  },\n  {\n   \"id\": \"trnw-revenue\",\n   \"title\": \"Tarnwell Electric: 2027 revenue\",\n   \"snippet\": \"Revenue expected up 6% in 2027 on price increases.\"\n  },\n  {\n   \"id\": \"trnw-margins\",\n   \"title\": \"Tarnwell Electric: margins\",\n   \"snippet\": \"Price increases lift operating margin to 14% in 2027 from 12%.\"\n  }\n ],\n \"series\": [],\n \"ref\": \"n2.d1\"\n}",
+   "ms": 3199,
+   "error": null
+  },
+  {
+   "node": "n5",
+   "t": 10.72,
+   "code": "// Single judgment: OSTM 2027 outlook. Answer directly.\nconst r=await world.search(\"Ostrand Meters OSTM\");\nreturn JSON.stringify(r).slice(0,3000);",
+   "output": "{\"docs\":[{\"id\":\"ostm-revenue\",\"title\":\"Ostrand Meters: 2027 revenue\",\"snippet\":\"A smart-meter contract with Norvane Utilities adds about 20% to 2027 revenue.\"},{\"id\":\"ostm-margins\",\"title\":\"Ostrand Meters: margins\",\"snippet\":\"Margins dip one point in 2027 as the Norvane rollout ramps.\"}],\"series\":[],\"ref\":\"n5.d1\"}",
+   "ms": 4333,
+   "error": null
+  },
+  {
+   "node": "n4",
+   "t": 11.45,
+   "code": "const r=await world.search(\"Braxen Cable BRXC\");return JSON.stringify(r).slice(0,3000)",
+   "output": "{\"docs\":[{\"id\":\"brxc-revenue\",\"title\":\"Braxen Cable: 2027 revenue\",\"snippet\":\"Volumes flat; revenue up 2% in 2027 from pass-through pricing.\"},{\"id\":\"brxc-margins\",\"title\":\"Braxen Cable: margins\",\"snippet\":\"Copper costs up 18% squeeze margins; 2027 earnings expected flat.\"}],\"series\":[],\"ref\":\"n4.d1\"}",
+   "ms": 4830,
+   "error": null
+  },
+  {
+   "node": "n3",
+   "t": 11.49,
+   "code": "// single judgment: TRNW 2027 revenue & margins\nconst r=await world.search(\"Tarnwell Electric TRNW 2027 outlook revenue margin\");\nreturn r;",
+   "output": "{\n \"docs\": [\n  {\n   \"id\": \"trnw-revenue\",\n   \"title\": \"Tarnwell Electric: 2027 revenue\",\n   \"snippet\": \"Revenue expected up 6% in 2027 on price increases.\"\n  },\n  {\n   \"id\": \"trnw-margins\",\n   \"title\": \"Tarnwell Electric: margins\",\n   \"snippet\": \"Price increases lift operating margin to 14% in 2027 from 12%.\"\n  },\n  {\n   \"id\": \"vltg-revenue\",\n   \"title\": \"Voltaris Grid: 2027 revenue\",\n   \"snippet\": \"Backlog C$5.1B; management reaffirmed 2027 revenue guidance of C$4.2B.\"\n  },\n  {\n   \"id\": \"vltg-margins\",\n   \"title\": \"Voltaris Grid: margins\",\n   \"snippet\": \"Operating margin expected near 11% in 2027, flat on 2026.\"\n  }\n ],\n \"series\": [],\n \"ref\": \"n3.d1\"\n}",
+   "ms": 5052,
+   "error": null
+  },
+  {
+   "node": "n5",
+   "t": 15.39,
+   "code": "return JSON.stringify([await world.doc(\"ostm-revenue\"),await world.doc(\"ostm-margins\")]);",
+   "output": "[{\"id\":\"ostm-revenue\",\"title\":\"Ostrand Meters: 2027 revenue\",\"body\":\"A smart-meter contract with Norvane Utilities adds about 20% to 2027 revenue.\",\"ref\":\"n5.d2\"},{\"id\":\"ostm-margins\",\"title\":\"Ostrand Meters: margins\",\"body\":\"Margins dip one point in 2027 as the Norvane rollout ramps.\",\"ref\":\"n5.d3\"}]",
+   "ms": 3443,
+   "error": null
+  },
+  {
+   "node": "n6",
+   "t": 19.98,
+   "code": "return [await world.doc(\"klbs-revenue\"),await world.doc(\"klbs-margins\")]",
+   "output": "[\n {\n  \"id\": \"klbs-revenue\",\n  \"title\": \"Kelby Switchgear: 2027 revenue\",\n  \"body\": \"Losing share to Tarnwell in medium-voltage switchgear; 2027 revenue expected down 5%.\",\n  \"ref\": \"n6.d2\"\n },\n {\n  \"id\": \"klbs-margins\",\n  \"title\": \"Kelby Switchgear: margins\",\n  \"body\": \"Restructuring holds operating margin at 8%.\",\n  \"ref\": \"n6.d3\"\n }\n]",
+   "ms": 10115,
+   "error": null
+  },
+  {
+   "node": "n2",
+   "t": 21.58,
+   "code": "return [await world.doc(\"vltg-revenue\"),await world.doc(\"vltg-margins\")]",
+   "output": "[\n {\n  \"id\": \"vltg-revenue\",\n  \"title\": \"Voltaris Grid: 2027 revenue\",\n  \"body\": \"Backlog C$5.1B; management reaffirmed 2027 revenue guidance of C$4.2B.\",\n  \"ref\": \"n2.d2\"\n },\n {\n  \"id\": \"vltg-margins\",\n  \"title\": \"Voltaris Grid: margins\",\n  \"body\": \"Operating margin expected near 11% in 2027, flat on 2026.\",\n  \"ref\": \"n2.d3\"\n }\n]",
+   "ms": 6168,
+   "error": null
+  },
+  {
+   "node": "n4",
+   "t": 21.74,
+   "code": "return JSON.stringify([await world.doc(\"brxc-revenue\"),await world.doc(\"brxc-margins\")])",
+   "output": "[{\"id\":\"brxc-revenue\",\"title\":\"Braxen Cable: 2027 revenue\",\"body\":\"Volumes flat; revenue up 2% in 2027 from pass-through pricing.\",\"ref\":\"n4.d2\"},{\"id\":\"brxc-margins\",\"title\":\"Braxen Cable: margins\",\"body\":\"Copper costs up 18% squeeze margins; 2027 earnings expected flat.\",\"ref\":\"n4.d3\"}]",
+   "ms": 9190,
+   "error": null
+  },
+  {
+   "node": "n1",
+   "t": 25.52,
+   "code": "const r=[];const ids=['n2','n3','n4','n5','n6'];\nfor(const i of ids){r.push(await nodes.handle(i).result());}\nreturn r.map(x=>x.ref+\"\\n\"+read(x.ref));",
+   "output": "[\n \"n2.r1\\n[object Promise]\",\n \"n3.r1\\n[object Promise]\",\n \"n4.r1\\n[object Promise]\",\n \"n5.r1\\n[object Promise]\",\n \"n6.r1\\n[object Promise]\"\n]",
+   "ms": 15200,
+   "error": null
+  },
+  {
+   "node": "n1",
+   "t": 26.94,
+   "code": "const o=[];for(const i of ['n2','n3','n4','n5','n6']){o.push(await tools.readArtifact({ref:i+'.r1'}));}return o.map(x=>x.text);",
+   "output": "[\n \"Voltaris Grid (VLTG) 2027 outlook: revenue is guided at C$4.2B, and operating margin is expected to hold near 11%. This comes from two short documents, and I found nothing else on the company.\\n\\n- **Revenue:** Management reaffirmed 2027 revenue guidance of C$4.2B (n2.d2). Backlog is C$5.1B, which is above the guided revenue. The documents don't give a 2026 revenue figure, so I can't state a growth rate.\\n- **Margins:** Operating margin is expected near 11% in 2027, flat on 2026 (n2.d3). Management expects no expansion or compression.\\n\\nThe outlook is steady and the guidance has been reaffirmed. The document gives no growth drivers and no margin risks.\",\n \"Tarnwell Electric (TRNW) 2027 outlook, from two search snippets. I didn't open the full documents.\\n\\n- **Revenue:** Expected to grow 6% in 2027, driven by price increases. The snippet gives no revenue level in dollars and no volume outlook.\\n- **Margins:** Operating margin is expected to rise to 14% in 2027 from 12%. Price increases are again the stated driver, so the margin gain depends on the pricing holding.\\n\\nThe sources are the \\\"Tarnwell Electric: 2027 revenue\\\" (`trnw-revenue`) and \\\"Tarnwell Electric: margins\\\" (`trnw-margins`) documents.\",\n \"Braxen Cable (BRXC) looks flat to slightly up on revenue for 2027, with pressure on margins. This rests on two short source documents (brxc-revenue and brxc-margins), and neither gives a margin percentage or a dollar revenue figure.\\n\\n- **Revenue:** Revenue should grow about 2% in 2027. Volumes are flat, so the growth comes entirely from pass-through pricing.\\n- **Margins:** Copper costs are up 18%, which squeezes margins. 2027 earnings are expected to be flat. Cost pass-through is covering the copper increase at the earnings level, but margins stay under pressure.\",\n \"Ostrand Meters (OSTM) looks positive for 2027 revenue and slightly negative for margins. This rests on two short documents (n5.d2, n5.d3). I found no other sources, such as guidance or consensus figures.\\n\\n- **Revenue:** A smart-meter contract with Norvane Utilities adds about 20% to 2027 revenue. I couldn't tell whether that is 20% on top of the 2026 base or a 20% total increase, and the documents give no baseline growth figure.\\n- **Margins:** Margins dip one point in 2027 as the Norvane rollout ramps. The documents don't say whether the dip is temporary.\\n\\nThe contract brings in new revenue, but the cost of ramping it up takes about a point off margins.\",\n \"Kelby Switchgear (KLBS) looks weak on revenue for 2027 and flat on margins.\\n\\n- **Revenue:** I expect a decline of about 5%. KLBS is losing share to Tarnwell in medium-voltage switchgear.\\n- **Margins:** I expect operating margin to hold at about 8%, because restructuring is supporting it.\\n\\nThis rests on two short source documents (`klbs-revenue` and `klbs-margins`). They give no baseline revenue figure, no margin trend, and no explanation of how restructuring holds the margin. The 8% is a level, not a change, so I can't say whether it is up or down from 2026.\"\n]",
+   "ms": 14,
+   "error": null
+  }
+ ]
+}
