@@ -9,6 +9,7 @@ import crypto from 'node:crypto';
 import {World, WORKFLOWS} from './world.mjs';
 import {systemPrompt, taskPrompt, forkPrompt, reopenPrompt, finishPrompt} from './prompts.mjs';
 import {limitOf} from './limit.mjs';
+import {summaryOf} from './summaries.mjs';
 
 const HERE = path.dirname(new URL(import.meta.url).pathname);
 const SERVER = path.resolve(HERE, '..', 'ptc_server.mjs');
@@ -149,7 +150,7 @@ export class Run {
   spawn(n, mode, prompt, src = null) {
     if (this.ended) return;
     const args = ['-p', '--model', this.model, '--output-format', 'json', '--mcp-config', this.mcpConfig(n), '--strict-mcp-config',
-      '--tools', '', '--allowedTools', 'mcp__ptc__run_cell', '--system-prompt', systemPrompt(this.cond), '--setting-sources', '',
+      '--tools', '', '--allowedTools', 'mcp__ptc__run_cell', '--system-prompt', systemPrompt(this.cond, {root: !n.opener}), '--setting-sources', '',
       '--max-turns', String(this.caps.turns)];
     if (mode === 'fresh') { n.session = crypto.randomUUID(); args.push('--session-id', n.session); }
     else if (mode === 'resume') args.push('--resume', n.session);
@@ -506,7 +507,7 @@ export class Run {
       this.worldCalls.push({node: n.id, fn, args, ms: Date.now() - t0, t: this.now(), shared: disp, ref: known.ref, from: known.node});
       return {...v, ref: known.ref, from: known.node, [disp]: true};
     }
-    const dataLines = this.cond.lines === 'data';
+    const dataLines = this.cond.lines === 'data' || this.cond.lines === 'summary';
     const entry = {ref: identity || dataLines ? `${n.id}.d${++n.data}` : null, node: n.id, done: false};
     entry.promise = this.world[fn](n.id, ...args);
     if (identity) this.calls.set(key, entry);
@@ -516,7 +517,13 @@ export class Run {
       if (entry.ref) this.artifacts.set(entry.ref, {node: n.id, kind: 'data', fn, args, content: JSON.stringify(v), t: this.now()});
       // Data lines: each fetched document or series is one line. A document's line carries its title and first sentence;
       // a series' line carries its description and latest point.
-      if (dataLines && fn !== 'search') {
+      // Summary lines: a one-line summary written by a small model, computed once per item; the 1.5 s delay stands in
+      // for that model call. A missing summary falls back to the title and first sentence.
+      const summary = this.cond.lines === 'summary' && fn !== 'search' ? summaryOf(this.workflow, fn, String(args[0])) : null;
+      if (summary) {
+        const text = `${entry.ref} · ${fn} ${first(String(args[0]), 40)} · ${first(summary, 160)}`;
+        setTimeout(() => { if (!this.ended) this.addLine({text, kind: 'data', subj: n.id, ref: entry.ref}); }, 1500);
+      } else if (dataLines && fn !== 'search') {
         let head;
         if (fn === 'doc') {
           const m = String(v.body || '').match(/^(.*?[.!?])(?:\s|$)/s);

@@ -10,6 +10,9 @@ const LINES = {
 // Call identity, as the world section describes it when a run has it.
 const IDENTITY = `Each world call's output is stored as a ref, nK.dJ, and the call returns it as ref. A call identical to one already made in the run (the same function and arguments, by any node) does not fetch again: if that call is still running it joins it, and if it has finished it reuses its stored output. Either way it returns the same output with ref, from (the node that fetched it) and joined: true or reused: true, and a line records it, such as "n3 joined n2.d4 · series cma_futures". load(ref) returns a data ref's output.`;
 
+// The root's settling paragraph (root-settles stage, root only), as approved.
+const SETTLE = `How to settle. You integrate the whole run. Before you write your answer, compare your children's results: if one child's result explains or contradicts another's, address a checkpoint to the child whose question it bears on, with to, saying what the other child found and citing its refs. That child is reopened by it, and you hold it until its next result: wait for that result and use it in your answer.`;
+
 // The guided arms' sharing paragraph, as approved.
 const SHARING = `How to share. Other nodes are working at the same time, and the lines in your stream are how you learn what they have.
 
@@ -19,14 +22,17 @@ When a line names something your task needs, read its ref instead of redoing the
 
 Before you finish, look at your stream: if another node's result conflicts with yours, or is explained by something you found, address a checkpoint to it saying what and why, citing the refs. A finished node is reopened by it.`;
 
-export function systemPrompt(cond) {
+export function systemPrompt(cond, {root = false} = {}) {
   const identity = cond.data === 'identity';
-  const dataLines = cond.lines === 'data';
+  const summaries = cond.lines === 'summary';
+  const dataLines = cond.lines === 'data' || summaries;
+  const fetched = summaries ? 'every document or series a node fetches (as a one-line summary of it)' : 'every document or series a node fetches';
   const kinds = 'Every start, join, reuse, checkpoint, result, close, cancellation, failure and reopen in the run is one line'
-    + (dataLines && identity ? ', and so is every document or series a node fetches and every joined or reused world call'
-      : dataLines ? ', and so is every document or series a node fetches'
+    + (dataLines && identity ? `, and so is ${fetched} and every joined or reused world call`
+      : dataLines ? `, and so is ${fetched}`
         : identity ? ', and so is every joined or reused world call' : '');
-  const example = dataLines ? `, "n5.r1 · <first line> · cites n3.c1" or "n2.d5 · doc <id> · <its title>: <its first sentence>"` : ` or "n5.r1 · <first line> · cites n3.c1"`;
+  const example = summaries ? `, "n5.r1 · <first line> · cites n3.c1" or "n2.d5 · doc <id> · <a one-line summary of it>"`
+    : dataLines ? `, "n5.r1 · <first line> · cites n3.c1" or "n2.d5 · doc <id> · <its title>: <its first sentence>"` : ` or "n5.r1 · <first line> · cites n3.c1"`;
   const delivery = (identity || dataLines) && cond.delivery === 'broadcast'
     ? `You receive every line from every other node in the run: starts, joins, reuses, checkpoints, results, closes, cancellations, failures, reopens${dataLines ? ', fetched documents and series' : ''}${identity ? ', and joined or reused world calls' : ''}.`
     : LINES[cond.delivery];
@@ -52,7 +58,7 @@ Shortcuts: nodes.open(request) opens a node and returns an op at once: op.result
 Lines. ${kinds}, such as "n2 opened n5 · <task>"${example}. ${delivery} Lines reach you in two ways: new ones are appended to the output of each cell you run, and nodes.next() returns them when you wait. Each batch ends with the budget left.
 
 How to work. Your task is a what, and your first cell splits it. A judgment is one question with its own evidence: when your task names more than one factor, market, source or scenario, each is a separate judgment. In your first cell, write the judgments as a comment, one per line. If there are two or more, open one child node per judgment with nodes.open in that same cell (children run in parallel with you and with each other), giving each child exactly one judgment stated so that it can be answered on its own, and keep the ops on globalThis. If there is only one, say so in the comment and answer it directly. Once you have children, leave their judgments to them: your own work is whatever no child has, plus integrating their results into yours. The how is never a node: searches, reads and calculations are calls in your cells.
-${cond.guided ? '\n' + SHARING + '\n' : ''}
+${cond.guided ? '\n' + SHARING + '\n' : ''}${cond.settle && root ? '\n' + SETTLE + '\n' : ''}
 Your result. When you stop calling run_cell, your final message is stored as your result (nK.r1, or the next version if you are reopened) and its first line appears in the streams of other nodes. Refs you write in it are recorded as its links. You cannot finish while a node you hold is still running: wait for its result or close it first.`;
 }
 
