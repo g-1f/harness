@@ -10,6 +10,8 @@ import {score} from './lib/score.mjs';
 import {grade} from './lib/grade.mjs';
 import {runHitLimit, waitForReset} from './lib/limit.mjs';
 import {STAGES} from './lib/stages.mjs';
+import {fileURLToPath} from 'node:url';
+const RUNS = path.join(path.dirname(fileURLToPath(import.meta.url)), 'runs');
 
 const argv = process.argv.slice(2);
 const stage = argv[0];
@@ -18,7 +20,7 @@ const CAP = opt('--cap', 25);
 const PAR = opt('--parallel', 3);
 const S = STAGES[stage];
 if (!S) { console.log(`unknown stage ${stage}; stages: ${Object.keys(STAGES).join(', ')}`); process.exit(1); }
-const root = path.resolve('runs', stage);
+const root = path.join(RUNS, stage);
 fs.mkdirSync(root, {recursive: true});
 const resultsFile = path.join(root, 'results.jsonl');
 const discardFile = path.join(root, 'discarded.jsonl');
@@ -38,7 +40,7 @@ if (fs.existsSync(discardFile)) {
 }
 // Imports: an earlier stage's runs of an identical condition count as this stage's runs, copied with the condition renamed.
 for (const imp of S.imports || []) {
-  const srcRoot = path.resolve('runs', imp.stage);
+  const srcRoot = path.join(RUNS, imp.stage);
   const as = S.conds.find(c => c.id === imp.as);
   const have = new Set(fs.existsSync(resultsFile) ? fs.readFileSync(resultsFile, 'utf8').split('\n').filter(Boolean).map(l => { const r = JSON.parse(l); return keyOf(r.workflow, r.cond.id, r.seed); }) : []);
   for (const l of fs.readFileSync(path.join(srcRoot, 'results.jsonl'), 'utf8').split('\n').filter(Boolean)) {

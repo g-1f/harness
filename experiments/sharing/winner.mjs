@@ -3,9 +3,11 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import {score} from './lib/score.mjs';
+import {fileURLToPath} from 'node:url';
+const RUNS = path.join(path.dirname(fileURLToPath(import.meta.url)), 'runs');
 
 const stage = process.argv[2];
-const root = path.resolve('runs', stage);
+const root = path.join(RUNS, stage);
 const rows = fs.readFileSync(path.join(root, 'results.jsonl'), 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l)).map(r => {
   const dir = path.join(root, r.dir);
   return {...r, ...score(JSON.parse(fs.readFileSync(path.join(dir, 'state.json'))), JSON.parse(fs.readFileSync(path.join(dir, 'summary.json'))))};

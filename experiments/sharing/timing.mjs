@@ -3,9 +3,11 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import {branches} from './lib/score.mjs';
+import {fileURLToPath} from 'node:url';
+const RUNS = path.join(path.dirname(fileURLToPath(import.meta.url)), 'runs');
 
 const stage = process.argv[2];
-const root = path.resolve('runs', stage);
+const root = path.join(RUNS, stage);
 const runs = fs.readdirSync(root).filter(d => fs.existsSync(path.join(root, d, 'state.json'))).sort().map(d => ({
   d, st: JSON.parse(fs.readFileSync(path.join(root, d, 'state.json'))), sm: JSON.parse(fs.readFileSync(path.join(root, d, 'summary.json'))),
 }));

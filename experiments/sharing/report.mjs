@@ -3,9 +3,11 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {score} from './lib/score.mjs';
 import {WORKFLOWS} from './lib/world.mjs';
+import {fileURLToPath} from 'node:url';
+const RUNS = path.join(path.dirname(fileURLToPath(import.meta.url)), 'runs');
 
 const stage = process.argv[2];
-const root = path.resolve('runs', stage);
+const root = path.join(RUNS, stage);
 // Re-score every run from its saved state so that scorer fixes apply to finished runs; grades are kept.
 const rows = fs.readFileSync(path.join(root, 'results.jsonl'), 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l)).map(r => {
   const dir = path.join(root, r.dir);
