@@ -1,0 +1,87 @@
+{
+  "protocol": "IR-30-v0.1",
+  "status": "proposed-not-run",
+  "episode_seconds": 1800,
+  "checkpoint_seconds": [
+    0,
+    300,
+    600,
+    900,
+    1200,
+    1500,
+    1800
+  ],
+  "arms": {
+    "A": "single-agent-ptc",
+    "B": "serial-subagents",
+    "C": "synchronous-parallel",
+    "D": "v4-async-graph"
+  },
+  "resources": {
+    "usd_cap": 25,
+    "input_tokens_cap": 300000,
+    "output_tokens_cap": 60000,
+    "model_concurrency_max": 4,
+    "tool_concurrency_max": 12,
+    "tool_calls_cap": 300,
+    "active_nodes_cap": 24
+  },
+  "cases": {
+    "development": 12,
+    "heldout": 40,
+    "per_family": 10,
+    "archival_per_family": 5,
+    "synthetic_per_family": 5,
+    "families": [
+      "breadth",
+      "depth",
+      "convergence",
+      "standing_delta"
+    ],
+    "replications": 3
+  },
+  "delta_injections": [
+    {
+      "elapsed_s": 480,
+      "type": "hidden-irrelevant-or-duplicate"
+    },
+    {
+      "elapsed_s": 900,
+      "type": "hidden-relevant-immaterial"
+    },
+    {
+      "elapsed_s": 1320,
+      "type": "hidden-material"
+    }
+  ],
+  "quality_weights": {
+    "financial_accuracy": 30,
+    "evidence_citations": 25,
+    "decision_quality": 25,
+    "alternatives": 10,
+    "audit": 10
+  },
+  "primary_outcome": "auc_q_30_left_step",
+  "primary_comparison": "D-minus-C",
+  "noninferiority_margin_q30": -5,
+  "reliability_gates": [
+    "lookahead",
+    "unauthorized_access",
+    "fabricated_citation",
+    "critical_unsupported_conclusion"
+  ],
+  "randomization": {
+    "block_by": [
+      "case_id",
+      "rep"
+    ],
+    "seed_to_freeze_before_holdout": null
+  },
+  "model": {
+    "provider": null,
+    "build": null,
+    "sampling": null,
+    "price_table_ref": null
+  },
+  "notes": "Freeze source manifests, priors, grader code, model and pricing before held-out trials. This file is defaults, not a completed benchmark."
+}
