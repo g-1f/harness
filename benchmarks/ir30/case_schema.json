@@ -1,0 +1,137 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "IR-30 Case Manifest",
+  "type": "object",
+  "required": [
+    "case_id",
+    "family",
+    "origin",
+    "as_of_world",
+    "source_manifest",
+    "gold_manifest",
+    "version"
+  ],
+  "properties": {
+    "version": {
+      "const": "IR-30-v0.1"
+    },
+    "case_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "family": {
+      "enum": [
+        "breadth",
+        "depth",
+        "convergence",
+        "standing_delta"
+      ]
+    },
+    "origin": {
+      "enum": [
+        "archival",
+        "synthetic"
+      ]
+    },
+    "as_of_world": {
+      "type": "object",
+      "required": [
+        "world_ref",
+        "available_by"
+      ],
+      "properties": {
+        "world_ref": {
+          "type": "string"
+        },
+        "available_by": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "ingested_by": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        }
+      }
+    },
+    "prompt_ref": {
+      "type": "string"
+    },
+    "source_manifest": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "artifact_ref",
+          "sha256",
+          "available_at",
+          "access_scope"
+        ],
+        "properties": {
+          "artifact_ref": {
+            "type": "string"
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{64}$"
+          },
+          "available_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "access_scope": {
+            "type": "string"
+          },
+          "license": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "gold_manifest": {
+      "type": "object",
+      "required": [
+        "sealed_ref",
+        "sha256"
+      ],
+      "properties": {
+        "sealed_ref": {
+          "type": "string"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-fA-F0-9]{64}$"
+        }
+      }
+    },
+    "injections": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "elapsed_s",
+          "source_refs"
+        ],
+        "properties": {
+          "elapsed_s": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1800
+          },
+          "source_refs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "quality_rubric_ref": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}
