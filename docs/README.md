@@ -17,3 +17,16 @@ show actual offline Deep Agents/QuickJS behavior.
 
 Older document paths redirect to these guides. The original `new_doc.md` proposal
 is preserved in [the archive](archive/2026-09-25-proposal.md), explicitly non-normative.
+
+## Proposed next architecture (not implemented)
+
+- [V4 evidence-native async reasoning proposal](harness-spec-v4/README.md) — six-call
+  kernel, durable trajectories, precise forks and convergence, evidence timelines,
+  stable incremental decision revisions, and adversarial implementation milestones.
+- [IR-30 benchmark](../benchmarks/ir30/README.md) — preregisterable 30-minute
+  four-arm comparison and offline metric scorer; real-model evaluation is pending.
+
+These are design proposals. The maintained implementation contracts above still
+describe the September callable-skill-graph reference runtime. The [v3 six-call
+specification](harness-spec-v3/README.md) is also a proposal, not an implemented
+v3 runtime.
