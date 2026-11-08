@@ -47,7 +47,7 @@ def aggregate(rows: list[dict]) -> dict:
             raise ValueError(f"Missing/invalid 30m total USD for {case_id}/{arm}/{rep}")
         summaries.append({
             "case_id": case_id, "arm": arm, "rep": rep,
-            "auc_q_30": round(auc, 4),
+            "auc_q_30": auc,
             "q30": q[-1],
             "usd": last["usd"],
             "illustrative": any(snapshots[t].get("illustrative", False) for t in CHECKPOINTS)
