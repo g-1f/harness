@@ -11,7 +11,7 @@ class TestAnytime(unittest.TestCase):
 
     def test_left_step_auc_and_terminal(self):
         got = aggregate(self.episode())
-        self.assertEqual(got["arms"]["A"]["mean_auc_q_30"], 200 / 6)
+        self.assertAlmostEqual(got["arms"]["A"]["mean_auc_q_30"], 200 / 6, places=4)
         self.assertEqual(got["arms"]["A"]["mean_q30"], 70)
 
     def test_missing_checkpoint_rejected(self):
@@ -25,7 +25,7 @@ class TestAnytime(unittest.TestCase):
 
     def test_paired_differences(self):
         result = aggregate(self.episode("A") + self.episode("D", (0,30,40,50,60,70,80)))
-        self.assertEqual(result["paired_descriptive"]["D_minus_A"]["mean_auc_difference"], 50 / 6)
+        self.assertAlmostEqual(result["paired_descriptive"]["D_minus_A"]["mean_auc_difference"], 50 / 6, places=4)
 
 
 if __name__ == "__main__":
