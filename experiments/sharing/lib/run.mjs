@@ -100,7 +100,7 @@ export class Run {
       nodes: [...this.nodes.values()].map(n => ({
         id: n.id, request: n.request, opener: n.opener, state: n.state, results: n.results, cps: n.cps,
         holdersEver: [...n.holdersEver], states: n.states, cost: n.cost, turns: n.turns, activations: n.activations,
-        session: n.session, from: n.request.from || null,
+        session: n.session, from: n.request.from || null, got: n.got || 0, gotData: n.gotData || 0,
       })),
       lines: this.lines, artifacts: Object.fromEntries(this.artifacts), edges: this.edges,
       reads: this.reads, worldCalls: this.worldCalls, cells: this.cells,
@@ -278,8 +278,37 @@ export class Run {
   inScope(n, l) {
     const producer = l.by || l.subj;
     if (producer === n.id && l.kind !== 'reopen') return false;
-    if (this.cond.delivery === 'broadcast') return true;
+    if (this.cond.delivery === 'broadcast') {
+      // Relevance filter: a data line reaches a node only when it shares a key term with the node's task.
+      if (l.kind === 'data' && this.cond.filter === 'terms') return this.relevant(n, l);
+      return true;
+    }
     return l.to === n.id || n.everHeld.has(l.subj) || (l.subj === n.id && l.by && l.by !== n.id);
+  }
+  // Key terms: words of four or more letters, plurals folded, that are not stop words and appear in at most a third of
+  // the workflow's documents, so names and specific nouns count and words every document uses do not.
+  terms(text) {
+    if (!this.common) {
+      const docs = this.world.corpus.docs.map(d => new Set(this.words(`${d.title} ${d.body}`)));
+      const df = new Map();
+      for (const ws of docs) for (const w of ws) df.set(w, (df.get(w) || 0) + 1);
+      this.common = new Set([...df].filter(([, k]) => k > docs.length / 3).map(([w]) => w));
+    }
+    return new Set(this.words(text).filter(w => !this.common.has(w)));
+  }
+  words(text) {
+    const STOP = new Set(['what', 'does', 'with', 'from', 'that', 'this', 'their', 'through', 'imply', 'implies', 'given', 'about', 'into', 'will',
+      'would', 'could', 'should', 'which', 'there', 'these', 'those', 'have', 'been', 'being', 'they', 'them', 'than', 'then', 'when', 'where',
+      'judging', 'right', 'year', 'over', 'more', 'most', 'some', 'only', 'also', 'such', 'each', 'other', 'after', 'before', 'under', 'still']);
+    return (String(text).toLowerCase().match(/[a-z][a-z-]{3,}/g) || [])
+      .map(w => w.replace(/ies$/, 'y').replace(/([^s])s$/, '$1'))
+      .filter(w => w.length >= 4 && !STOP.has(w));
+  }
+  relevant(n, l) {
+    n.taskTerms ||= this.terms(n.request.task);
+    const head = l.text.split(' · ').slice(2).join(' · ');
+    for (const w of this.terms(head)) if (n.taskTerms.has(w)) return true;
+    return false;
   }
   left() {
     const min = Math.max(0, Math.round((this.caps.wallMin * 60 - this.now()) / 60));
@@ -302,6 +331,8 @@ export class Run {
   takeStream(n) {
     const batch = this.lines.slice(n.cursor).filter(l => this.inScope(n, l));
     n.cursor = this.lines.length;
+    n.got = (n.got || 0) + batch.length;
+    n.gotData = (n.gotData || 0) + batch.filter(l => l.kind === 'data').length;
     return batch.map(l => l.text + (l.to === n.id ? '   [addressed to you]' : ''));
   }
 

@@ -131,6 +131,31 @@ export const WORKFLOWS = {
     ],
     judgment: [],
   },
+  sector: {
+    title: 'Larger run',
+    question: 'Should we add to our VLTX position for 2027?',
+    split: [
+      'Is demand for grid equipment from Caldrian utilities and data centres rising through 2027?',
+      'Can Caldrian utilities finance their 2027 capex plans, through debt markets and through equity markets?',
+      "Will Voltaris, VLTX's largest holding, meet its 2027 revenue guidance of C$4.2B, judging from its own disclosures and from industry shipments and market share?",
+      "Is the valuation case for VLTX's holdings intact through 2027 given the expected CMA policy path, and are VLTX Jan-2028 calls attractively priced?",
+    ],
+    // All three planted situations in one run of about a dozen nodes: the shared slow series (valuation and calls),
+    // the contradiction inside the Voltaris branch, and the Pellham cut found by financing and needed by demand.
+    planted: {
+      rates: "CMA futures imply the policy rate falls from 4.50% to about 4.00% by end-2027; the Governor's base case is one 25bp cut.",
+      voltaris: 'Voltaris orders +11% and backlog C$5.1B, but Q2 shipments fell 9% (large power transformers -38%) because the Halbrook plant was offline nine weeks after a fire; it restarted in August, and about C$310M of delayed shipments are scheduled for Q4 2026 to Q2 2027.',
+      demand: "Utilities' 2027 capital plans are up (Pellham +18%), but Pellham withdrew its C$2.4B equity offering and will cut 2027 transformer orders by about 40%; Pellham is 35% of VLTX holdings' utility orders.",
+      answer: "Hold, or add only modestly: the easing path supports valuation and Voltaris's shipment drop is a temporary outage, but the Pellham cut undercuts 2027 utility demand.",
+    },
+    rubric: [
+      "States the market-implied CMA path (4.50% to about 4.00% by end-2027) and the Governor's one-cut base case.",
+      "Explains Voltaris's shipment drop by the Halbrook plant fire and outage, with the plant restarted in August.",
+      "States that Pellham is cutting 2027 transformer orders by about 40% after withdrawing its equity offering, and connects it to demand for VLTX holdings.",
+      'Recommends holding or only a modest add, with the Pellham cut as the main risk.',
+    ],
+    judgment: [3],
+  },
 };
 
 const D = (id, title, keys, body) => ({id, title, keys, body});
@@ -283,6 +308,13 @@ function mulberry32(a) {
   };
 }
 const hash = s => [...s].reduce((h, c) => (Math.imul(h, 31) + c.charCodeAt(0)) | 0, 7);
+
+// The larger run's world is the union of the shared need's and the two long variants' documents and series.
+CORPUS.sector = {
+  latency: [3, 8],
+  docs: [...CORPUS.shared.docs, ...CORPUS['conflict-long'].docs, ...CORPUS['cross-long'].docs],
+  series: {...CORPUS.shared.series, ...CORPUS['conflict-long'].series, ...CORPUS['cross-long'].series},
+};
 
 export class World {
   constructor(workflow, seed, {instant = false} = {}) {

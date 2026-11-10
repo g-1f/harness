@@ -16,9 +16,9 @@ const rows = fs.readFileSync(path.join(root, 'results.jsonl'), 'utf8').split('\n
   return {...r, ...score(state, summary), grade: r.grade};
 });
 const conds = [...new Set(rows.map(r => r.cond.id))];
-const wfs = ['shared', 'conflict', 'cross', 'noise', 'conflict-long', 'cross-long'].filter(w => rows.some(r => r.workflow === w));
+const wfs = ['shared', 'conflict', 'cross', 'noise', 'conflict-long', 'cross-long', 'sector'].filter(w => rows.some(r => r.workflow === w));
 const WF = {shared: 'Shared need', conflict: 'Contradiction', cross: 'Cross-branch finding', noise: 'Noise',
-  'conflict-long': 'Contradiction, long', 'cross-long': 'Cross-branch, long'};
+  'conflict-long': 'Contradiction, long', 'cross-long': 'Cross-branch, long', sector: 'Larger run'};
 const mean = xs => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : NaN);
 const median = xs => { const v = [...xs].sort((a, b) => a - b); return v.length ? (v.length % 2 ? v[(v.length - 1) / 2] : (v[v.length / 2 - 1] + v[v.length / 2]) / 2) : NaN; };
 const f = (x, d = 2) => (Number.isFinite(x) ? x.toFixed(d) : '–');
@@ -46,6 +46,7 @@ const CHECK = {
   conflict: [['branchesTalked', 'branches cited or messaged each other'], ['shipmentsBranchExplained', 'shipments branch explains the drop']],
   cross: [['findingCrossed', 'finding reached the demand branch'], ['demandBranchKnows', 'demand branch states the Pellham cut']],
   noise: [['noCrossTraffic', 'no cross-branch reads or messages']],
+  sector: [['fetchedOnce', 'series fetched once'], ['shipmentsExplained', 'industry node explains the drop'], ['findingCrossed', 'finding reached demand'], ['demandKnows', 'demand branch states the Pellham news']],
 };
 const checksOf = w => CHECK[w.replace(/-long$/, '')];
 md += `\n## Planted-situation checks (runs passing)\n\n| Condition | ${wfs.flatMap(w => checksOf(w).map(([, d]) => `${WF[w]}: ${d}`)).join(' | ')} |\n|---|${wfs.flatMap(w => checksOf(w)).map(() => '---|').join('')}\n`;
@@ -57,7 +58,7 @@ const M = [
   ['cost', 'Cost per run ($)', 3], ['wall', 'Wall time (s)', 0], ['nodes', 'Nodes', 1], ['openedBeyondSplit', 'Nodes opened below the split', 1],
   ['turns', 'Model turns', 1], ['cells', 'Cells', 1], ['worldCalls', 'World calls', 1], ['duplicateFetches', 'Duplicate fetches', 2],
   ['dataJoins', 'Calls joined in flight', 2], ['dataReuses', 'Calls reused', 2], ['crossData', 'Calls shared across branches', 2],
-  ['dataLines', 'Data lines', 1], ['linesPerNode', 'Lines delivered per node', 1], ['cps', 'Checkpoints published', 2], ['msgs', 'Addressed checkpoints', 2], ['reopens', 'Reopens', 2],
+  ['dataLines', 'Data lines', 1], ['linesPerNode', 'Lines delivered per node', 1], ['linesTaken', 'Lines taken per node (recorded)', 1], ['dataTaken', 'Data lines taken per node (recorded)', 1], ['cps', 'Checkpoints published', 2], ['msgs', 'Addressed checkpoints', 2], ['reopens', 'Reopens', 2],
   ['joins', 'Node joins', 2], ['reuses', 'Node reuses', 2], ['crossCites', 'Cross-branch cites', 2], ['crossReads', 'Cross-branch reads', 2],
 ];
 md += `\n## Mechanics and cost (mean per run)\n\n| Measure | ${conds.join(' | ')} |\n|---|${conds.map(() => '---|').join('')}\n`;

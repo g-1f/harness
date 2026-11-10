@@ -59,6 +59,9 @@ export function score(state, summary) {
     crossData: state.worldCalls.filter(c => c.shared && c.from && cross(c.node, c.from)).length,
     crossDataReads: state.reads.filter(r => /^n\d+\.d\d+$/.test(r.ref) && cross(r.ref.split('.')[0], r.node)).length,
     dataLines: state.lines.filter(l => l.kind === 'data').length,
+    // Lines each node actually took from its stream, recorded by the harness (runs before the larger run lack it).
+    linesTaken: state.nodes.some(n => n.got != null) ? +(state.nodes.reduce((t, n) => t + (n.got || 0), 0) / state.nodes.length).toFixed(1) : null,
+    dataTaken: state.nodes.some(n => n.gotData != null) ? +(state.nodes.reduce((t, n) => t + (n.gotData || 0), 0) / state.nodes.length).toFixed(1) : null,
     cancels: state.lines.filter(l => l.kind === 'cancel').length,
     fails: state.lines.filter(l => l.kind === 'fail').length,
     crossCites: e.filter(x => x.kind === 'cite' && cross(x.from, x.to)).length,
@@ -112,6 +115,21 @@ export function score(state, summary) {
     checks.findingCrossed = e.some(x => (x.kind === 'cite' || x.kind === 'msg') && of(x.from) === b && of(x.to) === a) ||
       state.reads.some(r => of(r.node) === a && of(r.ref.split('.')[0]) === b) ||
       state.worldCalls.some(c => c.shared && c.from && of(c.node) === a && of(c.from) === b && (c.args || [])[0] === 'pellham-offering');
+  } else if (wf === 'sector') {
+    // The larger run: the split is demand, financing, Voltaris and valuation, in that order.
+    const [dem, fin, volt] = top;
+    const fetchers = new Set(calls('series', 'cma_futures').map(c => c.node));
+    checks.fetchedOnce = fetchers.size <= 1;
+    m.futuresFetchers = fetchers.size;
+    // The contradiction sits inside the Voltaris branch: its industry node's result, or the branch's if it did not split.
+    const inVolt = subtree(volt);
+    const industry = state.nodes.filter(n => inVolt.includes(n.id) && n.id !== volt && /industry|shipment|market share/i.test(n.request.task)).map(n => n.id);
+    checks.shipmentsExplained = /halbrook|fire|outage|offline/i.test(textsOf(state, industry.length ? industry : [volt]));
+    const dText = textsOf(state, subtree(dem));
+    checks.demandKnows = /pellham/i.test(dText) && /(40\s?%|withdr\w*[^.]{0,40}offering|cut\w*[^.]{0,40}2027 transformer orders|resiz)/i.test(dText);
+    checks.findingCrossed = e.some(x => (x.kind === 'cite' || x.kind === 'msg') && of(x.from) === fin && of(x.to) === dem) ||
+      state.reads.some(r => of(r.node) === dem && of(r.ref.split('.')[0]) === fin) ||
+      state.worldCalls.some(c => c.shared && c.from && of(c.node) === dem && of(c.from) === fin && (c.args || [])[0] === 'pellham-offering');
   } else if (wf === 'noise') {
     checks.noCrossTraffic = m.crossMsgs === 0 && m.crossReads === 0;
   }

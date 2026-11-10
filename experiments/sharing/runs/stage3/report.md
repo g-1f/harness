@@ -46,6 +46,8 @@
 | Calls shared across branches | 1.77 | 1.93 | 1.60 | 1.73 |
 | Data lines | 0.0 | 0.0 | 7.4 | 8.1 |
 | Lines delivered per node | 7.7 | 6.8 | 11.5 | 12.1 |
+| Lines taken per node (recorded) | 0.0 | 0.0 | 0.0 | 0.0 |
+| Data lines taken per node (recorded) | 0.0 | 0.0 | 0.0 | 0.0 |
 | Checkpoints published | 0.00 | 0.00 | 0.00 | 0.00 |
 | Addressed checkpoints | 0.00 | 0.00 | 0.00 | 0.00 |
 | Reopens | 0.00 | 0.00 | 0.00 | 0.00 |
