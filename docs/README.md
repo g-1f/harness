@@ -18,4 +18,4 @@ show actual offline Deep Agents/QuickJS behavior.
 Older document paths redirect to these guides. The original `new_doc.md` proposal
 is preserved in [the archive](archive/2026-09-25-proposal.md), explicitly non-normative.
 
-The current design is [specification v5](harness-spec-v5/README.md): traced PTC nodes, claim-line citation and the delta engine. It replaces [v3](harness-spec-v3/README.md).
+The current design is [specification v5.1](harness-spec-v5.1/README.md): an always-on research agent whose results are justification graphs, checked by scripts first and a model last. It replaces [v5.0](harness-spec-v5/README.md) and [v3](harness-spec-v3/README.md).

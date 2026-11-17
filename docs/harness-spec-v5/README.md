@@ -2,6 +2,8 @@
 
 Async PTC nodes whose every claim cites the records it rests on, so one trace serves delta compute, scenarios, backtests and outcome review.
 
+**Superseded by [v5.1](../harness-spec-v5.1/README.md)**, which replaces prose-parsed citations and cell replay with code handles and a scheduled tick.
+
 Status: design, 2026-11-10. Replaces [v3](../harness-spec-v3/README.md) and absorbs the v4 proposal (branch `design/v4-evidence-timelines-ir30`). Nothing here is built except where a line says **measured**; those numbers come from [the sharing experiment](../../experiments/sharing/FINDINGS.md) and [the delta trace prototype](../../experiments/delta/trace.mjs).
 
 This harness is for discretionary investing and portfolio management. It is not a generic agent runtime.
