@@ -2,6 +2,8 @@
 
 An always-on research agent whose every result is a justification graph, checked by scripts first and a model last.
 
+**Superseded by [v5.2](../harness-spec-v5.2/README.md)**, which replaces the claim graph with free prose and two kinds of inline citation, and moves the tick to node granularity.
+
 Status: design, 2026-11-16. Replaces [v5.0](../harness-spec-v5/README.md). Nothing here is built except where a line says **measured**; those numbers come from [the sharing experiment](../../experiments/sharing/FINDINGS.md) and [the delta trace prototype](../../experiments/delta/trace.mjs).
 
 This harness is for discretionary investing and portfolio management. It is not a generic agent runtime.
